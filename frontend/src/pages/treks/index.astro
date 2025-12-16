@@ -1,0 +1,184 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import TrekGrid from '@/components/trek/TrekGrid.astro';
+import { MOCK_TREKS } from '@/lib/data';
+import { DIFFICULTY_LABELS } from '@/lib/constants';
+
+const treks = MOCK_TREKS;
+
+// Get unique seasons from all treks
+const allSeasons = [...new Set(treks.flatMap(trek => trek.season))].sort();
+---
+
+<MainLayout 
+  title="All Treks" 
+  description="Browse our complete collection of Himalayan treks. Filter by difficulty, price, and season to find your perfect adventure."
+>
+  <!-- Page Header - Blue theme -->
+  <section class="bg-gradient-to-br from-secondary-600 to-secondary-500 py-16 md:py-24">
+    <div class="container-custom text-center text-white">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white">Explore Our Treks</h1>
+      <p class="text-lg text-white/80 max-w-2xl mx-auto">
+        From easy weekend getaways to challenging high-altitude expeditions, find the perfect trek for your next adventure.
+      </p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="section bg-neutral-50">
+    <div class="container-custom">
+      <div class="lg:flex lg:gap-8">
+        
+        <!-- Filters Sidebar -->
+        <aside class="lg:w-72 flex-shrink-0 mb-8 lg:mb-0">
+          <div class="bg-white rounded-xl border border-neutral-200 p-6 sticky top-24">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-secondary-600">Filters</h3>
+              <button id="reset-filters" class="text-sm text-primary-500 hover:text-primary-600 font-medium">
+                Reset
+              </button>
+            </div>
+
+            <!-- Difficulty Filter -->
+            <div class="mb-6">
+              <h4 class="font-medium text-neutral-800 mb-3">Difficulty</h4>
+              <div class="space-y-2">
+                {Object.entries(DIFFICULTY_LABELS).map(([key, value]) => (
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="difficulty" 
+                      value={key}
+                      class="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    <span class="text-neutral-600 group-hover:text-secondary-600">{value.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="mb-6">
+              <h4 class="font-medium text-neutral-800 mb-3">Price Range</h4>
+              <div class="space-y-3">
+                <input 
+                  type="range" 
+                  id="price-range"
+                  min="5000" 
+                  max="50000" 
+                  value="50000"
+                  class="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-primary-500"
+                />
+                <div class="flex justify-between text-sm text-neutral-500">
+                  <span>₹5,000</span>
+                  <span id="price-value" class="font-medium text-secondary-600">₹50,000</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Season Filter -->
+            <div class="mb-6">
+              <h4 class="font-medium text-neutral-800 mb-3">Season</h4>
+              <div class="grid grid-cols-2 gap-2">
+                {allSeasons.slice(0, 6).map((season) => (
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="season" 
+                      value={season}
+                      class="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    <span class="text-sm text-neutral-600 group-hover:text-secondary-600">{season}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Duration Filter -->
+            <div>
+              <h4 class="font-medium text-neutral-800 mb-3">Duration</h4>
+              <div class="space-y-2">
+                {[
+                  { label: '1-3 days', value: '1-3' },
+                  { label: '4-6 days', value: '4-6' },
+                  { label: '7-10 days', value: '7-10' },
+                  { label: '10+ days', value: '10+' },
+                ].map((duration) => (
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="duration" 
+                      value={duration.value}
+                      class="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                    />
+                    <span class="text-neutral-600 group-hover:text-secondary-600">{duration.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Trek Grid -->
+        <div class="flex-grow">
+          <!-- Results Header -->
+          <div class="flex items-center justify-between mb-6">
+            <p class="text-neutral-600">
+              Showing <span class="font-semibold text-secondary-600">{treks.length}</span> treks
+            </p>
+            <div class="flex items-center gap-3">
+              <label class="text-sm text-neutral-600">Sort by:</label>
+              <select class="input py-2 px-3 w-auto text-sm">
+                <option value="popular">Most Popular</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="duration">Duration</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Trek Cards Grid -->
+          <TrekGrid treks={treks} columns={3} />
+
+          <!-- Pagination -->
+          <div class="mt-12 flex justify-center">
+            <nav class="flex items-center gap-2">
+              <button class="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-400 cursor-not-allowed" disabled>
+                Previous
+              </button>
+              <button class="px-4 py-2 rounded-lg bg-primary-500 text-white">1</button>
+              <button class="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50">2</button>
+              <button class="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50">3</button>
+              <button class="px-4 py-2 rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50">
+                Next
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  // Price range slider update
+  const priceRange = document.getElementById('price-range') as HTMLInputElement;
+  const priceValue = document.getElementById('price-value');
+  
+  priceRange?.addEventListener('input', () => {
+    if (priceValue) {
+      priceValue.textContent = `₹${parseInt(priceRange.value).toLocaleString('en-IN')}`;
+    }
+  });
+
+  // Reset filters
+  document.getElementById('reset-filters')?.addEventListener('click', () => {
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    if (priceRange) {
+      priceRange.value = '50000';
+      if (priceValue) priceValue.textContent = '₹50,000';
+    }
+  });
+</script>

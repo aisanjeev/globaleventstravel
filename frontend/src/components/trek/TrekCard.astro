@@ -1,0 +1,122 @@
+---
+import type { Trek, Difficulty } from '@/lib/types';
+import { DIFFICULTY_LABELS } from '@/lib/constants';
+
+interface Props {
+  trek: Trek;
+}
+
+const { trek } = Astro.props;
+
+const difficultyInfo = DIFFICULTY_LABELS[trek.difficulty] || DIFFICULTY_LABELS.moderate;
+
+// Format price with Indian rupee
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+// Generate star rating
+const fullStars = Math.floor(trek.rating);
+const hasHalfStar = trek.rating % 1 >= 0.5;
+---
+
+<article class="card group cursor-pointer">
+  <a href={`/treks/${trek.slug}`} class="block">
+    <!-- Image Container -->
+    <div class="relative overflow-hidden aspect-[4/3]">
+      <img
+        src={trek.image || '/images/treks/placeholder.jpg'}
+        alt={trek.name}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        loading="lazy"
+      />
+      <!-- Difficulty Badge -->
+      <div class="absolute top-4 left-4">
+        <span class={`badge ${difficultyInfo.color}`}>
+          {difficultyInfo.label}
+        </span>
+      </div>
+      <!-- Featured Badge - Orange -->
+      {trek.featured && (
+        <div class="absolute top-4 right-4">
+          <span class="badge bg-gradient-to-r from-primary-600 to-primary-500 text-white">
+            Featured
+          </span>
+        </div>
+      )}
+      <!-- Price Tag -->
+      <div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+        <span class="text-lg font-bold text-secondary-600">{formatPrice(trek.price)}</span>
+        <span class="text-xs text-neutral-500 block">per person</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-5">
+      <!-- Title -->
+      <h3 class="text-xl font-semibold text-secondary-600 group-hover:text-primary-500 transition-colors mb-2 line-clamp-1">
+        {trek.name}
+      </h3>
+
+      <!-- Rating -->
+      <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <svg
+              class={`w-4 h-4 ${i < fullStars ? 'text-primary-500' : i === fullStars && hasHalfStar ? 'text-primary-500' : 'text-neutral-300'}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+        </div>
+        <span class="text-sm text-neutral-500">
+          {trek.rating.toFixed(1)} ({trek.review_count} reviews)
+        </span>
+      </div>
+
+      <!-- Trek Details -->
+      <div class="flex flex-wrap gap-4 text-sm text-neutral-600 mb-4">
+        <div class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{trek.duration} days</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          <span>{trek.elevation.toLocaleString()}m</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          <span>{trek.distance} km</span>
+        </div>
+      </div>
+
+      <!-- Short description -->
+      {trek.short_description && (
+        <p class="text-neutral-500 text-sm line-clamp-2 mb-4">
+          {trek.short_description}
+        </p>
+      )}
+
+      <!-- Season Tags -->
+      <div class="flex flex-wrap gap-2">
+        {trek.season.slice(0, 3).map((s) => (
+          <span class="text-xs px-2 py-1 bg-neutral-100 text-neutral-600 rounded">
+            {s}
+          </span>
+        ))}
+      </div>
+    </div>
+  </a>
+</article>

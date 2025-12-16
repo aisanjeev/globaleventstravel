@@ -1,0 +1,42 @@
+---
+import type { Trek } from '@/lib/types';
+import TrekGrid from '@/components/trek/TrekGrid.astro';
+
+interface Props {
+  treks: Trek[];
+  title?: string;
+  subtitle?: string;
+}
+
+const {
+  treks,
+  title = "Featured Treks",
+  subtitle = "Explore our most popular expeditions loved by thousands of adventurers"
+} = Astro.props;
+---
+
+<section class="section bg-neutral-50">
+  <div class="container-custom">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+      <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
+        Popular Adventures
+      </span>
+      <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-4">{title}</h2>
+      <p class="text-lg text-neutral-600 max-w-2xl mx-auto">{subtitle}</p>
+    </div>
+
+    <!-- Trek Grid -->
+    <TrekGrid treks={treks} columns={3} />
+
+    <!-- View All Button -->
+    <div class="text-center mt-12">
+      <a href="/treks" class="btn-secondary">
+        View All Treks
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

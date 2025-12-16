@@ -1,0 +1,93 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import HeroHome from '@/components/hero/HeroHome.astro';
+import FeaturedTreks from '@/components/sections/FeaturedTreks.astro';
+import WhyChooseUs from '@/components/sections/WhyChooseUs.astro';
+import Statistics from '@/components/sections/Statistics.astro';
+import TestimonialCard from '@/components/testimonial/TestimonialCard.astro';
+import CTA from '@/components/sections/CTA.astro';
+
+import { getFeaturedTreks, MOCK_TESTIMONIALS } from '@/lib/data';
+
+const featuredTreks = getFeaturedTreks();
+const testimonials = MOCK_TESTIMONIALS;
+---
+
+<MainLayout title="Home" description="Discover amazing treks and expeditions in the Himalayas with Global Events Travels. Expert guides, safety first, unforgettable experiences.">
+  
+  <!-- Hero Section -->
+  <HeroHome />
+
+  <!-- Featured Treks -->
+  <FeaturedTreks treks={featuredTreks} />
+
+  <!-- Why Choose Us -->
+  <WhyChooseUs />
+
+  <!-- Statistics -->
+  <Statistics />
+
+  <!-- Testimonials Section -->
+  <section class="section bg-neutral-50">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
+          Testimonials
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+          What Our Trekkers Say
+        </h2>
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          Don't just take our word for it. Here's what adventurers who've trekked with us have to say.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {testimonials.map((testimonial) => (
+          <TestimonialCard testimonial={testimonial} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Popular Destinations Quick Links -->
+  <section class="section bg-white">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+          Popular Destinations
+        </h2>
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          Explore the most sought-after trekking regions in the Himalayas
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { name: 'Uttarakhand', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400', treks: 15 },
+          { name: 'Himachal Pradesh', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400', treks: 20 },
+          { name: 'Kashmir', image: 'https://images.unsplash.com/photo-1566837945700-30057527ade0?w=400', treks: 8 },
+          { name: 'Ladakh', image: 'https://images.unsplash.com/photo-1545652985-5edd365b12eb?w=400', treks: 12 },
+        ].map((destination) => (
+          <a href={`/treks?region=${destination.name.toLowerCase()}`} class="group relative aspect-square rounded-2xl overflow-hidden">
+            <img 
+              src={destination.image} 
+              alt={destination.name}
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+            <div class="absolute bottom-4 left-4 right-4 text-white">
+              <h3 class="text-lg font-semibold">{destination.name}</h3>
+              <p class="text-sm text-white/70">{destination.treks} treks</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <CTA />
+
+</MainLayout>
+

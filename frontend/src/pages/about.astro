@@ -1,0 +1,174 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import Statistics from '@/components/sections/Statistics.astro';
+import CTA from '@/components/sections/CTA.astro';
+import { MOCK_GUIDES } from '@/lib/data';
+
+const guides = MOCK_GUIDES;
+---
+
+<MainLayout 
+  title="About Us" 
+  description="Learn about Global Events Travels - your trusted partner for Himalayan adventures since 2016."
+>
+  <!-- Page Header - Blue theme -->
+  <section class="bg-gradient-to-br from-secondary-600 to-secondary-500 py-16 md:py-24">
+    <div class="container-custom text-center text-white">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white">About Us</h1>
+      <p class="text-lg text-white/80 max-w-2xl mx-auto">
+        Passionate about mountains, committed to your safety, dedicated to creating unforgettable experiences.
+      </p>
+    </div>
+  </section>
+
+  <!-- Our Story Section -->
+  <section class="section bg-white">
+    <div class="container-custom">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
+            Our Story
+          </span>
+          <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-6">
+            Born in the Mountains, Built for Adventure
+          </h2>
+          <div class="space-y-4 text-neutral-600 leading-relaxed">
+            <p>
+              Global Events Travels was founded in 2016 by a group of passionate mountaineers who believed that everyone deserves to experience the magic of the Himalayas. What started as a small team of friends leading treks has grown into one of the most trusted adventure travel companies in India.
+            </p>
+            <p>
+              Our founders grew up in the mountains of Uttarakhand and Himachal Pradesh. They know every trail, every peak, and every hidden gem. This deep local knowledge, combined with international safety standards, is what sets us apart.
+            </p>
+            <p>
+              Today, we've helped over 10,000 trekkers from around the world discover the beauty of the Indian Himalayas. But our mission remains the same: to provide safe, sustainable, and unforgettable mountain experiences.
+            </p>
+          </div>
+        </div>
+        <div class="relative">
+          <img 
+            src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=800" 
+            alt="Team trekking in mountains"
+            class="rounded-2xl shadow-xl"
+          />
+          <div class="absolute -bottom-6 -left-6 bg-gradient-to-r from-primary-600 to-primary-500 text-white p-6 rounded-xl shadow-lg">
+            <div class="text-3xl font-bold">8+</div>
+            <div class="text-sm text-white/80">Years of Excellence</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values Section -->
+  <section class="section bg-neutral-50">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-4">Our Values</h2>
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          These core principles guide everything we do
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[
+          {
+            icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>`,
+            title: 'Safety First',
+            description: 'Your safety is our top priority. We never compromise on equipment, training, or protocols.',
+          },
+          {
+            icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+            title: 'Sustainability',
+            description: 'Leave no trace. We're committed to preserving the mountains for future generations.',
+          },
+          {
+            icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`,
+            title: 'Community',
+            description: 'Supporting local communities and providing employment opportunities.',
+          },
+          {
+            icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
+            title: 'Passion',
+            description: 'We love what we do, and that passion shows in every trek we lead.',
+          },
+        ].map((value) => (
+          <div class="text-center p-6">
+            <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Fragment set:html={value.icon} />
+            </div>
+            <h3 class="text-xl font-semibold text-secondary-600 mb-2">{value.title}</h3>
+            <p class="text-neutral-600">{value.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics -->
+  <Statistics />
+
+  <!-- Meet Our Team -->
+  <section class="section bg-white">
+    <div class="container-custom">
+      <div class="text-center mb-12">
+        <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
+          Our Team
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-4">Meet Our Expert Guides</h2>
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          Certified professionals with decades of combined experience in the Himalayas
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {guides.map((guide) => (
+          <div class="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div class="aspect-[4/3] overflow-hidden">
+              <img 
+                src={guide.profile_image_url} 
+                alt={guide.name}
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xl font-semibold text-secondary-600">{guide.name}</h3>
+                <div class="flex items-center gap-1 text-primary-500">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span class="text-sm font-medium text-neutral-600">{guide.rating}</span>
+                </div>
+              </div>
+              <p class="text-sm text-primary-500 font-medium mb-3">
+                {guide.experience_years}+ years experience
+              </p>
+              <p class="text-neutral-600 text-sm mb-4 line-clamp-3">
+                {guide.bio}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                {guide.specializations.slice(0, 2).map((spec) => (
+                  <span class="text-xs px-2 py-1 bg-neutral-100 text-neutral-600 rounded">
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="text-center mt-10">
+        <a href="/guides" class="btn-secondary">
+          View All Guides
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <CTA 
+    title="Ready to Start Your Adventure?"
+    description="Join thousands of happy trekkers who have explored the Himalayas with us. Your journey begins here."
+  />
+</MainLayout>

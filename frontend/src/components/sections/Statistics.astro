@@ -1,0 +1,28 @@
+---
+const stats = [
+  { value: '50+', label: 'Trek Routes', description: 'Across the Himalayas' },
+  { value: '10,000+', label: 'Happy Trekkers', description: 'And counting' },
+  { value: '15+', label: 'Expert Guides', description: 'Certified professionals' },
+  { value: '8+', label: 'Years Experience', description: 'In adventure tourism' },
+];
+---
+
+<section class="py-16 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400">
+  <div class="container-custom">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+      {stats.map((stat) => (
+        <div class="text-center">
+          <div class="text-4xl md:text-5xl font-bold text-white mb-2">
+            {stat.value}
+          </div>
+          <div class="text-lg font-semibold text-white/90 mb-1">
+            {stat.label}
+          </div>
+          <div class="text-sm text-white/70">
+            {stat.description}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Global Events Travels - Brand Theme Styles
+   Orange: Accent/CTAs | Blue: Headings/Links
+   ============================================ */
+
+@layer base {
+  /* Root variables */
+  :root {
+    /* Orange Brand Colors */
+    --color-primary: #F39C12;
+    --color-primary-dark: #E67E22;
+    --color-primary-light: #F5B041;
+    
+    /* Blue Brand Colors */
+    --color-secondary: #1F3C88;
+    --color-secondary-light: #2E4DA7;
+    
+    /* Neutrals */
+    --color-text: #2C2C2C;
+    --color-text-light: #576269;
+    --color-heading: #1F3C88;
+    --color-background: #ffffff;
+    --color-surface: #F4F6F7;
+    --color-border: #d4d9db;
+  }
+
+  /* Base styles */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-neutral-800 font-sans antialiased;
+    line-height: 1.6;
+  }
+
+  /* Typography - Blue for headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-secondary-600 leading-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  p {
+    @apply text-neutral-800 leading-relaxed;
+  }
+
+  /* Blue links */
+  a {
+    @apply text-secondary-600 hover:text-secondary-500 transition-colors duration-200;
+  }
+
+  /* Focus states for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+}
+
+@layer components {
+  /* Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Section spacing */
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .section-sm {
+    @apply py-12 md:py-16;
+  }
+
+  /* Buttons - Orange for primary CTAs */
+  .btn {
+    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:from-primary-700 hover:to-primary-600 active:from-primary-700 focus:ring-primary-500 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply btn border-2 border-secondary-600 text-secondary-600 hover:bg-secondary-600 hover:text-white focus:ring-secondary-600;
+  }
+
+  .btn-ghost {
+    @apply btn text-secondary-600 hover:bg-secondary-50 focus:ring-secondary-500;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+
+  /* Badges - Difficulty levels */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-easy {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .badge-moderate {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .badge-hard {
+    @apply bg-orange-100 text-orange-800;
+  }
+
+  .badge-expert {
+    @apply bg-red-100 text-red-800;
+  }
+
+  /* Form inputs */
+  .input {
+    @apply w-full px-4 py-3 border border-neutral-300 rounded-lg text-neutral-800 placeholder-neutral-400 transition-colors duration-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 focus:outline-none;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-neutral-800 mb-2;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply text-neutral-800 hover:text-secondary-600 font-medium transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-secondary-600;
+  }
+}
+
+@layer utilities {
+  /* Text gradient - Orange brand */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent;
+  }
+
+  /* Brand gradient backgrounds */
+  .bg-brand-gradient {
+    @apply bg-gradient-to-r from-primary-600 via-primary-500 to-primary-300;
+  }
+
+  /* Background patterns */
+  .bg-pattern {
+    background-image: radial-gradient(#d4d9db 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Smooth image loading */
+  .img-loading {
+    @apply bg-neutral-100 animate-pulse;
+  }
+
+  /* Hide scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
