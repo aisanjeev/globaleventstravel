@@ -1,18 +1,17 @@
 ---
+import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
+import MobileStickyForm from '@/components/forms/MobileStickyForm';
+
 interface Props {
-  title?: string;
-  subtitle?: string;
   backgroundImage?: string;
 }
 
 const {
-  title = "Adventure Awaits in the Himalayas",
-  subtitle = "Discover breathtaking treks, experienced guides, and unforgettable experiences. Join us for the journey of a lifetime.",
   backgroundImage = "/images/home/hero-bg.webp"
 } = Astro.props;
 ---
 
-<section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+<section class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden">
   <!-- Background Image -->
   <div class="absolute inset-0">
     <img 
@@ -22,74 +21,113 @@ const {
       loading="eager"
     />
     <!-- Gradient overlay for text readability -->
-    <div class="absolute inset-0 bg-gradient-to-br from-secondary-600/85 via-secondary-500/70 to-secondary-700/80"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-secondary-600/90 via-secondary-600/80 to-secondary-600/60 lg:to-transparent"></div>
+    <!-- Additional overlay for form area on desktop -->
+    <div class="hidden lg:block absolute inset-0 bg-gradient-to-l from-black/30 via-transparent to-transparent"></div>
   </div>
 
-  <!-- Animated accent shapes - Orange accents -->
+  <!-- Animated accent shapes -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/15 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl animate-pulse delay-1000"></div>
-    <div class="absolute top-1/2 left-1/4 w-64 h-64 bg-primary-300/10 rounded-full blur-2xl animate-pulse delay-500"></div>
+    <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-primary-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
   </div>
 
-  <!-- Content -->
-  <div class="relative z-10 container-custom text-center text-white px-4">
-    <div class="max-w-4xl mx-auto">
-      <!-- Badge with orange accent -->
-      <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-white/20">
-        <span class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
-        <span class="text-sm font-medium">Now booking for 2025 season</span>
+  <!-- Main Content Container -->
+  <div class="relative z-10 container-custom w-full py-12 lg:py-0">
+    <div class="grid lg:grid-cols-5 gap-8 lg:gap-12 items-center">
+      
+      <!-- Left Content (60% on desktop) -->
+      <div class="lg:col-span-3 text-white">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
+          <span class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
+          <span class="text-sm font-medium">Now booking for 2025 season</span>
+        </div>
+
+        <!-- Main Headline - Benefit focused -->
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+          Get Your Custom Himalayan Trek Itinerary
+        </h1>
+
+        <!-- Subheadline -->
+        <p class="text-lg md:text-xl text-white/90 mb-8 max-w-xl leading-relaxed drop-shadow">
+          Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp
+        </p>
+
+        <!-- Social Proof Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div class="text-center sm:text-left">
+            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">50+</div>
+            <div class="text-white/70 text-sm">Trek Routes</div>
+          </div>
+          <div class="text-center sm:text-left">
+            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">10k+</div>
+            <div class="text-white/70 text-sm">Happy Trekkers</div>
+          </div>
+          <div class="text-center sm:text-left">
+            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">15+</div>
+            <div class="text-white/70 text-sm">Expert Guides</div>
+          </div>
+          <div class="text-center sm:text-left">
+            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">8+</div>
+            <div class="text-white/70 text-sm">Years Experience</div>
+          </div>
+        </div>
+
+        <!-- Mini Testimonial -->
+        <div class="hidden md:block bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 max-w-md">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0">
+              <span class="text-white font-bold text-sm">PS</span>
+            </div>
+            <div>
+              <p class="text-white/90 text-sm italic mb-2">
+                "Best trekking experience of my life! The guides were amazing and the itinerary was perfect."
+              </p>
+              <p class="text-white/60 text-xs">
+                <span class="font-medium text-white/80">Priya S.</span> — Kedarkantha Trek
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trust Badges (Mobile) -->
+        <div class="flex flex-wrap gap-4 mt-6 lg:hidden">
+          <div class="flex items-center gap-2 text-white/80 text-sm">
+            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>Free Itinerary</span>
+          </div>
+          <div class="flex items-center gap-2 text-white/80 text-sm">
+            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>WhatsApp Delivery</span>
+          </div>
+          <div class="flex items-center gap-2 text-white/80 text-sm">
+            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span>No Spam</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Main heading -->
-      <h1 class="text-4xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight text-white drop-shadow-lg">
-        {title}
-      </h1>
-
-      <!-- Subtitle -->
-      <p class="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow">
-        {subtitle}
-      </p>
-
-      <!-- CTA Buttons - Orange primary -->
-      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        <a href="/treks" class="btn bg-gradient-to-r from-primary-600 to-primary-500 text-white hover:from-primary-700 hover:to-primary-600 px-8 py-4 text-lg font-semibold shadow-lg shadow-primary-500/30">
-          Explore Treks
-          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </a>
-        <a href="/contact" class="btn border-2 border-white/50 text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm">
-          Plan Your Trip
-        </a>
-      </div>
-
-      <!-- Stats -->
-      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
-        <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-primary-300 drop-shadow">50+</div>
-          <div class="text-white/70 text-sm mt-1">Trek Routes</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-primary-300 drop-shadow">10k+</div>
-          <div class="text-white/70 text-sm mt-1">Happy Trekkers</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-primary-300 drop-shadow">15+</div>
-          <div class="text-white/70 text-sm mt-1">Expert Guides</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl md:text-4xl font-bold text-primary-300 drop-shadow">8+</div>
-          <div class="text-white/70 text-sm mt-1">Years Experience</div>
-        </div>
+      <!-- Right Form Panel (40% on desktop) - Hidden on mobile -->
+      <div class="hidden lg:block lg:col-span-2">
+        <LeadCaptureForm client:load />
       </div>
     </div>
   </div>
 
   <!-- Scroll indicator -->
-  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden lg:block">
     <svg class="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
     </svg>
   </div>
 </section>
+
+<!-- Mobile Sticky Form (only rendered on mobile) -->
+<MobileStickyForm client:load />

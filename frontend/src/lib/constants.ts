@@ -42,3 +42,45 @@ export const PAGINATION = {
   maxLimit: 100,
 };
 
+// Trek options for lead capture form
+export const TREK_OPTIONS = [
+  { value: '', label: 'Select a Trek' },
+  { value: 'hampta-pass', label: 'Hampta Pass Trek' },
+  { value: 'kedarkantha', label: 'Kedarkantha Trek' },
+  { value: 'valley-of-flowers', label: 'Valley of Flowers' },
+  { value: 'roopkund', label: 'Roopkund Trek' },
+  { value: 'sar-pass', label: 'Sar Pass Trek' },
+  { value: 'brahmatal', label: 'Brahmatal Trek' },
+  { value: 'chadar', label: 'Chadar Trek' },
+  { value: 'goechala', label: 'Goechala Trek' },
+  { value: 'custom', label: 'Custom Trek / Not Sure' },
+];
+
+// Form configuration
+export const LEAD_FORM_CONFIG = {
+  whatsappCountryCode: '+91',
+  successMessage: 'Thank you! Your trek itinerary will be sent to your WhatsApp shortly.',
+  privacyText: 'Your data is 100% safe. We never share your information.',
+  ctaText: 'Get Instant Itinerary',
+  formTitle: 'Get Your Free Trek Guide',
+  formSubtitle: 'Personalized itinerary sent to WhatsApp',
+};
+
+// Hero section content
+export const HERO_CONTENT = {
+  badge: 'Now booking for 2025 season',
+  headline: 'Get Your Custom Himalayan Trek Itinerary',
+  subheadline: 'Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp',
+  stats: [
+    { value: '50+', label: 'Trek Routes' },
+    { value: '10k+', label: 'Happy Trekkers' },
+    { value: '15+', label: 'Expert Guides' },
+    { value: '8+', label: 'Years Experience' },
+  ],
+  testimonial: {
+    quote: 'Best trekking experience of my life! The guides were amazing.',
+    author: 'Priya S.',
+    trek: 'Kedarkantha Trek',
+  },
+};
+
