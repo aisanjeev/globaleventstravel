@@ -1,5 +1,6 @@
 ---
 import { NAV_LINKS, SITE_CONFIG } from '@/lib/constants';
+import { Image } from 'astro:assets';
 
 const currentPath = Astro.url.pathname;
 ---
@@ -9,14 +10,15 @@ const currentPath = Astro.url.pathname;
     <div class="flex items-center justify-between h-16 md:h-20">
       <!-- Logo -->
       <a href="/" class="flex items-center gap-2 group">
-        <!-- Brand logo image -->
-        <img
-          src="/logo.png"
+        <!-- Brand logo image (optimized Image component) -->
+        <Image
+          src="/logo.webp"
           alt="Globaleventstravels logo"
           class="h-12 w-auto object-contain drop-shadow-sm"
-          loading="lazy"
+          width={300}
+          height={80}
+          loading="eager"
         />
-        
       </a>
 
       <!-- Desktop Navigation -->

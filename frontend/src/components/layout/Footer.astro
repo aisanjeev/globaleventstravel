@@ -1,5 +1,6 @@
 ---
 import { SITE_CONFIG, NAV_LINKS, SOCIAL_LINKS } from '@/lib/constants';
+import { Image } from 'astro:assets';
 ---
 
 <footer class="bg-secondary-600 text-white">
@@ -9,11 +10,13 @@ import { SITE_CONFIG, NAV_LINKS, SOCIAL_LINKS } from '@/lib/constants';
       <!-- Brand Column -->
       <div class="lg:col-span-1">
         <a href="/" class="flex items-center gap-2 mb-4">
-          <!-- Brand logo image -->
-          <img
+          <!-- Brand logo image (optimized Image component) -->
+          <Image
             src="/logo.webp"
             alt="Globaleventstravels logo"
             class="h-12 w-auto object-contain drop-shadow-sm"
+            width={300}
+            height={80}
             loading="lazy"
           />
         </a>

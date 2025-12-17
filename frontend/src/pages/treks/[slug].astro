@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import { MOCK_TREKS, getTrekBySlug } from '@/lib/data';
 import { DIFFICULTY_LABELS } from '@/lib/constants';
 import type { Trek } from '@/lib/types';
+import { Image } from 'astro:assets';
 
 export async function getStaticPaths() {
   return MOCK_TREKS.map((trek) => ({
@@ -59,10 +60,13 @@ const notIncluded = [
 >
   <!-- Hero Section -->
   <section class="relative h-[60vh] min-h-[400px]">
-    <img 
+    <Image 
       src={trek.image} 
       alt={trek.name}
       class="w-full h-full object-cover"
+      width={1920}
+      height={800}
+      loading="eager"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
     

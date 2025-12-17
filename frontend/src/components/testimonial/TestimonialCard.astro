@@ -1,5 +1,6 @@
 ---
 import type { Testimonial } from '@/lib/types';
+import { Image } from 'astro:assets';
 
 interface Props {
   testimonial: Testimonial;
@@ -32,10 +33,13 @@ const { testimonial } = Astro.props;
   <div class="flex items-center gap-4">
     <div class="w-12 h-12 rounded-full bg-neutral-100 overflow-hidden flex-shrink-0">
       {testimonial.image_url ? (
-        <img
+        <Image
           src={testimonial.image_url}
           alt={testimonial.name}
           class="w-full h-full object-cover"
+          width={96}
+          height={96}
+          loading="lazy"
         />
       ) : (
         <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 font-semibold text-lg">

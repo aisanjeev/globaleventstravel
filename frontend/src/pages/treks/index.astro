@@ -127,8 +127,8 @@ const allSeasons = [...new Set(treks.flatMap(trek => trek.season))].sort();
               Showing <span class="font-semibold text-secondary-600">{treks.length}</span> treks
             </p>
             <div class="flex items-center gap-3">
-              <label class="text-sm text-neutral-600">Sort by:</label>
-              <select class="input py-2 px-3 w-auto text-sm">
+              <label for="trek-sort" class="text-sm text-neutral-600">Sort by:</label>
+              <select id="trek-sort" class="input py-2 px-3 w-auto text-sm">
                 <option value="popular">Most Popular</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>

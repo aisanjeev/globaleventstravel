@@ -6,6 +6,7 @@ import WhyChooseUs from '@/components/sections/WhyChooseUs.astro';
 import Statistics from '@/components/sections/Statistics.astro';
 import TestimonialCard from '@/components/testimonial/TestimonialCard.astro';
 import CTA from '@/components/sections/CTA.astro';
+import { Image } from 'astro:assets';
 
 import { getFeaturedTreks, MOCK_TESTIMONIALS } from '@/lib/data';
 
@@ -70,10 +71,12 @@ const testimonials = MOCK_TESTIMONIALS;
           { name: 'Srinagar', image: 'https://www.stayvista.com/blog/wp-content/uploads/2024/08/Srinagar_Dal_Lake_Sudhakar_Bichali.jpg', treks: 1 },
         ].map((destination) => (
           <a href={`/treks?region=${destination.name.toLowerCase()}`} class="group relative aspect-square rounded-2xl overflow-hidden">
-            <img 
+            <Image 
               src={destination.image} 
               alt={destination.name}
-              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              class="object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+              inferSize={true}
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             <div class="absolute bottom-4 left-4 right-4 text-white">
