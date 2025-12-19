@@ -1,6 +1,7 @@
 ---
 import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
 import MobileStickyForm from '@/components/forms/MobileStickyForm';
+import { Image } from 'astro:assets';
 
 interface Props {
   backgroundImage?: string;
@@ -14,10 +15,12 @@ const {
 <section class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden">
   <!-- Background Image -->
   <div class="absolute inset-0">
-    <img 
+    <Image
       src={backgroundImage}
       alt="Himalayan mountain landscape"
       class="w-full h-full object-cover"
+      width={800}
+      height={600}
       loading="eager"
     />
     <!-- Gradient overlay for text readability -->
