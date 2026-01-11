@@ -1,0 +1,325 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import BlogCard from '@/components/blog/BlogCard.astro';
+import { blogApi } from '@/lib/api';
+import { BLOG_CATEGORIES } from '@/lib/data';
+import { SITE_CONFIG } from '@/lib/constants';
+
+// Enable SSR for this page (fetch data at request time)
+export const prerender = false;
+
+const { slug } = Astro.params;
+
+let post: any = null;
+let relatedPosts: any[] = [];
+
+try {
+  post = await blogApi.getPostBySlug(slug as string);
+  relatedPosts = await blogApi.getRelatedPosts(slug as string, 3);
+} catch (error) {
+  console.error('Error fetching blog post:', error);
+  return Astro.redirect('/404');
+}
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const categoryInfo = BLOG_CATEGORIES.find(c => c.value === post.category);
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+// Handle both API format and legacy format
+const publishDate = post.publishDate || post.publish_date || '';
+const featuredImage = post.featuredImage || post.featured_image || '/images/blog/placeholder.jpg';
+const readTime = post.readTime || post.read_time || 5;
+const tags = post.tags || [];
+const content = post.content || '';
+
+// Generate table of contents from headings (simplified for demo)
+const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('## ', '')) || [];
+---
+
+<MainLayout 
+  title={post.title} 
+  description={post.metaDescription || post.excerpt}
+>
+  <!-- Article Header -->
+  <article>
+    <header class="bg-gradient-to-br from-secondary-600 via-secondary-700 to-secondary-800 text-white py-16 md:py-24">
+      <div class="container-custom">
+        <div class="max-w-4xl mx-auto">
+          <!-- Breadcrumb -->
+          <nav class="flex items-center gap-2 text-sm text-white/70 mb-6">
+            <a href="/" class="hover:text-white">Home</a>
+            <span>/</span>
+            <a href="/blog" class="hover:text-white">Blog</a>
+            <span>/</span>
+            <span class="text-white">{post.title.slice(0, 30)}...</span>
+          </nav>
+
+          <!-- Category -->
+          <a 
+            href={`/blog?category=${post.category}`}
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/20 rounded-full text-sm font-medium mb-6 hover:bg-white/20 transition-colors"
+          >
+            {categoryInfo?.icon || '📝'} {categoryInfo?.label || post.category}
+          </a>
+
+          <!-- Title -->
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+            {post.title}
+          </h1>
+
+          <!-- Meta -->
+          <div class="flex flex-wrap items-center gap-6 text-white/80">
+            <!-- Author -->
+            {post.author && (
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-white/10 overflow-hidden">
+                  {post.author.avatar ? (
+                    <img
+                      src={post.author.avatar}
+                      alt={post.author.name}
+                      class="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div class="w-full h-full flex items-center justify-center text-white font-semibold">
+                      {post.author.name?.charAt(0) || 'A'}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div class="font-medium text-white">{post.author.name}</div>
+                  <div class="text-sm text-white/60">{post.author.role}</div>
+                </div>
+              </div>
+            )}
+            
+            <span class="hidden sm:block">•</span>
+            <span>{formatDate(publishDate)}</span>
+            <span>•</span>
+            <span>{readTime} min read</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Featured Image -->
+    <div class="container-custom -mt-8 relative z-10">
+      <div class="max-w-4xl mx-auto">
+        <img
+          src={featuredImage}
+          alt={post.title}
+          class="w-full h-64 md:h-96 object-cover rounded-2xl shadow-xl"
+        />
+      </div>
+    </div>
+
+    <!-- Article Content -->
+    <div class="section">
+      <div class="container-custom">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          <!-- Table of Contents (Desktop) -->
+          <aside class="hidden lg:block lg:col-span-1">
+            <div class="sticky top-24">
+              {headings.length > 0 && (
+                <div class="bg-neutral-50 rounded-xl p-6 mb-6">
+                  <h3 class="font-bold text-secondary-600 mb-4">Table of Contents</h3>
+                  <nav class="space-y-2">
+                    {headings.map((heading: string, index: number) => (
+                      <a
+                        href={`#section-${index}`}
+                        class="block text-sm text-neutral-600 hover:text-primary-600 transition-colors py-1 border-l-2 border-neutral-200 hover:border-primary-500 pl-3"
+                      >
+                        {heading}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              )}
+
+              <!-- Share -->
+              <div class="bg-neutral-50 rounded-xl p-6">
+                <h3 class="font-bold text-secondary-600 mb-4">Share Article</h3>
+                <div class="flex gap-3">
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </a>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-green-500 hover:text-white hover:border-green-500 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.929C.15 5.184 5.185.15 12.201.15c3.611 0 7.043 1.411 9.592 3.959 2.549 2.549 3.96 5.98 3.96 9.592 0 7.016-5.035 12.05-12.051 12.05-1.981 0-3.91-.555-5.618-1.617l-6.177 1.688z" />
+                    </svg>
+                  </a>
+                  <a
+                    href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}&title=${encodeURIComponent(post.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content -->
+          <div class="lg:col-span-3">
+            <div class="max-w-3xl">
+              <!-- Article Body -->
+              <div class="prose prose-lg max-w-none">
+                <Fragment set:html={content.replace(/^## (.+)$/gm, (_: string, heading: string) => {
+                  const index = headings.indexOf(heading);
+                  return `<h2 id="section-${index}">${heading}</h2>`;
+                })} />
+              </div>
+
+              <!-- Tags -->
+              {tags.length > 0 && (
+                <div class="mt-12 pt-8 border-t border-neutral-200">
+                  <h3 class="font-bold text-secondary-600 mb-4">Tags</h3>
+                  <div class="flex flex-wrap gap-2">
+                    {tags.map((tag: string) => (
+                      <a
+                        href={`/blog?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                        class="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-full text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors"
+                      >
+                        #{tag}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <!-- Author Bio -->
+              {post.author && (
+                <div class="mt-12 bg-neutral-50 rounded-2xl p-8">
+                  <div class="flex items-start gap-6">
+                    <div class="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex-shrink-0">
+                      {post.author.avatar ? (
+                        <img
+                          src={post.author.avatar}
+                          alt={post.author.name}
+                          class="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 text-2xl font-bold">
+                          {post.author.name?.charAt(0) || 'A'}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-secondary-600 text-lg">{post.author.name}</h3>
+                      {post.author.role && (
+                        <p class="text-primary-600 text-sm mb-2">{post.author.role}</p>
+                      )}
+                      {post.author.bio && (
+                        <p class="text-neutral-600">{post.author.bio}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <!-- Mobile Share -->
+              <div class="mt-8 lg:hidden">
+                <h3 class="font-bold text-secondary-600 mb-4">Share this article</h3>
+                <div class="flex gap-3">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium flex items-center justify-center gap-2"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.929C.15 5.184 5.185.15 12.201.15c3.611 0 7.043 1.411 9.592 3.959 2.549 2.549 3.96 5.98 3.96 9.592 0 7.016-5.035 12.05-12.051 12.05-1.981 0-3.91-.555-5.618-1.617l-6.177 1.688z" />
+                    </svg>
+                    WhatsApp
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 py-3 bg-black text-white rounded-xl font-medium flex items-center justify-center gap-2"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                    Twitter
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Related Posts -->
+  {relatedPosts.length > 0 && (
+    <section class="section bg-neutral-50">
+      <div class="container-custom">
+        <h2 class="text-2xl md:text-3xl font-bold text-secondary-600 mb-8">
+          Related Articles
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {relatedPosts.map((relatedPost: any) => (
+            <BlogCard post={relatedPost} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- CTA -->
+  <section class="section bg-gradient-to-r from-primary-500 to-primary-600 text-white">
+    <div class="container-custom text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Adventure?</h2>
+      <p class="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+        Turn what you've learned into an unforgettable experience. Our expert guides are ready to lead you.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/treks" class="btn-primary bg-white text-primary-600 hover:bg-neutral-100">
+          Browse Treks
+        </a>
+        <a href="/contact" class="btn-secondary border-white text-white hover:bg-white/10">
+          Talk to Expert
+        </a>
+      </div>
+    </div>
+  </section>
+</MainLayout>

@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import OfficesList from '@/components/offices/OfficesList.astro';
 import { SITE_CONFIG } from '@/lib/constants';
 ---
 
@@ -209,19 +210,8 @@ import { SITE_CONFIG } from '@/lib/constants';
     </div>
   </section>
 
-  <!-- Map Section -->
-  <section class="h-96 bg-neutral-200">
-    <div class="w-full h-full flex items-center justify-center text-neutral-500">
-      <div class="text-center">
-        <svg class="w-16 h-16 mx-auto mb-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <p class="text-lg font-medium">Interactive Map</p>
-        <p class="text-sm">Google Maps integration will be added here</p>
-      </div>
-    </div>
-  </section>
+  <!-- Our Offices Section -->
+  <OfficesList />
 
   <!-- FAQ Section -->
   <section class="section bg-white">
@@ -267,8 +257,9 @@ import { SITE_CONFIG } from '@/lib/constants';
   </section>
 </MainLayout>
 
-<script>
-  const form = document.getElementById('contact-form') as HTMLFormElement;
+<script define:vars={{ apiUrl: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000' }}>
+  const API_BASE_URL = apiUrl;
+  const form = document.getElementById('contact-form');
   const btnText = document.getElementById('btn-text');
   const btnSpinner = document.getElementById('btn-spinner');
   const successMessage = document.getElementById('success-message');
@@ -280,11 +271,39 @@ import { SITE_CONFIG } from '@/lib/constants';
     if (btnText) btnText.textContent = 'Sending...';
     btnSpinner?.classList.remove('hidden');
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Get form data
+    const formData = new FormData(form);
+    const contactData = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone') || undefined,
+      subject: formData.get('subject'),
+      trek_interest: formData.get('trek') || undefined,
+      message: formData.get('message'),
+      newsletter_subscribe: formData.get('newsletter') === 'on',
+    };
 
-    // Show success
-    form.classList.add('hidden');
-    successMessage?.classList.remove('hidden');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit');
+      }
+
+      // Show success
+      form.classList.add('hidden');
+      successMessage?.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      if (btnText) btnText.textContent = 'Send Message';
+      btnSpinner?.classList.add('hidden');
+      alert('Failed to send message. Please try again.');
+    }
   });
 </script>

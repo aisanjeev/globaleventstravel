@@ -1,0 +1,35 @@
+"""
+API v1 router - combines all endpoint routers.
+"""
+from fastapi import APIRouter
+from app.api.v1.endpoints import (
+    auth,
+    treks,
+    expeditions,
+    guides,
+    bookings,
+    leads,
+    contacts,
+    testimonials,
+    offices,
+    blog,
+    health,
+    uploads,
+)
+
+api_router = APIRouter()
+
+# Include all endpoint routers
+api_router.include_router(health.router, prefix="/health", tags=["Health"])
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(treks.router, prefix="/treks", tags=["Treks"])
+api_router.include_router(expeditions.router, prefix="/expeditions", tags=["Expeditions"])
+api_router.include_router(guides.router, prefix="/guides", tags=["Guides"])
+api_router.include_router(bookings.router, prefix="/bookings", tags=["Bookings"])
+api_router.include_router(leads.router, prefix="/leads", tags=["Leads"])
+api_router.include_router(contacts.router, prefix="/contacts", tags=["Contacts"])
+api_router.include_router(testimonials.router, prefix="/testimonials", tags=["Testimonials"])
+api_router.include_router(offices.router, prefix="/offices", tags=["Offices"])
+api_router.include_router(blog.router, prefix="/blog", tags=["Blog"])
+api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+

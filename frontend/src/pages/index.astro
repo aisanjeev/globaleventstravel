@@ -4,14 +4,13 @@ import HeroHome from '@/components/hero/HeroHome.astro';
 import FeaturedTreks from '@/components/sections/FeaturedTreks.astro';
 import WhyChooseUs from '@/components/sections/WhyChooseUs.astro';
 import Statistics from '@/components/sections/Statistics.astro';
-import TestimonialCard from '@/components/testimonial/TestimonialCard.astro';
+import TestimonialSection from '@/components/testimonial/TestimonialSection.astro';
+import ExpeditionList from '@/components/expedition/ExpeditionList.astro';
 import CTA from '@/components/sections/CTA.astro';
-import { Image } from 'astro:assets';
 
-import { getFeaturedTreks, MOCK_TESTIMONIALS } from '@/lib/data';
+import { getFeaturedTreks } from '@/lib/data';
 
 const featuredTreks = getFeaturedTreks();
-const testimonials = MOCK_TESTIMONIALS;
 ---
 
 <MainLayout title="Home" description="Discover amazing treks and expeditions in the Himalayas with Global Events Travels. Expert guides, safety first, unforgettable experiences.">
@@ -28,28 +27,11 @@ const testimonials = MOCK_TESTIMONIALS;
   <!-- Statistics -->
   <Statistics />
 
-  <!-- Testimonials Section -->
-  <section class="section bg-neutral-50">
-    <div class="container-custom">
-      <div class="text-center mb-12">
-        <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
-          Testimonials
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
-          What Our Trekkers Say
-        </h2>
-        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-          Don't just take our word for it. Here's what adventurers who've trekked with us have to say.
-        </p>
-      </div>
+  <!-- Expeditions Section -->
+  <ExpeditionList limit={2} />
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {testimonials.map((testimonial) => (
-          <TestimonialCard testimonial={testimonial} />
-        ))}
-      </div>
-    </div>
-  </section>
+  <!-- Testimonials Section -->
+  <TestimonialSection limit={3} />
 
   <!-- Popular Destinations Quick Links -->
   <section class="section bg-white">
@@ -71,12 +53,11 @@ const testimonials = MOCK_TESTIMONIALS;
           { name: 'Srinagar', image: 'https://d26dp53kz39178.cloudfront.net/media/uploads/products/5_result_3-1683719790067.webp', treks: 1 },
         ].map((destination) => (
           <a href={`/treks?region=${destination.name.toLowerCase()}`} class="group relative aspect-square rounded-2xl overflow-hidden">
-            <Image 
+            <img 
               src={destination.image} 
               alt={destination.name}
               class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
               loading="lazy"
-              inferSize={true}
             />
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             <div class="absolute bottom-4 left-4 right-4 text-white">
@@ -93,4 +74,3 @@ const testimonials = MOCK_TESTIMONIALS;
   <CTA />
 
 </MainLayout>
-

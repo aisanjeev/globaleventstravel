@@ -85,10 +85,85 @@ export interface Testimonial {
   id: number;
   name: string;
   role?: string;
+  location?: string;
   image_url?: string;
   testimonial: string;
   trek_name?: string;
+  rating: number;
+  verified: boolean;
+  tags?: string[];
+  helpful_count?: number;
+  date: string;
   featured: boolean;
+}
+
+// Office / Location types
+export interface Office {
+  id: number;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmarks?: string;
+  phone: string;
+  email: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  mapUrl: string;
+  image?: string;
+}
+
+// Expedition types
+export type ExpeditionDifficulty = 'advanced' | 'expert' | 'extreme';
+
+export interface Expedition {
+  id: number;
+  name: string;
+  slug: string;
+  difficulty: ExpeditionDifficulty;
+  duration: number;
+  summitAltitude: number;
+  baseAltitude: number;
+  location: string;
+  region: string;
+  description: string;
+  shortDescription: string;
+  highlights: string[];
+  requirements: {
+    experience: string;
+    fitnessLevel: string;
+    technicalSkills: string[];
+  };
+  itinerary: ExpeditionDay[];
+  equipment: {
+    provided: string[];
+    personal: string[];
+  };
+  price: number;
+  groupSize: {
+    min: number;
+    max: number;
+  };
+  season: string[];
+  successRate: number;
+  image: string;
+  gallery?: string[];
+  guides?: Guide[];
+  safetyInfo?: string;
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+}
+
+export interface ExpeditionDay {
+  day: number;
+  title: string;
+  description: string;
+  altitude: number;
+  activities: string[];
 }
 
 export interface ContactForm {
@@ -109,5 +184,71 @@ export interface PaginatedResponse<T> {
 export interface ApiError {
   detail: string;
   status_code: number;
+}
+
+// Blog types
+export type BlogCategoryType = 
+  | 'trek-guide'
+  | 'budget-tips'
+  | 'destination'
+  | 'gear-review'
+  | 'safety'
+  | 'season-guide'
+  | 'travel-tips'
+  | string; // Allow custom categories from API
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  contentType?: 'html' | 'markdown';
+  author?: BlogAuthor;
+  publishDate?: string;
+  updatedDate?: string;
+  publishedAt?: string;
+  featuredImage?: string;
+  category?: BlogCategoryType;
+  categoryId?: number;
+  categoryName?: string;
+  tags?: string[];
+  readTime?: number; // minutes
+  featured?: boolean;
+  status?: 'draft' | 'published' | 'archived';
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BlogAuthor {
+  id?: number;
+  name: string;
+  avatar?: string;
+  bio?: string;
+  role?: string;
+}
+
+export interface BlogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  parent_id?: number;
+  display_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  children?: BlogCategory[];
+  post_count?: number;
+}
+
+export interface BlogTag {
+  id: number;
+  name: string;
+  slug: string;
+  post_count?: number;
 }
 

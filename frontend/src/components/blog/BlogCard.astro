@@ -1,0 +1,114 @@
+---
+import type { BlogPost } from '@/lib/types';
+import { BLOG_CATEGORIES } from '@/lib/data';
+
+interface Props {
+  post: BlogPost;
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+const categoryInfo = BLOG_CATEGORIES.find(c => c.value === post.category);
+
+// Handle both API format (camelCase) and legacy format
+const publishDate = post.publishDate || (post as any).publish_date || '';
+const featuredImage = post.featuredImage || (post as any).featured_image || '/images/blog/placeholder.jpg';
+const readTime = post.readTime || (post as any).read_time || 5;
+const tags = post.tags || [];
+---
+
+<article class={`group ${featured ? 'md:flex gap-8' : ''}`}>
+  <a href={`/blog/${post.slug}`} class={`block ${featured ? 'md:w-1/2' : ''}`}>
+    <div class={`relative overflow-hidden rounded-2xl ${featured ? 'h-72 md:h-full' : 'h-52'}`}>
+      <img
+        src={featuredImage}
+        alt={post.title}
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        loading="lazy"
+      />
+      <!-- Category Badge -->
+      <div class="absolute top-4 left-4">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-secondary-600">
+          {categoryInfo?.icon || '📝'} {categoryInfo?.label || post.category}
+        </span>
+      </div>
+      {featured && (
+        <div class="absolute top-4 right-4">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 text-white rounded-full text-sm font-medium">
+            ⭐ Featured
+          </span>
+        </div>
+      )}
+    </div>
+  </a>
+
+  <div class={`${featured ? 'md:w-1/2 md:py-4' : 'mt-5'}`}>
+    <!-- Meta -->
+    <div class="flex items-center gap-3 text-sm text-neutral-500 mb-3">
+      <span>{formatDate(publishDate)}</span>
+      <span>•</span>
+      <span>{readTime} min read</span>
+    </div>
+
+    <!-- Title -->
+    <a href={`/blog/${post.slug}`}>
+      <h3 class={`font-bold text-secondary-600 group-hover:text-primary-600 transition-colors mb-3 ${featured ? 'text-2xl md:text-3xl' : 'text-xl'}`}>
+        {post.title}
+      </h3>
+    </a>
+
+    <!-- Excerpt -->
+    <p class={`text-neutral-600 mb-4 ${featured ? 'line-clamp-3' : 'line-clamp-2'}`}>
+      {post.excerpt}
+    </p>
+
+    <!-- Tags -->
+    {tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-4">
+        {tags.slice(0, 3).map((tag: string) => (
+          <a 
+            href={`/blog?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
+            class="text-xs bg-neutral-100 text-neutral-600 px-2.5 py-1 rounded-full hover:bg-primary-100 hover:text-primary-700 transition-colors"
+          >
+            #{tag}
+          </a>
+        ))}
+      </div>
+    )}
+
+    <!-- Author -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-neutral-100 overflow-hidden">
+        {post.author.avatar ? (
+          <img
+            src={post.author.avatar}
+            alt={post.author.name}
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 font-semibold">
+            {post.author.name.charAt(0)}
+          </div>
+        )}
+      </div>
+      <div>
+        <div class="font-medium text-secondary-600 text-sm">{post.author.name}</div>
+        {post.author.role && (
+          <div class="text-xs text-neutral-500">{post.author.role}</div>
+        )}
+      </div>
+    </div>
+  </div>
+</article>
+

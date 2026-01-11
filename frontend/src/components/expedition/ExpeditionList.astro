@@ -1,0 +1,48 @@
+---
+import ExpeditionCard from './ExpeditionCard.astro';
+import { EXPEDITIONS } from '@/lib/data';
+
+interface Props {
+  showTitle?: boolean;
+  limit?: number;
+}
+
+const { showTitle = true, limit } = Astro.props;
+const expeditions = limit ? EXPEDITIONS.slice(0, limit) : EXPEDITIONS;
+---
+
+<section class="section">
+  <div class="container-custom">
+    {showTitle && (
+      <div class="text-center mb-12">
+        <span class="inline-block px-4 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-medium mb-4">
+          High Altitude Adventures
+        </span>
+        <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-4">
+          Himalayan Expeditions
+        </h2>
+        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+          Push your limits with our expertly guided mountaineering expeditions. Conquer legendary peaks with safety and expertise.
+        </p>
+      </div>
+    )}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {expeditions.map((expedition) => (
+        <ExpeditionCard expedition={expedition} />
+      ))}
+    </div>
+
+    {limit && EXPEDITIONS.length > limit && (
+      <div class="text-center mt-10">
+        <a href="/expeditions" class="btn-secondary">
+          View All Expeditions
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    )}
+  </div>
+</section>
+

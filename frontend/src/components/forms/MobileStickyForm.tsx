@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
+import { leadsApi, type LeadData } from '@/lib/api';
 
 interface FormData {
   name: string;
@@ -39,6 +40,7 @@ export default function MobileStickyForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Hide sticky bar when scrolled to top (hero is visible)
   useEffect(() => {
@@ -100,14 +102,30 @@ export default function MobileStickyForm() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    console.log('Lead captured:', formData);
-    
-    setIsSubmitting(false);
-    setIsSuccess(true);
+    try {
+      // Get trek name from options
+      const trekOption = TREK_OPTIONS.find(opt => opt.value === formData.trek);
+      
+      // Submit to API
+      const leadData: LeadData = {
+        name: formData.name,
+        email: formData.email,
+        whatsapp: formData.whatsapp,
+        trek_slug: formData.trek,
+        trek_name: trekOption?.label,
+        source: 'mobile_sticky',
+      };
+      
+      await leadsApi.create(leadData);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -318,6 +336,13 @@ export default function MobileStickyForm() {
                       )}
                     </button>
                   </form>
+
+                  {/* Error Message */}
+                  {submitError && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{submitError}</p>
+                    </div>
+                  )}
 
                   {/* Trust Badge */}
                   <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">

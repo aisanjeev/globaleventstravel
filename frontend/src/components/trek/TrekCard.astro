@@ -113,13 +113,15 @@ const hasHalfStar = trek.rating % 1 >= 0.5;
       )}
 
       <!-- Season Tags -->
-      <div class="flex flex-wrap gap-2">
-        {trek.season.slice(0, 3).map((s) => (
-          <span class="text-xs px-2 py-1 bg-neutral-100 text-neutral-600 rounded">
-            {s}
-          </span>
-        ))}
-      </div>
+      {trek.season && trek.season.length > 0 && (
+        <div class="flex flex-wrap gap-2">
+          {trek.season.slice(0, 3).map((s) => (
+            <span class="text-xs px-2 py-1 bg-neutral-100 text-neutral-600 rounded">
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   </a>
 </article>
