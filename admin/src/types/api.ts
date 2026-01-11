@@ -144,4 +144,145 @@ export interface AuthResponse {
   token_type: string;
 }
 
+// ============================================
+// Trek Types
+// ============================================
+
+export type TrekStatus = "draft" | "published" | "archived" | "seasonal";
+export type TrekDifficulty = "easy" | "moderate" | "difficult" | "challenging" | "extreme";
+
+export interface ItineraryDay {
+  id: number;
+  day: number;
+  title: string;
+  description: string;
+  elevation_gain: number;
+  distance: number;
+  accommodation?: string;
+  meals?: string;
+  highlights?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ItineraryDayCreate {
+  day: number;
+  title: string;
+  description: string;
+  elevation_gain?: number;
+  distance?: number;
+  accommodation?: string;
+  meals?: string;
+  highlights?: string[];
+}
+
+export interface ItineraryDayUpdate extends Partial<ItineraryDayCreate> {}
+
+export interface TrekCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  parent_id?: number;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrekCategoryTree extends TrekCategory {
+  children: TrekCategoryTree[];
+  trek_count: number;
+}
+
+export interface Trek {
+  id: number;
+  name: string;
+  slug: string;
+  short_description?: string;
+  description: string;
+  difficulty: TrekDifficulty;
+  duration: number;
+  max_altitude: number;
+  distance?: number;
+  price: number;
+  featured_image?: string;
+  gallery?: string[];
+  status: TrekStatus;
+  featured: boolean;
+  category?: string;
+  category_id?: number;
+  category_name?: string;
+  location: string;
+  best_season: string[];
+  group_size_min: number;
+  group_size_max: number;
+  includes?: string[];
+  excludes?: string[];
+  equipment_list?: string[];
+  fitness_level?: string;
+  experience_required?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string[];
+  itinerary: ItineraryDay[];
+  rating?: number;
+  review_count: number;
+  created_at: string;
+  updated_at: string;
+  published_at?: string;
+}
+
+export interface TrekListItem {
+  id: number;
+  name: string;
+  slug: string;
+  short_description?: string;
+  difficulty: TrekDifficulty;
+  duration: number;
+  price: number;
+  featured_image?: string;
+  status: TrekStatus;
+  featured: boolean;
+  category?: string;
+  category_name?: string;
+  location: string;
+  rating?: number;
+  review_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrekCreate {
+  name: string;
+  slug: string;
+  short_description?: string;
+  description: string;
+  difficulty: TrekDifficulty;
+  duration: number;
+  max_altitude: number;
+  distance?: number;
+  price: number;
+  featured_image?: string;
+  gallery?: string[];
+  status?: TrekStatus;
+  featured?: boolean;
+  category_id?: number;
+  location: string;
+  best_season: string[];
+  group_size_min: number;
+  group_size_max: number;
+  includes?: string[];
+  excludes?: string[];
+  equipment_list?: string[];
+  fitness_level?: string;
+  experience_required?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string[];
+  itinerary?: ItineraryDayCreate[];
+}
+
+export interface TrekUpdate extends Partial<TrekCreate> {}
+
 
