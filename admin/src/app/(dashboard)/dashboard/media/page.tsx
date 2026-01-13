@@ -34,8 +34,8 @@ export default function MediaPage() {
 
   const fetchFiles = async () => {
     try {
-      const data = await mediaService.list({ limit: 100 });
-      setFiles(data);
+      const response = await mediaService.list({ limit: 100 });
+      setFiles(response.items);
     } catch (error) {
       console.error("Failed to fetch files:", error);
     } finally {
@@ -59,7 +59,7 @@ export default function MediaPage() {
     setUploading(true);
     try {
       for (const file of validFiles) {
-        await mediaService.upload(file, "general");
+        await mediaService.upload({ file, folder: "general" });
       }
       addToast({
         type: "success",
@@ -103,7 +103,7 @@ export default function MediaPage() {
     if (!confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      await mediaService.delete(file.folder, file.filename);
+      await mediaService.delete(file.id);
       addToast({ type: "success", message: "File deleted successfully" });
       setSelectedFile(null);
       fetchFiles();
@@ -159,10 +159,10 @@ export default function MediaPage() {
               </button>
             </div>
             <label>
-              <Button as="span" className="cursor-pointer">
+              <span className="inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 px-4 py-2 text-sm bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 cursor-pointer">
                 <Upload className="h-4 w-4" />
                 Upload Files
-              </Button>
+              </span>
               <input
                 type="file"
                 accept="image/*"

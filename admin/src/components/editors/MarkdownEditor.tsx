@@ -66,7 +66,15 @@ export function MarkdownEditor({
     [content, onChange]
   );
 
-  const toolbarActions = [
+  type ToolbarAction = 
+    | { type: "divider" }
+    | {
+        icon: React.ComponentType<{ className?: string }>;
+        action: () => void;
+        title: string;
+      };
+
+  const toolbarActions: ToolbarAction[] = [
     {
       icon: Bold,
       action: () => insertMarkdown("**", "**", "bold text"),
@@ -229,19 +237,24 @@ export function MarkdownEditor({
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-1.5">
         <div className="flex flex-wrap items-center gap-0.5">
-          {toolbarActions.map((action, index) =>
-            action.type === "divider" ? (
-              <div key={index} className="mx-1 h-6 w-px bg-gray-300" />
-            ) : (
-              <ToolbarButton
-                key={index}
-                onClick={action.action!}
-                title={action.title!}
-              >
-                <action.icon className="h-4 w-4" />
-              </ToolbarButton>
-            )
-          )}
+          {toolbarActions.map((action, index) => {
+            if ("type" in action && action.type === "divider") {
+              return <div key={index} className="mx-1 h-6 w-px bg-gray-300" />;
+            }
+            if ("icon" in action) {
+              const Icon = action.icon;
+              return (
+                <ToolbarButton
+                  key={index}
+                  onClick={action.action}
+                  title={action.title}
+                >
+                  <Icon className="h-4 w-4" />
+                </ToolbarButton>
+              );
+            }
+            return null;
+          })}
         </div>
 
         <div className="flex items-center gap-0.5">

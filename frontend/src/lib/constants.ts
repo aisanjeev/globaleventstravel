@@ -31,8 +31,9 @@ export const SOCIAL_LINKS = {
 export const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
   easy: { label: 'Easy', color: 'badge-easy' },
   moderate: { label: 'Moderate', color: 'badge-moderate' },
-  hard: { label: 'Hard', color: 'badge-hard' },
-  expert: { label: 'Expert', color: 'badge-expert' },
+  difficult: { label: 'Difficult', color: 'badge-hard' },
+  challenging: { label: 'Challenging', color: 'badge-expert' },
+  extreme: { label: 'Extreme', color: 'badge-extreme' },
 };
 
 export const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';

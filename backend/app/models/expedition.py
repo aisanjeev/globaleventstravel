@@ -82,6 +82,7 @@ class ExpeditionBase(BaseModel):
     rating: float = Field(default=0.0, ge=0, le=5)
     review_count: int = Field(default=0, ge=0, alias="reviewCount")
     featured: bool = False
+    status: str = Field(default="draft", pattern="^(draft|published|archived)$")
 
     class Config:
         populate_by_name = True
@@ -118,6 +119,7 @@ class ExpeditionUpdate(BaseModel):
     rating: Optional[float] = Field(None, ge=0, le=5)
     review_count: Optional[int] = Field(None, ge=0, alias="reviewCount")
     featured: Optional[bool] = None
+    status: Optional[str] = Field(None, pattern="^(draft|published|archived)$")
 
     class Config:
         populate_by_name = True
@@ -149,6 +151,7 @@ class ExpeditionResponse(BaseModel):
     rating: float
     reviewCount: int
     featured: bool
+    status: str
     created_at: datetime
     updated_at: datetime
 
@@ -183,6 +186,7 @@ class ExpeditionResponse(BaseModel):
             rating=obj.rating,
             reviewCount=obj.review_count,
             featured=obj.featured,
+            status=obj.status,
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )
@@ -211,6 +215,9 @@ class ExpeditionListResponse(BaseModel):
     rating: float
     reviewCount: int
     featured: bool
+    status: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
@@ -235,5 +242,8 @@ class ExpeditionListResponse(BaseModel):
             rating=obj.rating,
             reviewCount=obj.review_count,
             featured=obj.featured,
+            status=obj.status,
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
         )
 

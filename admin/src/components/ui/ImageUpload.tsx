@@ -3,7 +3,9 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { mediaService } from "@/services/media.service";
-import { Upload, X, Link as LinkIcon, Loader2 } from "lucide-react";
+import { MediaPicker } from "./MediaPicker";
+import type { MediaFile } from "@/types/api";
+import { Upload, X, Link as LinkIcon, Loader2, FolderOpen } from "lucide-react";
 
 interface ImageUploadProps {
   value?: string;
@@ -22,6 +24,7 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
@@ -32,7 +35,7 @@ export function ImageUpload({
 
     setIsUploading(true);
     try {
-      const response = await mediaService.upload(file, folder);
+      const response = await mediaService.upload({ file, folder });
       onChange(mediaService.getFullUrl(response.url));
     } catch (error) {
       console.error("Upload failed:", error);
@@ -80,6 +83,14 @@ export function ImageUpload({
 
   const handleRemove = () => {
     onChange("");
+  };
+
+  const handleMediaSelect = (media: MediaFile | MediaFile[]) => {
+    const selected = Array.isArray(media) ? media[0] : media;
+    if (selected) {
+      onChange(mediaService.getFullUrl(selected.url));
+    }
+    setShowMediaPicker(false);
   };
 
   if (value) {
@@ -132,51 +143,68 @@ export function ImageUpload({
   }
 
   return (
-    <div
-      className={cn(
-        "relative rounded-lg border-2 border-dashed p-8 text-center transition-colors",
-        dragOver
-          ? "border-primary-500 bg-primary-50"
-          : error
-          ? "border-red-300 bg-red-50"
-          : "border-gray-300 hover:border-gray-400"
-      )}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
-      {isUploading ? (
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-2 text-sm text-gray-500">Uploading...</p>
-        </div>
-      ) : (
-        <>
-          <Upload className="mx-auto h-8 w-8 text-gray-400" />
-          <p className="mt-2 text-sm text-gray-500">{placeholder}</p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <label className="cursor-pointer rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50">
-              Choose File
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowUrlInput(true)}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-            >
-              <LinkIcon className="h-4 w-4" />
-              URL
-            </button>
+    <>
+      <div
+        className={cn(
+          "relative rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+          dragOver
+            ? "border-primary-500 bg-primary-50"
+            : error
+            ? "border-red-300 bg-red-50"
+            : "border-gray-300 hover:border-gray-400"
+        )}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        {isUploading ? (
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+            <p className="mt-2 text-sm text-gray-500">Uploading...</p>
           </div>
-        </>
-      )}
-    </div>
+        ) : (
+          <>
+            <Upload className="mx-auto h-8 w-8 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-500">{placeholder}</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <label className="cursor-pointer rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 hover:bg-gray-50">
+                Upload New
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowMediaPicker(true)}
+                className="flex items-center gap-2 rounded-lg bg-primary-50 px-4 py-2 text-sm font-medium text-primary-700 ring-1 ring-primary-200 hover:bg-primary-100"
+              >
+                <FolderOpen className="h-4 w-4" />
+                Media Library
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUrlInput(true)}
+                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                <LinkIcon className="h-4 w-4" />
+                URL
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Media Picker Modal */}
+      <MediaPicker
+        isOpen={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={handleMediaSelect}
+        acceptedTypes="image"
+        defaultFolder={folder}
+      />
+    </>
   );
 }
-
-

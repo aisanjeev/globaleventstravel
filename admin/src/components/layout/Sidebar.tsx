@@ -12,7 +12,7 @@ import {
   Tags,
   Image,
   Mountain,
-  Map,
+  Compass,
   Settings,
   ChevronLeft,
   ChevronDown,
@@ -55,19 +55,13 @@ const navigation: NavigationItem[] = [
   },
   {
     name: "Treks",
+    href: "/dashboard/treks",
     icon: Mountain,
-    children: [
-      {
-        name: "All Treks",
-        href: "/dashboard/treks",
-        icon: Mountain,
-      },
-      {
-        name: "Categories",
-        href: "/dashboard/treks/categories",
-        icon: Map,
-      },
-    ],
+  },
+  {
+    name: "Expeditions",
+    href: "/dashboard/expeditions",
+    icon: Compass,
   },
   {
     name: "Media",
@@ -79,7 +73,7 @@ const navigation: NavigationItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUIStore();
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["Blog", "Treks"]));
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["Blog", "Treks", "Expeditions"]));
 
   const toggleExpanded = (itemName: string) => {
     const newExpanded = new Set(expandedItems);

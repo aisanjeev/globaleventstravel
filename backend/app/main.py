@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
     """
     Application lifespan handler.
     Creates database tables on startup.
+    Supports both Alembic migrations and create_all() fallback.
     """
     # Ensure data directory exists for SQLite
     if settings.is_sqlite:
@@ -24,12 +25,26 @@ async def lifespan(app: FastAPI):
     
     # Import all models to register them
     from app.db.models import (
-        Trek, Expedition, Guide, Booking, Lead, 
-        ContactMessage, Testimonial, Office, BlogPost
+        Trek, TrekFAQ, Expedition, Guide, Booking, Lead, 
+        ContactMessage, Testimonial, Office, BlogPost, Media
     )
     
-    # Create tables
-    Base.metadata.create_all(bind=engine)
+    # Use Alembic migrations if enabled, otherwise use create_all()
+    if settings.USE_ALEMBIC_MIGRATIONS:
+        try:
+            from alembic.config import Config
+            from alembic import command
+            
+            alembic_cfg = Config("alembic.ini")
+            # Run migrations to head
+            command.upgrade(alembic_cfg, "head")
+        except Exception as e:
+            # Fallback to create_all() if Alembic fails
+            print(f"Warning: Alembic migration failed, falling back to create_all(): {e}")
+            Base.metadata.create_all(bind=engine)
+    else:
+        # Default behavior: use create_all() for backward compatibility
+        Base.metadata.create_all(bind=engine)
     
     yield
     

@@ -8,9 +8,20 @@ import TestimonialSection from '@/components/testimonial/TestimonialSection.astr
 import ExpeditionList from '@/components/expedition/ExpeditionList.astro';
 import CTA from '@/components/sections/CTA.astro';
 
-import { getFeaturedTreks } from '@/lib/data';
+import { treksApi } from '@/lib/api';
+import { getFeaturedTreks as getMockFeaturedTreks } from '@/lib/data';
 
-const featuredTreks = getFeaturedTreks();
+// Enable SSR for dynamic data fetching
+export const prerender = false;
+
+// Fetch featured treks from database API, fallback to mock data if API fails
+let featuredTreks;
+try {
+  featuredTreks = await treksApi.getFeatured(6);
+} catch (error) {
+  console.error('Failed to fetch featured treks from API, using mock data:', error);
+  featuredTreks = getMockFeaturedTreks();
+}
 ---
 
 <MainLayout title="Home" description="Discover amazing treks and expeditions in the Himalayas with Global Events Travels. Expert guides, safety first, unforgettable experiences.">

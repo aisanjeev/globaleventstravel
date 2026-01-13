@@ -19,11 +19,13 @@ router = APIRouter()
 def list_treks(
     skip: int = Query(0, ge=0),
     limit: int = Query(None),
-    difficulty: Optional[str] = Query(None, pattern="^(easy|moderate|hard|expert)$"),
+    difficulty: Optional[str] = Query(None, pattern="^(easy|moderate|difficult|challenging|extreme)$"),
     min_price: Optional[float] = Query(None, ge=0),
     max_price: Optional[float] = Query(None, ge=0),
     featured: Optional[bool] = None,
-    season: Optional[str] = None,
+    status: Optional[str] = Query(None, pattern="^(draft|published|archived|seasonal)$"),
+    location: Optional[str] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -31,11 +33,13 @@ def list_treks(
     
     - **skip**: Number of records to skip (pagination)
     - **limit**: Maximum number of records to return
-    - **difficulty**: Filter by difficulty (easy, moderate, hard, expert)
+    - **difficulty**: Filter by difficulty (easy, moderate, difficult, challenging, extreme)
     - **min_price**: Minimum price filter
     - **max_price**: Maximum price filter
     - **featured**: Filter featured treks only
-    - **season**: Filter by season month
+    - **status**: Filter by status (draft, published, archived, seasonal)
+    - **location**: Filter by location (partial match)
+    - **search**: Search in name, short_description, location
     """
     if limit is None:
         limit = settings.DEFAULT_PAGE_SIZE
@@ -49,7 +53,9 @@ def list_treks(
         min_price=min_price,
         max_price=max_price,
         featured=featured,
-        season=season,
+        status=status,
+        location=location,
+        search=search,
     )
     total = trek_crud.get_count_with_filters(
         db,
@@ -57,7 +63,9 @@ def list_treks(
         min_price=min_price,
         max_price=max_price,
         featured=featured,
-        season=season,
+        status=status,
+        location=location,
+        search=search,
     )
     
     return PaginatedResponse(
@@ -74,7 +82,7 @@ def list_featured_treks(
     db: Session = Depends(get_db),
 ):
     """Get featured treks."""
-    treks = trek_crud.get_featured(db, limit=limit)
+    treks = trek_crud.get_multi_with_filters(db, limit=limit, featured=True, status="published")
     return [TrekListResponse.model_validate(t) for t in treks]
 
 
@@ -117,14 +125,14 @@ def create_trek(
     return TrekResponse.model_validate(trek)
 
 
-@router.put("/{trek_id}", response_model=TrekResponse)
+@router.put("/{trek_id}", response_model=TrekDetailResponse)
 def update_trek(
     trek_id: int,
     trek_in: TrekUpdate,
     db: Session = Depends(get_db),
 ):
     """Update a trek."""
-    trek = trek_crud.get(db, trek_id)
+    trek = trek_crud.get_with_details(db, trek_id)
     if not trek:
         raise HTTPException(status_code=404, detail="Trek not found")
     
@@ -134,8 +142,8 @@ def update_trek(
         if existing:
             raise HTTPException(status_code=400, detail="Trek with this slug already exists")
     
-    trek = trek_crud.update(db, db_obj=trek, obj_in=trek_in)
-    return TrekResponse.model_validate(trek)
+    trek = trek_crud.update_with_relations(db, db_obj=trek, obj_in=trek_in)
+    return TrekDetailResponse.model_validate(trek)
 
 
 @router.delete("/{trek_id}")
@@ -151,3 +159,72 @@ def delete_trek(
     trek_crud.remove(db, id=trek_id)
     return {"message": "Trek deleted successfully"}
 
+
+@router.post("/{trek_id}/publish", response_model=TrekResponse)
+def publish_trek(
+    trek_id: int,
+    db: Session = Depends(get_db),
+):
+    """Publish a trek."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    
+    trek = trek_crud.publish(db, db_obj=trek)
+    return TrekResponse.model_validate(trek)
+
+
+@router.post("/{trek_id}/unpublish", response_model=TrekResponse)
+def unpublish_trek(
+    trek_id: int,
+    db: Session = Depends(get_db),
+):
+    """Unpublish a trek (set to draft)."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    
+    trek = trek_crud.unpublish(db, db_obj=trek)
+    return TrekResponse.model_validate(trek)
+
+
+@router.post("/{trek_id}/archive", response_model=TrekResponse)
+def archive_trek(
+    trek_id: int,
+    db: Session = Depends(get_db),
+):
+    """Archive a trek."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    
+    trek = trek_crud.archive(db, db_obj=trek)
+    return TrekResponse.model_validate(trek)
+
+
+@router.post("/{trek_id}/restore", response_model=TrekResponse)
+def restore_trek(
+    trek_id: int,
+    db: Session = Depends(get_db),
+):
+    """Restore an archived trek to draft."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    
+    trek = trek_crud.restore(db, db_obj=trek)
+    return TrekResponse.model_validate(trek)
+
+
+@router.post("/{trek_id}/duplicate", response_model=TrekResponse, status_code=201)
+def duplicate_trek(
+    trek_id: int,
+    db: Session = Depends(get_db),
+):
+    """Duplicate a trek."""
+    trek = trek_crud.get_with_details(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    
+    new_trek = trek_crud.duplicate(db, db_obj=trek)
+    return TrekResponse.model_validate(new_trek)

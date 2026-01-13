@@ -16,8 +16,8 @@ import { FormField } from "@/components/ui/FormField";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { trekCategoryService } from "@/services/trek-category.service";
-import type { Trek, TrekCategory, TrekDifficulty, TrekStatus } from "@/types/api";
+import { GalleryUpload } from "@/components/ui/GalleryUpload";
+import type { Trek, TrekDifficulty, TrekStatus } from "@/types/api";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -33,6 +33,8 @@ import {
   ChevronUp,
   ChevronDown,
   GripVertical,
+  HelpCircle,
+  Map,
 } from "lucide-react";
 
 interface TrekFormProps {
@@ -67,9 +69,6 @@ const statusOptions: { value: TrekStatus; label: string; description: string }[]
 export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
   const [activeTab, setActiveTab] = useState("basic");
   const [contentType, setContentType] = useState<"html" | "markdown">("html");
-  const [categories, setCategories] = useState<
-    Array<TrekCategory & { level: number; fullPath: string }>
-  >([]);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["basic", "itinerary"])
   );
@@ -97,19 +96,19 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
       gallery: trek?.gallery || [],
       status: trek?.status || "draft",
       featured: trek?.featured || false,
-      category_id: trek?.category_id || undefined,
       location: trek?.location || "",
       best_season: trek?.best_season || [],
       group_size_min: trek?.group_size_min || 1,
       group_size_max: trek?.group_size_max || 10,
-      includes: trek?.includes || [],
-      excludes: trek?.excludes || [],
-      equipment_list: trek?.equipment_list || [],
+      includes: (trek?.includes ?? []) as string[],
+      excludes: (trek?.excludes ?? []) as string[],
+      equipment_list: (trek?.equipment_list ?? []) as string[],
       fitness_level: trek?.fitness_level || "",
       experience_required: trek?.experience_required || "",
       meta_title: trek?.meta_title || "",
       meta_description: trek?.meta_description || "",
       meta_keywords: trek?.meta_keywords || [],
+      map_embed: trek?.map_embed || "",
       itinerary: trek?.itinerary?.map(day => ({
         day: day.day,
         title: day.title,
@@ -120,27 +119,37 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
         meals: day.meals || "",
         highlights: day.highlights || [],
       })) || [],
+      faqs: trek?.faqs?.map(faq => ({
+        question: faq.question,
+        answer: faq.answer,
+        display_order: faq.display_order || 0,
+      })) || [],
     },
   });
 
   const { fields: itineraryFields, append: appendItinerary, remove: removeItinerary, move: moveItinerary } = useFieldArray({
     control,
-    name: "itinerary",
+    name: "itinerary" as const,
   });
 
   const { fields: includesFields, append: appendInclude, remove: removeInclude } = useFieldArray({
-    control,
-    name: "includes",
+    control: control as any,
+    name: "includes" as any,
   });
 
   const { fields: excludesFields, append: appendExclude, remove: removeExclude } = useFieldArray({
-    control,
-    name: "excludes",
+    control: control as any,
+    name: "excludes" as any,
   });
 
   const { fields: equipmentFields, append: appendEquipment, remove: removeEquipment } = useFieldArray({
+    control: control as any,
+    name: "equipment_list" as any,
+  });
+
+  const { fields: faqFields, append: appendFaq, remove: removeFaq, move: moveFaq } = useFieldArray({
     control,
-    name: "equipment_list",
+    name: "faqs" as const,
   });
 
   const name = watch("name");
@@ -154,18 +163,12 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
     }
   }, [name, trek, setValue]);
 
-  // Fetch categories
+  // Update FAQ display_order values when they are reordered
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const tree = await trekCategoryService.getTree();
-        setCategories(trekCategoryService.flattenTree(tree));
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    };
-    fetchCategories();
-  }, []);
+    faqFields.forEach((_, index) => {
+      setValue(`faqs.${index}.display_order`, index);
+    });
+  }, [faqFields, setValue]);
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -191,10 +194,20 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
     });
   };
 
+  const addFaq = () => {
+    appendFaq({
+      question: "",
+      answer: "",
+      display_order: faqFields.length,
+    });
+  };
+
   const tabs = [
     { id: "basic", label: "Basic Info", icon: Mountain },
     { id: "itinerary", label: "Itinerary", icon: Clock },
     { id: "details", label: "Details", icon: Users },
+    { id: "faq", label: "FAQ", icon: HelpCircle },
+    { id: "map", label: "Map", icon: Map },
     { id: "media", label: "Media", icon: Camera },
     { id: "seo", label: "SEO", icon: Eye },
   ];
@@ -261,7 +274,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                   label="Slug"
                   required
                   error={errors.slug?.message}
-                  description="URL-friendly version of the name"
+                  hint="URL-friendly version of the name"
                 >
                   <Input
                     {...register("slug")}
@@ -273,7 +286,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Short Description"
                 error={errors.short_description?.message}
-                description="Brief summary for listings (max 300 characters)"
+                hint="Brief summary for listings (max 300 characters)"
               >
                 <Textarea
                   {...register("short_description")}
@@ -397,32 +410,6 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                  label="Category"
-                  error={errors.category_id?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="category_id"
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      >
-                        <option value="">Select category</option>
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {"  ".repeat(category.level)}
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  />
-                </FormField>
-
-                <FormField
                   label="Status"
                   required
                   error={errors.status?.message}
@@ -452,7 +439,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <div className="flex items-center space-x-4">
                 <FormField
                   label="Featured Trek"
-                  description="Highlight this trek in featured sections"
+                  hint="Highlight this trek in featured sections"
                 >
                   <Controller
                     control={control}
@@ -460,7 +447,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                     render={({ field }) => (
                       <Switch
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onChange={field.onChange}
                       />
                     )}
                   />
@@ -507,7 +494,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-2">
                             <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                            <Badge variant="outline">Day {index + 1}</Badge>
+                            <Badge variant="default">Day {index + 1}</Badge>
                             <Input
                               {...register(`itinerary.${index}.title`)}
                               placeholder="Day title"
@@ -568,10 +555,9 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                                   </div>
                                   <div className="p-3">
                                     <RichTextEditor
-                                      content={field.value}
+                                      content={field.value || ""}
                                       onChange={field.onChange}
                                       error={!!errors.itinerary?.[index]?.description}
-                                      compact={true}
                                     />
                                   </div>
                                 </div>
@@ -647,16 +633,16 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
-                  label="Price (USD)"
+                  label="Price (INR)"
                   required
                   error={errors.price?.message}
                 >
                   <Input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="1"
                     {...register("price", { valueAsNumber: true })}
-                    placeholder="1500"
+                    placeholder="25000"
                   />
                 </FormField>
 
@@ -724,7 +710,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Best Seasons"
                 error={errors.best_season?.message}
-                description="Select the best times of year for this trek"
+                hint="Select the best times of year for this trek"
               >
                 <Controller
                   control={control}
@@ -774,7 +760,6 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                       content={field.value || ""}
                       onChange={field.onChange}
                       error={!!errors.fitness_level}
-                      compact={true}
                       placeholder="Describe the fitness level required for this trek..."
                     />
                   )}
@@ -793,7 +778,6 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                       content={field.value || ""}
                       onChange={field.onChange}
                       error={!!errors.experience_required}
-                      compact={true}
                       placeholder="Describe any previous trekking or mountaineering experience required..."
                     />
                   )}
@@ -918,6 +902,147 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
         </div>
       )}
 
+      {/* FAQ Tab */}
+      {activeTab === "faq" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Frequently Asked Questions</h3>
+                <p className="text-sm text-gray-600">Add common questions and answers about this trek</p>
+              </div>
+              <Button
+                type="button"
+                onClick={addFaq}
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add FAQ
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {faqFields.length === 0 ? (
+                <div className="text-center py-8">
+                  <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">No FAQs yet</h4>
+                  <p className="text-gray-600 mb-4">Add frequently asked questions to help trekkers</p>
+                  <Button type="button" onClick={addFaq}>
+                    Add First FAQ
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {faqFields.map((field, index) => (
+                    <Card key={field.id} className="border-l-4 border-l-blue-500">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
+                            <Badge variant="secondary">FAQ #{index + 1}</Badge>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => moveFaq(index, Math.max(0, index - 1))}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => moveFaq(index, Math.min(faqFields.length - 1, index + 1))}
+                              disabled={index === faqFields.length - 1}
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFaq(index)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <FormField
+                            label="Question"
+                            required
+                            error={errors.faqs?.[index]?.question?.message}
+                          >
+                            <Input
+                              {...register(`faqs.${index}.question`)}
+                              placeholder="e.g., What is the best time to do this trek?"
+                            />
+                          </FormField>
+
+                          <FormField
+                            label="Answer"
+                            required
+                            error={errors.faqs?.[index]?.answer?.message}
+                          >
+                            <Textarea
+                              {...register(`faqs.${index}.answer`)}
+                              rows={3}
+                              placeholder="Provide a detailed answer to the question..."
+                            />
+                          </FormField>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Map Tab */}
+      {activeTab === "map" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Trek Map</h3>
+              <p className="text-sm text-gray-600">
+                Paste the Google Maps embed code to show the trek route on the frontend
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                label="Google Maps Embed Code"
+                error={errors.map_embed?.message}
+                hint="Go to Google Maps → Share → Embed a map → Copy the iframe code"
+              >
+                <Textarea
+                  {...register("map_embed")}
+                  rows={6}
+                  placeholder='<iframe src="https://www.google.com/maps/embed?..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'
+                  className="font-mono text-sm"
+                />
+              </FormField>
+
+              {watch("map_embed") && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
+                  <div 
+                    className="w-full aspect-video rounded-lg overflow-hidden border border-gray-200"
+                    dangerouslySetInnerHTML={{ __html: watch("map_embed") || "" }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Media Tab */}
       {activeTab === "media" && (
         <div className="space-y-6">
@@ -929,7 +1054,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Featured Image"
                 error={errors.featured_image?.message}
-                description="Main image that represents this trek"
+                hint="Main image that represents this trek"
               >
                 <Controller
                   control={control}
@@ -947,20 +1072,14 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Gallery Images"
                 error={errors.gallery?.message}
-                description="Additional images showcasing the trek"
+                hint="Additional images showcasing the trek"
               >
-                <Controller
-                  control={control}
-                  name="gallery"
-                  render={({ field }) => (
-                    <ImageUpload
-                      value={field.value}
-                      onChange={field.onChange}
-                      folder="treks"
-                      multiple
-                      maxFiles={10}
-                    />
-                  )}
+                <GalleryUpload
+                  value={watch("gallery") || []}
+                  onChange={(urls) => setValue("gallery", urls)}
+                  folder="treks"
+                  maxImages={20}
+                  error={errors.gallery?.message}
                 />
               </FormField>
             </CardContent>
@@ -979,7 +1098,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Meta Title"
                 error={errors.meta_title?.message}
-                description="Title tag for search engines (recommended: under 70 characters)"
+                hint="Title tag for search engines (recommended: under 70 characters)"
               >
                 <Input
                   {...register("meta_title")}
@@ -994,7 +1113,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Meta Description"
                 error={errors.meta_description?.message}
-                description="Description for search results (recommended: under 160 characters)"
+                hint="Description for search results (recommended: under 160 characters)"
               >
                 <Textarea
                   {...register("meta_description")}
@@ -1010,7 +1129,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Meta Keywords"
                 error={errors.meta_keywords?.message}
-                description="Keywords related to this trek (one per line)"
+                hint="Keywords related to this trek (one per line)"
               >
                 <Controller
                   control={control}

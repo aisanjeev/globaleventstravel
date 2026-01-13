@@ -39,6 +39,20 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 10
     MAX_PAGE_SIZE: int = 100
     
+    # Storage Configuration
+    STORAGE_TYPE: str = "local"  # "local" or "azure"
+    AZURE_STORAGE_CONNECTION_STRING: str = ""
+    AZURE_CONTAINER_NAME: str = "global-events-travels"
+    LOCAL_UPLOAD_DIR: str = "uploads"
+    
+    # Database Migrations
+    USE_ALEMBIC_MIGRATIONS: bool = False  # Set to True to use Alembic migrations on startup
+    
+    @property
+    def is_azure_storage(self) -> bool:
+        """Check if using Azure Blob Storage."""
+        return self.STORAGE_TYPE.lower() == "azure"
+    
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""

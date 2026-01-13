@@ -118,30 +118,55 @@ export interface PaginatedResponse<T> {
 }
 
 export interface MediaFile {
-  id: string;
+  id: number;
+  hash: string;
   filename: string;
   original_filename: string;
   url: string;
   size: number;
   mime_type: string;
   folder: string;
+  tags: string[] | null;
+  storage_type: string;
+  alt_text: string | null;
+  caption: string | null;
   created_at: string;
+  updated_at: string;
 }
 
-export interface UploadResponse {
-  id: string;
-  filename: string;
-  original_filename: string;
-  url: string;
-  size: number;
-  mime_type: string;
+export interface UploadResponse extends MediaFile {
+  is_duplicate: boolean;
+}
+
+export interface MediaListResponse {
+  items: MediaFile[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
+export interface MediaUpdate {
+  tags?: string[];
+  alt_text?: string;
+  caption?: string;
+  folder?: string;
+}
+
+export interface TagInfo {
+  tag: string;
+  count: number;
+}
+
+export interface FolderInfo {
   folder: string;
-  created_at: string;
+  count: number;
 }
 
 export interface AuthResponse {
   access_token: string;
   token_type: string;
+  expires_in?: number;
+  user: User;
 }
 
 // ============================================
@@ -178,21 +203,20 @@ export interface ItineraryDayCreate {
 
 export interface ItineraryDayUpdate extends Partial<ItineraryDayCreate> {}
 
-export interface TrekCategory {
+export interface TrekFAQ {
   id: number;
-  name: string;
-  slug: string;
-  description?: string;
-  parent_id?: number;
+  trek_id: number;
+  question: string;
+  answer: string;
   display_order: number;
-  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface TrekCategoryTree extends TrekCategory {
-  children: TrekCategoryTree[];
-  trek_count: number;
+export interface TrekFAQCreate {
+  question: string;
+  answer: string;
+  display_order?: number;
 }
 
 export interface Trek {
@@ -210,9 +234,6 @@ export interface Trek {
   gallery?: string[];
   status: TrekStatus;
   featured: boolean;
-  category?: string;
-  category_id?: number;
-  category_name?: string;
   location: string;
   best_season: string[];
   group_size_min: number;
@@ -225,7 +246,9 @@ export interface Trek {
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string[];
+  map_embed?: string;
   itinerary: ItineraryDay[];
+  faqs?: TrekFAQ[];
   rating?: number;
   review_count: number;
   created_at: string;
@@ -244,8 +267,6 @@ export interface TrekListItem {
   featured_image?: string;
   status: TrekStatus;
   featured: boolean;
-  category?: string;
-  category_name?: string;
   location: string;
   rating?: number;
   review_count: number;
@@ -267,7 +288,6 @@ export interface TrekCreate {
   gallery?: string[];
   status?: TrekStatus;
   featured?: boolean;
-  category_id?: number;
   location: string;
   best_season: string[];
   group_size_min: number;
@@ -280,9 +300,129 @@ export interface TrekCreate {
   meta_title?: string;
   meta_description?: string;
   meta_keywords?: string[];
+  map_embed?: string;
   itinerary?: ItineraryDayCreate[];
+  faqs?: TrekFAQCreate[];
 }
 
 export interface TrekUpdate extends Partial<TrekCreate> {}
 
+// ============================================
+// Expedition Types
+// ============================================
+
+export type ExpeditionStatus = "draft" | "published" | "archived";
+export type ExpeditionDifficulty = "advanced" | "expert" | "extreme";
+
+export interface ExpeditionRequirements {
+  experience: string;
+  fitnessLevel: string;
+  technicalSkills: string[];
+}
+
+export interface ExpeditionEquipment {
+  provided: string[];
+  personal: string[];
+}
+
+export interface ExpeditionDay {
+  id?: number;
+  day: number;
+  title: string;
+  description: string;
+  altitude: number;
+  activities: string[];
+}
+
+export interface ExpeditionDayCreate {
+  day: number;
+  title: string;
+  description: string;
+  altitude: number;
+  activities: string[];
+}
+
+export interface Expedition {
+  id: number;
+  name: string;
+  slug: string;
+  difficulty: ExpeditionDifficulty;
+  duration: number;
+  summitAltitude: number;
+  baseAltitude: number;
+  location: string;
+  region: string;
+  description: string;
+  shortDescription: string;
+  highlights: string[];
+  requirements: ExpeditionRequirements;
+  equipment: ExpeditionEquipment;
+  price: number;
+  groupSize: { min: number; max: number };
+  season: string[];
+  successRate: number;
+  image: string;
+  gallery?: string[];
+  safetyInfo?: string;
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  status: ExpeditionStatus;
+  itinerary?: ExpeditionDay[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExpeditionListItem {
+  id: number;
+  name: string;
+  slug: string;
+  difficulty: ExpeditionDifficulty;
+  duration: number;
+  summitAltitude: number;
+  location: string;
+  region: string;
+  shortDescription: string;
+  price: number;
+  season: string[];
+  successRate: number;
+  image: string;
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+  status: ExpeditionStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExpeditionCreate {
+  name: string;
+  slug: string;
+  difficulty: ExpeditionDifficulty;
+  duration: number;
+  summitAltitude: number;
+  baseAltitude: number;
+  location: string;
+  region: string;
+  description: string;
+  shortDescription: string;
+  highlights: string[];
+  requirements: ExpeditionRequirements;
+  equipment: ExpeditionEquipment;
+  price: number;
+  group_size_min: number;
+  group_size_max: number;
+  season: string[];
+  successRate?: number;
+  image: string;
+  gallery?: string[];
+  safetyInfo?: string;
+  rating?: number;
+  reviewCount?: number;
+  featured?: boolean;
+  status?: ExpeditionStatus;
+  itinerary?: ExpeditionDayCreate[];
+}
+
+export interface ExpeditionUpdate extends Partial<ExpeditionCreate> {}
 

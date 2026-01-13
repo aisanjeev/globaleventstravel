@@ -24,7 +24,7 @@ import {
   RefreshCw,
   Mountain,
   Clock,
-  DollarSign,
+  IndianRupee,
   MapPin,
   Star,
 } from "lucide-react";
@@ -335,9 +335,9 @@ export default function TrekListPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 text-green-600" />
+                        <IndianRupee className="h-4 w-4 text-green-600" />
                         <span className="font-semibold text-green-600">
-                          ${trek.price.toLocaleString()}
+                          ₹{trek.price.toLocaleString('en-IN')}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -352,15 +352,6 @@ export default function TrekListPage() {
                         )}
                       </div>
                     </div>
-
-                    {/* Category */}
-                    {trek.category_name && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <span className="text-xs text-primary-600 bg-primary-50 px-2 py-1 rounded">
-                          {trek.category_name}
-                        </span>
-                      </div>
-                    )}
 
                     {/* Actions */}
                     <div className="mt-4 flex items-center justify-between">

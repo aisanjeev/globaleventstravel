@@ -12,9 +12,9 @@ export interface TrekListParams {
   limit?: number;
   status?: string;
   featured?: boolean;
-  category?: string;
-  category_id?: number;
   difficulty?: string;
+  min_price?: number;
+  max_price?: number;
   location?: string;
   search?: string;
 }

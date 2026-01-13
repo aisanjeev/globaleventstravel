@@ -45,6 +45,7 @@ class Expedition(Base):
     rating: Mapped[float] = mapped_column(Float, default=0.0)
     review_count: Mapped[int] = mapped_column(Integer, default=0)
     featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(50), default="draft", nullable=False)  # draft, published, archived
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

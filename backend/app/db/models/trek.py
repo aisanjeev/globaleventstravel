@@ -16,18 +16,52 @@ class Trek(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-    difficulty: Mapped[str] = mapped_column(String(50), nullable=False)  # easy, moderate, hard, expert
-    duration: Mapped[int] = mapped_column(Integer, nullable=False)  # days
-    price: Mapped[float] = mapped_column(Float, nullable=False)
-    season: Mapped[str] = mapped_column(JSON, nullable=False)  # List of months as JSON
-    elevation: Mapped[int] = mapped_column(Integer, nullable=False)  # meters
-    distance: Mapped[float] = mapped_column(Float, nullable=False)  # kilometers
-    description: Mapped[str] = mapped_column(Text, nullable=False)
     short_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    image: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    
+    # Difficulty: easy, moderate, difficult, challenging, extreme
+    difficulty: Mapped[str] = mapped_column(String(50), nullable=False, default="moderate")
+    duration: Mapped[int] = mapped_column(Integer, nullable=False)  # days
+    max_altitude: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # meters
+    distance: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # kilometers
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    
+    # Images
+    featured_image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    gallery: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # List of image URLs
+    
+    # Status: draft, published, archived, seasonal
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft")
+    featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Location & Season
+    location: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    best_season: Mapped[str] = mapped_column(JSON, nullable=False, default=list)  # List of seasons
+    
+    # Group size
+    group_size_min: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    group_size_max: Mapped[int] = mapped_column(Integer, nullable=False, default=15)
+    
+    # Package details (stored as JSON arrays)
+    includes: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # What's included
+    excludes: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # What's not included
+    equipment_list: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # Required equipment
+    
+    # Requirements
+    fitness_level: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    experience_required: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
+    # SEO
+    meta_title: Mapped[Optional[str]] = mapped_column(String(70), nullable=True)
+    meta_description: Mapped[Optional[str]] = mapped_column(String(160), nullable=True)
+    meta_keywords: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # List of keywords
+    
+    # Map embed code for Google Maps
+    map_embed: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
+    # Ratings
     rating: Mapped[float] = mapped_column(Float, default=0.0)
     review_count: Mapped[int] = mapped_column(Integer, default=0)
-    featured: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Foreign key to guide (optional)
     guide_id: Mapped[Optional[int]] = mapped_column(
@@ -41,6 +75,7 @@ class Trek(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
+    published_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
     # Relationships
     guide: Mapped[Optional["Guide"]] = relationship("Guide", back_populates="treks")
@@ -50,6 +85,10 @@ class Trek(Base):
     itinerary: Mapped[List["ItineraryDay"]] = relationship(
         "ItineraryDay", back_populates="trek", cascade="all, delete-orphan",
         order_by="ItineraryDay.day"
+    )
+    faqs: Mapped[List["TrekFAQ"]] = relationship(
+        "TrekFAQ", back_populates="trek", cascade="all, delete-orphan",
+        order_by="TrekFAQ.display_order"
     )
     bookings: Mapped[List["Booking"]] = relationship("Booking", back_populates="trek")
 
@@ -86,11 +125,48 @@ class ItineraryDay(Base):
     elevation_gain: Mapped[int] = mapped_column(Integer, default=0)
     distance: Mapped[float] = mapped_column(Float, default=0.0)
     
+    # Additional details
+    accommodation: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    meals: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    highlights: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # List of highlights
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    
     # Relationship
     trek: Mapped["Trek"] = relationship("Trek", back_populates="itinerary")
+
+
+class TrekFAQ(Base):
+    """FAQ items for a trek."""
+    
+    __tablename__ = "trek_faqs"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    trek_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("treks.id", ondelete="CASCADE"), nullable=False
+    )
+    question: Mapped[str] = mapped_column(String(500), nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    display_order: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    
+    # Relationship
+    trek: Mapped["Trek"] = relationship("Trek", back_populates="faqs")
 
 
 # Import for type hints (avoid circular imports)
 from app.db.models.guide import Guide
 from app.db.models.booking import Booking
-

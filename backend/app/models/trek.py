@@ -12,11 +12,14 @@ from pydantic import BaseModel, Field
 
 class ItineraryDayBase(BaseModel):
     """Base schema for itinerary day."""
-    day: int
-    title: str
-    description: str
-    elevation_gain: int = 0
-    distance: float = 0.0
+    day: int = Field(..., ge=1)
+    title: str = Field(..., min_length=1, max_length=255)
+    description: str = Field(..., min_length=1)
+    elevation_gain: int = Field(default=0, ge=0)
+    distance: float = Field(default=0.0, ge=0)
+    accommodation: Optional[str] = None
+    meals: Optional[str] = None
+    highlights: Optional[List[str]] = None
 
 
 class ItineraryDayCreate(ItineraryDayBase):
@@ -24,10 +27,24 @@ class ItineraryDayCreate(ItineraryDayBase):
     pass
 
 
+class ItineraryDayUpdate(BaseModel):
+    """Schema for updating an itinerary day."""
+    day: Optional[int] = Field(None, ge=1)
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = None
+    elevation_gain: Optional[int] = Field(None, ge=0)
+    distance: Optional[float] = Field(None, ge=0)
+    accommodation: Optional[str] = None
+    meals: Optional[str] = None
+    highlights: Optional[List[str]] = None
+
+
 class ItineraryDayResponse(ItineraryDayBase):
     """Schema for itinerary day response."""
     id: int
     trek_id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
@@ -59,25 +76,64 @@ class TrekImageResponse(TrekImageBase):
 
 
 # ============================================
+# Trek FAQ Schemas
+# ============================================
+
+class TrekFAQBase(BaseModel):
+    """Base schema for trek FAQ."""
+    question: str = Field(..., min_length=1, max_length=500)
+    answer: str = Field(..., min_length=1)
+    display_order: int = Field(default=0, ge=0)
+
+
+class TrekFAQCreate(TrekFAQBase):
+    """Schema for creating a trek FAQ."""
+    pass
+
+
+class TrekFAQResponse(TrekFAQBase):
+    """Schema for trek FAQ response."""
+    id: int
+    trek_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
 # Trek Schemas
 # ============================================
 
 class TrekBase(BaseModel):
     """Base schema for trek."""
-    name: str = Field(..., min_length=2, max_length=255)
-    slug: str = Field(..., min_length=2, max_length=255)
-    difficulty: str = Field(..., pattern="^(easy|moderate|hard|expert)$")
-    duration: int = Field(..., gt=0)
-    price: float = Field(..., gt=0)
-    season: List[str]
-    elevation: int = Field(..., gt=0)
-    distance: float = Field(..., gt=0)
-    description: str
+    name: str = Field(..., min_length=1, max_length=255)
+    slug: str = Field(..., min_length=1, max_length=255)
     short_description: Optional[str] = None
-    image: str
-    rating: float = Field(default=0.0, ge=0, le=5)
-    review_count: int = Field(default=0, ge=0)
+    description: str = Field(..., min_length=1)
+    difficulty: str = Field(..., pattern="^(easy|moderate|difficult|challenging|extreme)$")
+    duration: int = Field(..., ge=1)
+    max_altitude: int = Field(default=0, ge=0)
+    distance: Optional[float] = Field(None, ge=0)
+    price: float = Field(..., gt=0)
+    featured_image: Optional[str] = None
+    gallery: Optional[List[str]] = None
+    status: str = Field(default="draft", pattern="^(draft|published|archived|seasonal)$")
     featured: bool = False
+    location: str = Field(..., min_length=1)
+    best_season: List[str] = Field(default_factory=list)
+    group_size_min: int = Field(default=1, ge=1)
+    group_size_max: int = Field(default=15, ge=1)
+    includes: Optional[List[str]] = None
+    excludes: Optional[List[str]] = None
+    equipment_list: Optional[List[str]] = None
+    fitness_level: Optional[str] = None
+    experience_required: Optional[str] = None
+    meta_title: Optional[str] = Field(None, max_length=70)
+    meta_description: Optional[str] = Field(None, max_length=160)
+    meta_keywords: Optional[List[str]] = None
+    map_embed: Optional[str] = None
 
 
 class TrekCreate(TrekBase):
@@ -85,33 +141,77 @@ class TrekCreate(TrekBase):
     guide_id: Optional[int] = None
     itinerary: Optional[List[ItineraryDayCreate]] = None
     images: Optional[List[TrekImageCreate]] = None
+    faqs: Optional[List[TrekFAQCreate]] = None
 
 
 class TrekUpdate(BaseModel):
     """Schema for updating a trek."""
-    name: Optional[str] = Field(None, min_length=2, max_length=255)
-    slug: Optional[str] = Field(None, min_length=2, max_length=255)
-    difficulty: Optional[str] = Field(None, pattern="^(easy|moderate|hard|expert)$")
-    duration: Optional[int] = Field(None, gt=0)
-    price: Optional[float] = Field(None, gt=0)
-    season: Optional[List[str]] = None
-    elevation: Optional[int] = Field(None, gt=0)
-    distance: Optional[float] = Field(None, gt=0)
-    description: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    slug: Optional[str] = Field(None, min_length=1, max_length=255)
     short_description: Optional[str] = None
-    image: Optional[str] = None
-    rating: Optional[float] = Field(None, ge=0, le=5)
-    review_count: Optional[int] = Field(None, ge=0)
+    description: Optional[str] = None
+    difficulty: Optional[str] = Field(None, pattern="^(easy|moderate|difficult|challenging|extreme)$")
+    duration: Optional[int] = Field(None, ge=1)
+    max_altitude: Optional[int] = Field(None, ge=0)
+    distance: Optional[float] = Field(None, ge=0)
+    price: Optional[float] = Field(None, gt=0)
+    featured_image: Optional[str] = None
+    gallery: Optional[List[str]] = None
+    status: Optional[str] = Field(None, pattern="^(draft|published|archived|seasonal)$")
     featured: Optional[bool] = None
+    location: Optional[str] = None
+    best_season: Optional[List[str]] = None
+    group_size_min: Optional[int] = Field(None, ge=1)
+    group_size_max: Optional[int] = Field(None, ge=1)
+    includes: Optional[List[str]] = None
+    excludes: Optional[List[str]] = None
+    equipment_list: Optional[List[str]] = None
+    fitness_level: Optional[str] = None
+    experience_required: Optional[str] = None
+    meta_title: Optional[str] = Field(None, max_length=70)
+    meta_description: Optional[str] = Field(None, max_length=160)
+    meta_keywords: Optional[List[str]] = None
+    map_embed: Optional[str] = None
     guide_id: Optional[int] = None
+    itinerary: Optional[List[ItineraryDayCreate]] = None
+    faqs: Optional[List[TrekFAQCreate]] = None
 
 
-class TrekResponse(TrekBase):
+class TrekResponse(BaseModel):
     """Schema for trek response."""
     id: int
+    name: str
+    slug: str
+    short_description: Optional[str] = None
+    description: str
+    difficulty: str
+    duration: int
+    max_altitude: int
+    distance: Optional[float] = None
+    price: float
+    featured_image: Optional[str] = None
+    gallery: Optional[List[str]] = None
+    status: str
+    featured: bool
+    location: str
+    best_season: List[str]
+    group_size_min: int
+    group_size_max: int
+    includes: Optional[List[str]] = None
+    excludes: Optional[List[str]] = None
+    equipment_list: Optional[List[str]] = None
+    fitness_level: Optional[str] = None
+    experience_required: Optional[str] = None
+    meta_title: Optional[str] = None
+    meta_description: Optional[str] = None
+    meta_keywords: Optional[List[str]] = None
+    map_embed: Optional[str] = None
+    rating: float
+    review_count: int
     guide_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    published_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -121,6 +221,7 @@ class TrekDetailResponse(TrekResponse):
     """Schema for detailed trek response with relationships."""
     itinerary: List[ItineraryDayResponse] = []
     images: List[TrekImageResponse] = []
+    faqs: List[TrekFAQResponse] = []
 
     class Config:
         from_attributes = True
@@ -131,18 +232,18 @@ class TrekListResponse(BaseModel):
     id: int
     name: str
     slug: str
+    short_description: Optional[str] = None
     difficulty: str
     duration: int
     price: float
-    season: List[str]
-    elevation: int
-    distance: float
-    short_description: Optional[str] = None
-    image: str
+    featured_image: Optional[str] = None
+    status: str
+    featured: bool
+    location: str
     rating: float
     review_count: int
-    featured: bool
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
-

@@ -3,6 +3,9 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import TrekGrid from '@/components/trek/TrekGrid.astro';
 import { DIFFICULTY_LABELS } from '@/lib/constants';
 
+// Enable SSR for this page - allows dynamic filtering via URL params
+export const prerender = false;
+
 // Pagination configuration
 const ITEMS_PER_PAGE = 9;
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
@@ -42,7 +45,7 @@ try {
   if (allTreksResponse.ok) {
     const allData = await allTreksResponse.json();
     const allTreks = allData.items || [];
-    allSeasons = [...new Set(allTreks.flatMap((trek: any) => trek.season || []))].sort() as string[];
+    allSeasons = [...new Set(allTreks.flatMap((trek: any) => trek.best_season || []))].sort() as string[];
   }
 } catch (error) {
   console.error('Failed to fetch treks:', error);

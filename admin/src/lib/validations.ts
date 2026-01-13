@@ -89,6 +89,14 @@ export const itineraryDaySchema = z.object({
 
 export type ItineraryDayFormData = z.infer<typeof itineraryDaySchema>;
 
+export const trekFAQSchema = z.object({
+  question: z.string().min(1, "Question is required").max(500, "Question is too long"),
+  answer: z.string().min(1, "Answer is required"),
+  display_order: z.number().min(0).default(0),
+});
+
+export type TrekFAQFormData = z.infer<typeof trekFAQSchema>;
+
 export const trekSchema = z.object({
   name: z.string().min(1, "Trek name is required").max(255, "Name is too long"),
   slug: z
@@ -114,7 +122,6 @@ export const trekSchema = z.object({
   gallery: z.array(z.string().url("Invalid gallery image URL")).optional(),
   status: z.enum(["draft", "published", "archived", "seasonal"]),
   featured: z.boolean().default(false),
-  category_id: z.number().optional().nullable(),
   location: z.string().min(1, "Location is required"),
   best_season: z.array(z.string()).min(1, "At least one best season is required"),
   group_size_min: z.number().min(1, "Minimum group size must be at least 1"),
@@ -135,7 +142,9 @@ export const trekSchema = z.object({
     .optional()
     .or(z.literal("")),
   meta_keywords: z.array(z.string()).optional(),
+  map_embed: z.string().optional().or(z.literal("")),
   itinerary: z.array(itineraryDaySchema).optional(),
+  faqs: z.array(trekFAQSchema).optional(),
 }).refine(
   (data) => data.group_size_max >= data.group_size_min,
   {
@@ -145,22 +154,6 @@ export const trekSchema = z.object({
 );
 
 export type TrekFormData = z.infer<typeof trekSchema>;
-
-export const trekCategorySchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
-  slug: z
-    .string()
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Slug must be lowercase letters, numbers, and hyphens only"
-    ),
-  description: z.string().optional().or(z.literal("")),
-  parent_id: z.number().optional().nullable(),
-  display_order: z.number().default(0),
-  is_active: z.boolean().default(true),
-});
-
-export type TrekCategoryFormData = z.infer<typeof trekCategorySchema>;
 
 // Status transition validation
 export const validateStatusTransition = (
@@ -185,4 +178,83 @@ export const validateStatusTransition = (
   return { valid: true };
 };
 
+// ============================================
+// Expedition Validation Schemas
+// ============================================
+
+export const expeditionDaySchema = z.object({
+  day: z.number().min(1, "Day must be at least 1"),
+  title: z.string().min(1, "Day title is required").max(255, "Title is too long"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  altitude: z.number().min(0, "Altitude cannot be negative"),
+  activities: z.array(z.string()).min(1, "At least one activity is required"),
+});
+
+export type ExpeditionDayFormData = z.infer<typeof expeditionDaySchema>;
+
+export const expeditionRequirementsSchema = z.object({
+  experience: z.string().min(1, "Experience requirement is required"),
+  fitnessLevel: z.string().min(1, "Fitness level is required"),
+  technicalSkills: z.array(z.string()).optional().default([]),
+});
+
+export type ExpeditionRequirementsFormData = z.infer<typeof expeditionRequirementsSchema>;
+
+export const expeditionEquipmentSchema = z.object({
+  provided: z.array(z.string()).min(1, "At least one provided equipment item is required"),
+  personal: z.array(z.string()).min(1, "At least one personal equipment item is required"),
+});
+
+export type ExpeditionEquipmentFormData = z.infer<typeof expeditionEquipmentSchema>;
+
+export const expeditionSchema = z.object({
+  name: z.string().min(1, "Expedition name is required").max(255, "Name is too long"),
+  slug: z
+    .string()
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must be lowercase letters, numbers, and hyphens only"
+    ),
+  difficulty: z.enum(["advanced", "expert", "extreme"], {
+    message: "Please select a valid difficulty level",
+  }),
+  duration: z.number().min(1, "Duration must be at least 1 day"),
+  summitAltitude: z.number().min(1, "Summit altitude is required"),
+  baseAltitude: z.number().min(0, "Base altitude cannot be negative"),
+  location: z.string().min(1, "Location is required"),
+  region: z.string().min(1, "Region is required"),
+  description: z.string().min(50, "Description must be at least 50 characters"),
+  shortDescription: z
+    .string()
+    .min(1, "Short description is required")
+    .max(500, "Short description is too long"),
+  highlights: z.array(z.string()).min(1, "At least one highlight is required"),
+  requirements: expeditionRequirementsSchema,
+  equipment: expeditionEquipmentSchema,
+  price: z.number().min(1, "Price must be greater than 0"),
+  group_size_min: z.number().min(1, "Minimum group size must be at least 1"),
+  group_size_max: z.number().min(1, "Maximum group size must be at least 1"),
+  season: z.array(z.string()).min(1, "At least one season is required"),
+  successRate: z.number().min(0).max(100).optional().default(0),
+  image: z.string().url("Invalid image URL").or(z.literal("")),
+  gallery: z.array(z.string().url("Invalid gallery image URL")).optional(),
+  safetyInfo: z.string().optional().or(z.literal("")),
+  featured: z.boolean().default(false),
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
+  itinerary: z.array(expeditionDaySchema).optional(),
+}).refine(
+  (data) => data.group_size_max >= data.group_size_min,
+  {
+    message: "Maximum group size must be greater than or equal to minimum group size",
+    path: ["group_size_max"],
+  }
+).refine(
+  (data) => data.summitAltitude > data.baseAltitude,
+  {
+    message: "Summit altitude must be greater than base altitude",
+    path: ["summitAltitude"],
+  }
+);
+
+export type ExpeditionFormData = z.infer<typeof expeditionSchema>;
 
