@@ -235,6 +235,8 @@ class TrekListResponse(BaseModel):
     short_description: Optional[str] = None
     difficulty: str
     duration: int
+    max_altitude: int
+    distance: Optional[float] = None
     price: float
     featured_image: Optional[str] = None
     status: str

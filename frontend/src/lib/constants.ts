@@ -69,7 +69,7 @@ export const LEAD_FORM_CONFIG = {
 
 // Hero section content
 export const HERO_CONTENT = {
-  badge: 'Now booking for 2025 season',
+  badge: 'Now booking for 2026 season',
   headline: 'Get Your Custom Himalayan Trek Itinerary',
   subheadline: 'Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp',
   stats: [

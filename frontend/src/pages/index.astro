@@ -16,10 +16,12 @@ export const prerender = false;
 
 // Fetch featured treks from database API, fallback to mock data if API fails
 let featuredTreks;
+let featuredTreksSource = 'api';
 try {
   featuredTreks = await treksApi.getFeatured(6);
 } catch (error) {
   console.error('Failed to fetch featured treks from API, using mock data:', error);
+  featuredTreksSource = 'mock';
   featuredTreks = getMockFeaturedTreks();
 }
 ---
