@@ -1,6 +1,8 @@
 ---
 import TestimonialCard from './TestimonialCard.astro';
 import { MOCK_TESTIMONIALS } from '@/lib/data';
+import { testimonialsApi } from '@/lib/api';
+import type { Testimonial } from '@/lib/types';
 
 interface Props {
   showTitle?: boolean;
@@ -10,10 +12,35 @@ interface Props {
 
 const { showTitle = true, limit, showFilters = false } = Astro.props;
 
-// Get unique trek names for filter
-const trekNames = [...new Set(MOCK_TESTIMONIALS.filter(t => t.trek_name).map(t => t.trek_name))];
+let testimonials: Testimonial[] = [];
+let trekNames: string[] = [];
 
-const testimonials = limit ? MOCK_TESTIMONIALS.slice(0, limit) : MOCK_TESTIMONIALS;
+try {
+  if (limit) {
+    testimonials = await testimonialsApi.getFeatured(limit);
+  } else {
+    const response = await testimonialsApi.list(0, 50);
+    testimonials = response.items || [];
+  }
+
+  trekNames = [
+    ...new Set(
+      testimonials
+        .filter((t) => t.trek_name)
+        .map((t) => t.trek_name as string),
+    ),
+  ];
+} catch (error) {
+  console.error('Failed to fetch testimonials from API, falling back to mock data:', error);
+  testimonials = limit ? MOCK_TESTIMONIALS.slice(0, limit) : MOCK_TESTIMONIALS;
+  trekNames = [
+    ...new Set(
+      MOCK_TESTIMONIALS
+        .filter((t) => t.trek_name)
+        .map((t) => t.trek_name),
+    ),
+  ];
+}
 ---
 
 <section class="section bg-neutral-50">

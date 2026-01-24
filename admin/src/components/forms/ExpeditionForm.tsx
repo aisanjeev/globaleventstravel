@@ -148,6 +148,13 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
     }
   }, [name, expedition, setValue]);
 
+  // Sync day numbers when itinerary order changes
+  useEffect(() => {
+    itineraryFields.forEach((_, index) => {
+      setValue(`itinerary.${index}.day`, index + 1);
+    });
+  }, [itineraryFields, setValue]);
+
   const addItineraryDay = () => {
     const newDay = itineraryFields.length + 1;
     appendItinerary({
@@ -216,25 +223,29 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
                   name="difficulty"
                   control={control}
                   render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={difficultyOptions.map(d => ({ value: d.value, label: d.label }))}
-                    />
+                    <Select {...field}>
+                      {difficultyOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
                   )}
                 />
               </FormField>
 
-              <FormField label="Status" error={errors.status?.message}>
+              <FormField label="Status" error={errors.status?.message} required>
                 <Controller
                   name="status"
                   control={control}
                   render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={statusOptions.map(s => ({ value: s.value, label: s.label }))}
-                    />
+                    <Select {...field}>
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
                   )}
                 />
               </FormField>
@@ -245,7 +256,7 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
                   control={control}
                   render={({ field }) => (
                     <div className="flex items-center gap-2 pt-2">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={field.value} onChange={field.onChange} />
                       <span className="text-sm text-gray-600">Show on homepage</span>
                     </div>
                   )}
@@ -598,8 +609,6 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
                       </Button>
                     </div>
                   </div>
-
-                  <input type="hidden" {...register(`itinerary.${index}.day`)} value={index + 1} />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField label="Title" error={errors.itinerary?.[index]?.title?.message}>

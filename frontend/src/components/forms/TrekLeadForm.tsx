@@ -5,6 +5,7 @@ interface TrekLeadFormProps {
   trekName: string;
   trekSlug: string;
   trekPrice: string;
+  source?: string;
 }
 
 interface FormData {
@@ -19,7 +20,7 @@ interface FormErrors {
   whatsapp?: string;
 }
 
-export default function TrekLeadForm({ trekName, trekSlug, trekPrice }: TrekLeadFormProps) {
+export default function TrekLeadForm({ trekName, trekSlug, trekPrice, source = 'trek_page' }: TrekLeadFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -75,7 +76,7 @@ export default function TrekLeadForm({ trekName, trekSlug, trekPrice }: TrekLead
         whatsapp: formData.whatsapp,
         trek_slug: trekSlug,
         trek_name: trekName,
-        source: 'trek_page',
+        source: source || 'trek_page',
       };
       
       await leadsApi.create(leadData);

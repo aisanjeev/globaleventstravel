@@ -104,7 +104,11 @@ const formatPrice = (price: number) => {
             </svg>
           </div>
           <p class="text-xs text-neutral-500">Group</p>
-          <p class="font-semibold text-neutral-800">{expedition.groupSize.min}-{expedition.groupSize.max}</p>
+          <p class="font-semibold text-neutral-800">
+            {expedition.groupSize?.min && expedition.groupSize?.max
+              ? `${expedition.groupSize.min}-${expedition.groupSize.max}`
+              : 'N/A'}
+          </p>
         </div>
       </div>
 

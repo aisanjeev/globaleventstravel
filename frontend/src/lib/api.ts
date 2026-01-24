@@ -128,6 +128,7 @@ export interface ExpeditionFilters {
   maxPrice?: number;
   featured?: boolean;
   region?: string;
+  status?: string;
   skip?: number;
   limit?: number;
 }
@@ -140,6 +141,7 @@ export const expeditionsApi = {
     if (filters.maxPrice) params.append('max_price', filters.maxPrice.toString());
     if (filters.featured !== undefined) params.append('featured', filters.featured.toString());
     if (filters.region) params.append('region', filters.region);
+    if (filters.status) params.append('status', filters.status);
     if (filters.skip) params.append('skip', filters.skip.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     

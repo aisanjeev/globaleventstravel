@@ -1,10 +1,34 @@
 ---
-const stats = [
+import { api } from '@/lib/api';
+
+interface StatItem {
+  value: string;
+  label: string;
+  description: string;
+}
+
+const defaultStats: StatItem[] = [
   { value: '50+', label: 'Trek Routes', description: 'Across the Himalayas' },
   { value: '10,000+', label: 'Happy Trekkers', description: 'And counting' },
   { value: '15+', label: 'Expert Guides', description: 'Certified professionals' },
   { value: '8+', label: 'Years Experience', description: 'In adventure tourism' },
 ];
+
+let stats: StatItem[] = defaultStats;
+
+try {
+  const sections = await api.get<any[]>(`/content/home`);
+  const statSection = sections.find((s) => s.key === "stats");
+  if (statSection?.body_html) {
+    // Expect body_html as JSON array of { value, label, description }
+    const parsed = JSON.parse(statSection.body_html) as StatItem[];
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      stats = parsed;
+    }
+  }
+} catch (error) {
+  console.error('Failed to fetch home statistics content, using defaults:', error);
+}
 ---
 
 <section class="py-16 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400">

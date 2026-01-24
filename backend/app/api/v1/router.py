@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     health,
     uploads,
     media,
+    page_content,
 )
 
 api_router = APIRouter()
@@ -34,4 +35,5 @@ api_router.include_router(offices.router, prefix="/offices", tags=["Offices"])
 api_router.include_router(blog.router, prefix="/blog", tags=["Blog"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(media.router, prefix="/media", tags=["Media Library"])
+api_router.include_router(page_content.router, prefix="/content", tags=["Page Content"])
 

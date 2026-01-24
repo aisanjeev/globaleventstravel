@@ -185,9 +185,9 @@ export const validateStatusTransition = (
 export const expeditionDaySchema = z.object({
   day: z.number().min(1, "Day must be at least 1"),
   title: z.string().min(1, "Day title is required").max(255, "Title is too long"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.string().min(1, "Description is required"),
   altitude: z.number().min(0, "Altitude cannot be negative"),
-  activities: z.array(z.string()).min(1, "At least one activity is required"),
+  activities: z.array(z.string()).default([]),
 });
 
 export type ExpeditionDayFormData = z.infer<typeof expeditionDaySchema>;

@@ -2,6 +2,7 @@
 import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
 import MobileStickyForm from '@/components/forms/MobileStickyForm';
 import { Image } from 'astro:assets';
+import { api } from '@/lib/api';
 
 interface Props {
   backgroundImage?: string;
@@ -10,6 +11,34 @@ interface Props {
 const {
   backgroundImage = "/images/home/hero-bg.webp"
 } = Astro.props;
+
+interface PageSection {
+  title?: string | null;
+  subtitle?: string | null;
+  badge_text?: string | null;
+  body_html?: string | null;
+}
+
+let heroContent: PageSection = {};
+let statsContent: PageSection | null = null;
+
+try {
+  const [sections] = await Promise.all([
+    api.get<PageSection[]>(`/content/home`),
+  ]);
+
+  const heroSection = sections.find((s) => s.key === "hero");
+  const statsSection = sections.find((s) => s.key === "hero_stats");
+
+  if (heroSection) {
+    heroContent = heroSection;
+  }
+  if (statsSection) {
+    statsContent = statsSection;
+  }
+} catch (error) {
+  console.error('Failed to fetch home hero content, using defaults:', error);
+}
 ---
 
 <section class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden">
@@ -42,26 +71,38 @@ const {
       <!-- Left Content (60% on desktop) -->
       <div class="lg:col-span-3 text-white">
         <!-- Badge -->
-        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
-          <span class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
-          <span class="text-sm font-medium">Now booking for 2026 season</span>
-        </div>
+        {(heroContent.badge_text || 'Now booking for 2026 season') && (
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
+            <span class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
+            <span class="text-sm font-medium">
+              {heroContent.badge_text || 'Now booking for 2026 season'}
+            </span>
+          </div>
+        )}
 
         <!-- Main Headline - Benefit focused -->
         <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
-          Get Your Custom Himalayan Trek Itinerary
+          {heroContent.title || 'Get Your Custom Himalayan Trek Itinerary'}
         </h1>
 
         <!-- Subheadline -->
         <p class="text-lg md:text-xl text-white/90 mb-8 max-w-xl leading-relaxed drop-shadow">
-          Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp
+          {heroContent.subtitle || 'Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp'}
         </p>
 
         <!-- Social Proof Stats -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div class="text-center sm:text-left">
-            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">50+</div>
-            <div class="text-white/70 text-sm">Trek Routes</div>
+            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">
+              {(statsContent && statsContent.body_html) ? (
+                <span set:html={statsContent.body_html.split('|')[0] || '50+'}></span>
+              ) : '50+'}
+            </div>
+            <div class="text-white/70 text-sm">
+              {(statsContent && statsContent.body_html) ? (
+                <span set:html={statsContent.body_html.split('|')[1] || 'Trek Routes'}></span>
+              ) : 'Trek Routes'}
+            </div>
           </div>
           <div class="text-center sm:text-left">
             <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">10k+</div>

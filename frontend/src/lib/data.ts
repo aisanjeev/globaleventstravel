@@ -1,6 +1,7 @@
 // ============================================
 // Mock Data for Development
-// Replace with API calls in production
+// NOTE: In production, all user-facing pages now use live API data.
+// These mocks are kept only as safe fallbacks or for local demos.
 // ============================================
 
 import type { Trek, Testimonial, Guide, Office, Expedition, BlogPost } from './types';
@@ -282,7 +283,7 @@ export const OFFICES: Office[] = [
     state: 'Himachal Pradesh',
     pincode: '175131',
     landmarks: 'Near Aleo Road Petrol Pump, NSB Hotel',
-    phone: '+91 98765 43210',
+    phone: '+91 63833 13359',
     email: 'himachal@globaleventstravels.com',
     coordinates: { lat: 32.2299, lng: 77.1889 },
     mapUrl: 'https://maps.google.com/?q=32.2299,77.1889',
@@ -295,7 +296,7 @@ export const OFFICES: Office[] = [
     city: 'Chennai',
     state: 'Tamil Nadu',
     pincode: '600039',
-    phone: '+91 98765 43211',
+    phone: '+91 63833 13359',
     email: 'chennai@globaleventstravels.com',
     coordinates: { lat: 13.1175, lng: 80.1434 },
     mapUrl: 'https://maps.google.com/?q=13.1175,80.1434',
@@ -309,7 +310,7 @@ export const OFFICES: Office[] = [
     state: 'Himachal Pradesh',
     pincode: '175101',
     landmarks: 'Choj Bridge, Near Volvo Bus Stand',
-    phone: '+91 98765 43212',
+    phone: '+91 63833 13359',
     email: 'kasol@globaleventstravels.com',
     coordinates: { lat: 32.0167, lng: 77.3167 },
     mapUrl: 'https://maps.google.com/?q=32.0167,77.3167',
@@ -323,7 +324,7 @@ export const OFFICES: Office[] = [
     state: 'Uttarakhand',
     pincode: '248001',
     landmarks: 'Near Kukreja Institute, Mata Mandir Road',
-    phone: '+91 98765 43213',
+    phone: '+91 63833 13359',
     email: 'dehradun@globaleventstravels.com',
     coordinates: { lat: 30.2871, lng: 78.0211 },
     mapUrl: 'https://maps.google.com/?q=30.2871,78.0211',

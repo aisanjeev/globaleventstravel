@@ -129,7 +129,7 @@ import { SITE_CONFIG } from '@/lib/constants';
                     type="tel" 
                     id="phone" 
                     name="phone"
-                    placeholder="+91 98765 43210"
+                placeholder="+91 63833 13359"
                     class="input"
                   />
                 </div>
@@ -169,6 +169,7 @@ import { SITE_CONFIG } from '@/lib/constants';
                   placeholder="Tell us how we can help you..."
                   class="input resize-vertical"
                 ></textarea>
+                <p id="message-error" class="mt-2 text-sm text-red-600 hidden"></p>
               </div>
 
               <div class="flex items-start gap-3">
@@ -263,23 +264,45 @@ import { SITE_CONFIG } from '@/lib/constants';
   const btnText = document.getElementById('btn-text');
   const btnSpinner = document.getElementById('btn-spinner');
   const successMessage = document.getElementById('success-message');
+  const messageInput = document.getElementById('message');
+  const messageError = document.getElementById('message-error');
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Show loading state
+    // Clear previous errors and show loading state
+    if (messageError) {
+      messageError.textContent = '';
+      messageError.classList.add('hidden');
+    }
     if (btnText) btnText.textContent = 'Sending...';
     btnSpinner?.classList.remove('hidden');
 
     // Get form data
     const formData = new FormData(form);
+    const rawMessage = (formData.get('message') || '').toString().trim();
+
+    // Frontend validation to match backend (min length 10)
+    if (rawMessage.length < 10) {
+      if (messageError) {
+        messageError.textContent = 'Please enter at least 10 characters in your message.';
+        messageError.classList.remove('hidden');
+        if (messageInput) {
+          messageInput.focus();
+        }
+      }
+      if (btnText) btnText.textContent = 'Send Message';
+      btnSpinner?.classList.add('hidden');
+      return;
+    }
+
     const contactData = {
       name: formData.get('name'),
       email: formData.get('email'),
       phone: formData.get('phone') || undefined,
       subject: formData.get('subject'),
       trek_interest: formData.get('trek') || undefined,
-      message: formData.get('message'),
+      message: rawMessage,
       newsletter_subscribe: formData.get('newsletter') === 'on',
     };
 
@@ -293,7 +316,17 @@ import { SITE_CONFIG } from '@/lib/constants';
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit');
+        // Try to surface validation error (e.g. from Pydantic)
+        let errorMessage = 'Failed to submit';
+        try {
+          const errorBody = await response.json();
+          if (errorBody && Array.isArray(errorBody.detail) && errorBody.detail.length > 0) {
+            errorMessage = errorBody.detail[0].msg || errorMessage;
+          }
+        } catch (err) {
+          // ignore JSON parse errors
+        }
+        throw new Error(errorMessage);
       }
 
       // Show success
@@ -303,7 +336,17 @@ import { SITE_CONFIG } from '@/lib/constants';
       console.error('Error submitting contact form:', error);
       if (btnText) btnText.textContent = 'Send Message';
       btnSpinner?.classList.add('hidden');
-      alert('Failed to send message. Please try again.');
+
+      // Show specific validation error near the message field if available
+      if (error instanceof Error && messageError) {
+        messageError.textContent = error.message;
+        messageError.classList.remove('hidden');
+        if (messageInput) {
+          messageInput.focus();
+        }
+      } else {
+        alert('Failed to send message. Please try again.');
+      }
     }
   });
 </script>

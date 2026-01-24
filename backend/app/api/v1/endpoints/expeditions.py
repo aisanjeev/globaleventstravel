@@ -8,8 +8,11 @@ from app.core.deps import get_db
 from app.core.config import settings
 from app.crud.expedition import expedition_crud
 from app.models.expedition import (
-    ExpeditionCreate, ExpeditionUpdate, 
-    ExpeditionResponse, ExpeditionDetailResponse, ExpeditionListResponse
+    ExpeditionCreate,
+    ExpeditionUpdate,
+    ExpeditionResponse,
+    ExpeditionDetailResponse,
+    ExpeditionListResponse,
 )
 from app.models.common import PaginatedResponse
 
@@ -77,7 +80,7 @@ def list_featured_expeditions(
     return [ExpeditionListResponse.from_orm_model(e) for e in expeditions]
 
 
-@router.get("/{slug}", response_model=ExpeditionResponse)
+@router.get("/{slug}", response_model=ExpeditionDetailResponse)
 def get_expedition(
     slug: str,
     db: Session = Depends(get_db),
@@ -86,10 +89,10 @@ def get_expedition(
     expedition = expedition_crud.get_by_slug_with_details(db, slug)
     if not expedition:
         raise HTTPException(status_code=404, detail="Expedition not found")
-    return ExpeditionResponse.from_orm_model(expedition)
+    return ExpeditionDetailResponse.from_orm_model(expedition)
 
 
-@router.get("/id/{expedition_id}", response_model=ExpeditionResponse)
+@router.get("/id/{expedition_id}", response_model=ExpeditionDetailResponse)
 def get_expedition_by_id(
     expedition_id: int,
     db: Session = Depends(get_db),
@@ -98,7 +101,7 @@ def get_expedition_by_id(
     expedition = expedition_crud.get_with_details(db, expedition_id)
     if not expedition:
         raise HTTPException(status_code=404, detail="Expedition not found")
-    return ExpeditionResponse.from_orm_model(expedition)
+    return ExpeditionDetailResponse.from_orm_model(expedition)
 
 
 @router.post("", response_model=ExpeditionResponse, status_code=201)

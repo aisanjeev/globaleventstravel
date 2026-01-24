@@ -4,6 +4,7 @@ Populates the database with initial data from frontend mock data.
 """
 import os
 import sys
+import json
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -15,8 +16,9 @@ from app.db.models import (
     Trek, TrekImage, ItineraryDay, TrekFAQ,
     Expedition, ExpeditionDay,
     Guide, Testimonial, Office,
-    BlogPost, BlogAuthor, User
+    BlogPost, BlogAuthor, User,
 )
+from app.db.models.page_content import PageSection
 from app.core.security import get_password_hash
 
 
@@ -497,7 +499,7 @@ def seed_offices(db: Session):
             "state": "Himachal Pradesh",
             "pincode": "175131",
             "landmarks": "Near Aleo Road Petrol Pump, NSB Hotel",
-            "phone": "+91 98765 43210",
+            "phone": "+91 63833 13359",
             "email": "himachal@globaleventstravels.com",
             "lat": 32.2299,
             "lng": 77.1889,
@@ -510,7 +512,7 @@ def seed_offices(db: Session):
             "city": "Chennai",
             "state": "Tamil Nadu",
             "pincode": "600039",
-            "phone": "+91 98765 43211",
+            "phone": "+91 63833 13359",
             "email": "chennai@globaleventstravels.com",
             "lat": 13.1175,
             "lng": 80.1434,
@@ -524,7 +526,7 @@ def seed_offices(db: Session):
             "state": "Himachal Pradesh",
             "pincode": "175101",
             "landmarks": "Choj Bridge, Near Volvo Bus Stand",
-            "phone": "+91 98765 43212",
+            "phone": "+91 63833 13359",
             "email": "kasol@globaleventstravels.com",
             "lat": 32.0167,
             "lng": 77.3167,
@@ -538,7 +540,7 @@ def seed_offices(db: Session):
             "state": "Uttarakhand",
             "pincode": "248001",
             "landmarks": "Near Kukreja Institute, Mata Mandir Road",
-            "phone": "+91 98765 43213",
+            "phone": "+91 63833 13359",
             "email": "dehradun@globaleventstravels.com",
             "lat": 30.2871,
             "lng": 78.0211,
@@ -554,6 +556,178 @@ def seed_offices(db: Session):
             db.add(office)
     db.commit()
     print(f"[OK] Seeded {len(offices_data)} offices")
+
+
+def seed_page_content(db: Session):
+    """Seed editable page content sections for home, about, and expeditions."""
+    sections_data = [
+        # Home hero
+        {
+            "page": "home",
+            "key": "hero",
+            "title": "Get Your Custom Himalayan Trek Itinerary",
+            "subtitle": "Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp.",
+            "badge_text": "Now booking for 2026 season",
+            "body_html": None,
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Home hero stats (used by HeroHome for first stat item)
+        {
+            "page": "home",
+            "key": "hero_stats",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            # value|label format: first stat; remaining stats still use defaults
+            "body_html": "50+|Trek Routes",
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 1,
+            "is_active": True,
+        },
+        # Home statistics (used by Statistics section as JSON array)
+        {
+            "page": "home",
+            "key": "stats",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": json.dumps(
+                [
+                    {
+                        "value": "50+",
+                        "label": "Trek Routes",
+                        "description": "Across the Himalayas",
+                    },
+                    {
+                        "value": "10,000+",
+                        "label": "Happy Trekkers",
+                        "description": "And counting",
+                    },
+                    {
+                        "value": "15+",
+                        "label": "Expert Guides",
+                        "description": "Certified professionals",
+                    },
+                    {
+                        "value": "8+",
+                        "label": "Years Experience",
+                        "description": "In adventure tourism",
+                    },
+                ]
+            ),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 2,
+            "is_active": True,
+        },
+        # Home CTA
+        {
+            "page": "home",
+            "key": "cta",
+            "title": "Ready for Your Next Adventure?",
+            "subtitle": "Join thousands of happy trekkers who have discovered the magic of the Himalayas with us. Your adventure of a lifetime awaits.",
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": "Explore Treks",
+            "cta_url": "/treks",
+            "display_order": 3,
+            "is_active": True,
+        },
+        # About hero
+        {
+            "page": "about",
+            "key": "hero",
+            "title": "About Us",
+            "subtitle": "Passionate about mountains, committed to your safety, dedicated to creating unforgettable experiences.",
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # About story
+        {
+            "page": "about",
+            "key": "story",
+            "title": "Born in the Mountains, Built for Adventure",
+            "subtitle": None,
+            "badge_text": "Our Story",
+            "body_html": (
+                "<p>Global Events Travels was founded in 2016 by a group of passionate "
+                "mountaineers who believed that everyone deserves to experience the magic "
+                "of the Himalayas. What started as a small team of friends leading treks "
+                "has grown into one of the most trusted adventure travel companies in India.</p>"
+                "<p>Our founders grew up in the mountains of Uttarakhand and Himachal Pradesh. "
+                "They know every trail, every peak, and every hidden gem. This deep local "
+                "knowledge, combined with international safety standards, is what sets us apart.</p>"
+                "<p>Today, we've helped over 10,000 trekkers from around the world discover the "
+                "beauty of the Indian Himalayas. But our mission remains the same: to provide "
+                "safe, sustainable, and unforgettable mountain experiences.</p>"
+            ),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 1,
+            "is_active": True,
+        },
+        # Expeditions hero
+        {
+            "page": "expeditions",
+            "key": "hero",
+            "title": "Himalayan Expeditions",
+            "subtitle": "Push your limits with expertly guided mountaineering expeditions. From technical climbing to summit glory, experience the Himalayas like never before.",
+            "badge_text": "⛰️ High Altitude Adventures",
+            "body_html": None,
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Expeditions safety banner
+        {
+            "page": "expeditions",
+            "key": "safety",
+            "title": "Safety First Approach",
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": (
+                "All our expeditions are led by certified mountaineers with emergency protocols, "
+                "satellite communication, and insurance coverage. Previous high-altitude experience "
+                "is required for most expeditions."
+            ),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 1,
+            "is_active": True,
+        },
+    ]
+
+    created_count = 0
+    for data in sections_data:
+        existing = (
+            db.query(PageSection)
+            .filter(PageSection.page == data["page"], PageSection.key == data["key"])
+            .first()
+        )
+        if not existing:
+            section = PageSection(**data)
+            db.add(section)
+            created_count += 1
+
+    db.commit()
+    print(f"[OK] Seeded {created_count} page content sections")
 
 
 def seed_blog(db: Session):
@@ -693,6 +867,7 @@ def seed_all(drop_all: bool = True):
         seed_testimonials(db)
         seed_offices(db)
         seed_blog(db)
+        seed_page_content(db)
         
         print("\n[OK] Database seeding completed successfully!\n")
     except Exception as e:

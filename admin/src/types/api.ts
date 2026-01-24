@@ -426,3 +426,62 @@ export interface ExpeditionCreate {
 
 export interface ExpeditionUpdate extends Partial<ExpeditionCreate> {}
 
+// ============================================
+// Lead & Contact Types
+// ============================================
+
+export type LeadStatus = "new" | "contacted" | "converted" | "lost";
+
+export interface Lead {
+  id: number;
+  name: string;
+  email: string;
+  whatsapp: string;
+  trek_slug: string;
+  trek_name?: string | null;
+  source: string;
+  status: LeadStatus;
+  itinerary_sent: boolean;
+  created_at: string;
+  updated_at: string;
+  notes?: string | null;
+}
+
+export interface LeadListItem {
+  id: number;
+  name: string;
+  email: string;
+  whatsapp: string;
+  trek_slug: string;
+  trek_name?: string | null;
+  source: string;
+  status: LeadStatus;
+  itinerary_sent: boolean;
+  created_at: string;
+}
+
+export type ContactStatus = "unread" | "read" | "replied" | "archived";
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject: string;
+  trek_interest?: string | null;
+  message: string;
+  newsletter_subscribe: boolean;
+  status: ContactStatus;
+  admin_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContactMessageListItem {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  status: ContactStatus;
+  created_at: string;
+}

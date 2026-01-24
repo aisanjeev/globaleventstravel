@@ -938,7 +938,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-2">
                             <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
-                            <Badge variant="secondary">FAQ #{index + 1}</Badge>
+                            <Badge variant="info">FAQ #{index + 1}</Badge>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button

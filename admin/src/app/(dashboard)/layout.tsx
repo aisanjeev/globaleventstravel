@@ -50,10 +50,13 @@ export default function DashboardLayout({
       <main
         className={cn(
           "pt-16 min-h-screen transition-all duration-300",
-          sidebarOpen ? "pl-64" : "pl-20"
+          // Mobile: no left padding (sidebar overlays)
+          "pl-0",
+          // Desktop: adjust based on sidebar state
+          sidebarOpen ? "lg:pl-64" : "lg:pl-20"
         )}
       >
-        <div className="p-6">{children}</div>
+        <div className="p-4 md:p-6">{children}</div>
       </main>
       <ToastContainer />
     </div>

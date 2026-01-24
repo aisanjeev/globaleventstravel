@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   description: 'Discover amazing treks and expeditions in the Himalayas with experienced guides and unforgettable experiences.',
   url: 'https://globaleventstravels.com',
   email: 'info@globaleventstravels.com',
-  phone: '+91 98765 43210',
+  phone: '+91 63833 13359',
   address: 'Manali, Himachal Pradesh, India',
 };
 
@@ -22,10 +22,10 @@ export const NAV_LINKS = [
 ];
 
 export const SOCIAL_LINKS = {
-  facebook: 'https://facebook.com/globaleventstravels',
-  instagram: 'https://instagram.com/globaleventstravels',
-  twitter: 'https://twitter.com/globaleventstravels',
-  youtube: 'https://youtube.com/globaleventstravels',
+  facebook: 'https://www.facebook.com/TheTrekkingCommunity',
+  instagram: 'https://www.instagram.com/global_events_travels',
+  twitter: '#',
+  youtube: 'https://www.youtube.com/@globaleventstravels6010',
 };
 
 export const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {

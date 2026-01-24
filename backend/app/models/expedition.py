@@ -120,6 +120,7 @@ class ExpeditionUpdate(BaseModel):
     review_count: Optional[int] = Field(None, ge=0, alias="reviewCount")
     featured: Optional[bool] = None
     status: Optional[str] = Field(None, pattern="^(draft|published|archived)$")
+    itinerary: Optional[List[ExpeditionDayCreate]] = None
 
     class Config:
         populate_by_name = True
@@ -196,6 +197,16 @@ class ExpeditionDetailResponse(ExpeditionResponse):
     """Schema for detailed expedition response."""
     itinerary: List[ExpeditionDayResponse] = []
 
+    @classmethod
+    def from_orm_model(cls, obj):
+        """Convert ORM model (with itinerary) to detailed response schema."""
+        # Reuse base mapping logic
+        base = ExpeditionResponse.from_orm_model(obj)
+        return cls(
+            **base.model_dump(),
+            itinerary=[ExpeditionDayResponse.model_validate(day) for day in getattr(obj, "itinerary", [])],
+        )
+
 
 class ExpeditionListResponse(BaseModel):
     """Schema for expedition list (simplified)."""
@@ -209,6 +220,7 @@ class ExpeditionListResponse(BaseModel):
     region: str
     shortDescription: str
     price: float
+    groupSize: GroupSize
     season: List[str]
     successRate: int
     image: str
@@ -236,6 +248,7 @@ class ExpeditionListResponse(BaseModel):
             region=obj.region,
             shortDescription=obj.short_description,
             price=obj.price,
+            groupSize=GroupSize(min=obj.group_size_min, max=obj.group_size_max),
             season=obj.season,
             successRate=obj.success_rate,
             image=obj.image,

@@ -101,9 +101,16 @@ import { Image } from 'astro:assets';
         <p class="text-white/50 text-sm">
           © {new Date().getFullYear()} {SITE_CONFIG.name}. All rights reserved.
         </p>
-        <div class="flex gap-6 text-sm">
-          <a href="/privacy" class="text-white/50 hover:text-primary-300 transition-colors">Privacy Policy</a>
-          <a href="/terms" class="text-white/50 hover:text-primary-300 transition-colors">Terms of Service</a>
+        <div class="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-sm">
+          <a href="/privacy-policy" class="text-white/50 hover:text-primary-300 transition-colors">
+            Privacy Policy
+          </a>
+          <a href="/terms-of-service" class="text-white/50 hover:text-primary-300 transition-colors">
+            Terms of Service
+          </a>
+          <a href="/cancellation-refund" class="text-white/50 hover:text-primary-300 transition-colors">
+            Cancellation &amp; Refund
+          </a>
         </div>
       </div>
     </div>

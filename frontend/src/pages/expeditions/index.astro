@@ -1,11 +1,40 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import ExpeditionCard from '@/components/expedition/ExpeditionCard.astro';
-import { EXPEDITIONS } from '@/lib/data';
 import { SITE_CONFIG } from '@/lib/constants';
+import { expeditionsApi, api } from '@/lib/api';
+import type { Expedition } from '@/lib/types';
+import { EXPEDITIONS } from '@/lib/data';
+
+export const prerender = false;
 
 const title = 'Himalayan Expeditions | High Altitude Mountaineering';
 const description = 'Join our expert-led mountaineering expeditions to summit legendary Himalayan peaks. Black Peak, Friendship Peak and more with certified guides and safety protocols.';
+
+interface PageSection {
+  title?: string | null;
+  subtitle?: string | null;
+  badge_text?: string | null;
+  body_html?: string | null;
+}
+
+let expeditions: Expedition[] = [];
+let heroSection: PageSection | null = null;
+let safetySection: PageSection | null = null;
+
+try {
+  const [expeditionResponse, contentSections] = await Promise.all([
+    expeditionsApi.list({ status: 'published', limit: 20 }),
+    api.get<PageSection[]>(`/content/expeditions`),
+  ]);
+
+  expeditions = expeditionResponse.items || [];
+  heroSection = (contentSections || []).find((s: any) => s.key === 'hero') || null;
+  safetySection = (contentSections || []).find((s: any) => s.key === 'safety') || null;
+} catch (error) {
+  console.error('Failed to fetch expeditions or content from API, falling back to static data:', error);
+  expeditions = EXPEDITIONS;
+}
 ---
 
 <MainLayout title={title} description={description}>
@@ -20,14 +49,20 @@ const description = 'Join our expert-led mountaineering expeditions to summit le
     
     <div class="container-custom relative z-10">
       <div class="max-w-3xl">
-        <span class="inline-block px-4 py-1.5 bg-red-500/20 border border-red-500/30 text-red-300 rounded-full text-sm font-medium mb-6">
-          ⛰️ High Altitude Adventures
-        </span>
+        {heroSection?.badge_text && (
+          <span class="inline-block px-4 py-1.5 bg-red-500/20 border border-red-500/30 text-red-300 rounded-full text-sm font-medium mb-6">
+            {heroSection.badge_text}
+          </span>
+        )}
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          Himalayan <span class="text-primary-400">Expeditions</span>
+          {heroSection?.title || (
+            <>
+              Himalayan <span class="text-primary-400">Expeditions</span>
+            </>
+          )}
         </h1>
         <p class="text-xl text-neutral-300 mb-8 leading-relaxed">
-          Push your limits with expertly guided mountaineering expeditions. From technical climbing to summit glory, experience the Himalayas like never before.
+          {heroSection?.subtitle || 'Push your limits with expertly guided mountaineering expeditions. From technical climbing to summit glory, experience the Himalayas like never before.'}
         </p>
         
         <!-- Quick Stats -->
@@ -82,17 +117,23 @@ const description = 'Join our expert-led mountaineering expeditions to summit le
             </svg>
           </div>
           <div>
-            <h3 class="font-bold text-red-800 mb-1">Safety First Approach</h3>
-            <p class="text-red-700 text-sm">
-              All our expeditions are led by certified mountaineers with emergency protocols, satellite communication, and insurance coverage. Previous high-altitude experience is required for most expeditions.
-            </p>
+            <h3 class="font-bold text-red-800 mb-1">
+              {safetySection?.title || 'Safety First Approach'}
+            </h3>
+            {safetySection?.body_html ? (
+              <p class="text-red-700 text-sm" set:html={safetySection.body_html}></p>
+            ) : (
+              <p class="text-red-700 text-sm">
+                All our expeditions are led by certified mountaineers with emergency protocols, satellite communication, and insurance coverage. Previous high-altitude experience is required for most expeditions.
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       <!-- Expedition Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        {EXPEDITIONS.map((expedition) => (
+        {expeditions.map((expedition) => (
           <ExpeditionCard expedition={expedition} />
         ))}
       </div>
@@ -175,7 +216,7 @@ const description = 'Join our expert-led mountaineering expeditions to summit le
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href={`https://wa.me/${SITE_CONFIG.phone.replace(/\s/g, '')}?text=Hi%2C%20I%27m%20interested%20in%20joining%20an%20expedition.`}
+            href={`https://wa.me/916383313359?text=Hi%2C%20I%27m%20interested%20in%20joining%20an%20expedition.`}
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-600 font-semibold rounded-xl hover:bg-neutral-100 transition-colors"
