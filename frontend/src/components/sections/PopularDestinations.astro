@@ -1,0 +1,66 @@
+---
+import { api } from '@/lib/api';
+
+interface Destination {
+  name: string;
+  slug: string;
+  image?: string;
+  trek_count: number;
+}
+
+let destinations: Destination[] = [
+  { name: 'Uttarakhand', slug: 'uttarakhand', image: 'https://media3.thrillophilia.com/filestore/efftugji6q4448bt7s45z1js5tp5_1600680960_shutterstock_562139776.jpg?w=400&dpr=2', trek_count: 9 },
+  { name: 'Himachal Pradesh', slug: 'himachal-pradesh', image: 'https://res.cloudinary.com/dyiffrkzh/image/upload/c_fill,f_auto,fl_progressive.strip_profile,g_center,h_400,q_auto,w_700/v1728899306/banbanjara/vtbgtzdxrbbyjjo2s1wc.webp', trek_count: 10 },
+  { name: 'Uttarkashi', slug: 'uttarkashi', image: 'https://media1.thrillophilia.com/filestore/ylm7jv5cf5sf8nzp45db2rdh20om_shutterstock_1151786492.jpg?w=400&dpr=2', trek_count: 1 },
+  { name: 'Srinagar', slug: 'srinagar', image: 'https://d26dp53kz39178.cloudfront.net/media/uploads/products/5_result_3-1683719790067.webp', trek_count: 1 },
+];
+
+try {
+  const section = await api.get<{ body_html?: string | null }>('/content/home/destinations');
+  if (section?.body_html) {
+    const parsed = JSON.parse(section.body_html) as Destination[];
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      destinations = parsed;
+    }
+  }
+} catch (error) {
+  // Use defaults
+}
+---
+
+<section class="section bg-white">
+  <div class="container-custom">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+        Popular Destinations
+      </h2>
+      <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
+        Explore the most sought-after trekking regions in the Himalayas
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {destinations.map((d) => (
+        <a href={`/treks?location=${encodeURIComponent(d.name)}`} class="group relative aspect-square rounded-2xl overflow-hidden">
+          <img
+            src={d.image || '/images/placeholder-destination.jpg'}
+            alt={d.name}
+            class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+            loading="lazy"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+          <div class="absolute bottom-4 left-4 right-4 text-white">
+            <h3 class="text-lg font-semibold">{d.name}</h3>
+            <p class="text-sm text-white/80">{d.trek_count} treks</p>
+            <span class="inline-flex items-center gap-1 mt-2 text-sm font-medium text-primary-300 group-hover:text-primary-200">
+              View Treks
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

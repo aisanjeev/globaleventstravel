@@ -31,6 +31,7 @@ from app.db.models import (
     BlogPost, BlogAuthor, BlogCategory, BlogTag, blog_post_tags,
     User,
     Media,
+    EmailLog,
 )
 
 # this is the Alembic Config object, which provides

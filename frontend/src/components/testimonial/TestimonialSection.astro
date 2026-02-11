@@ -1,6 +1,5 @@
 ---
 import TestimonialCard from './TestimonialCard.astro';
-import { MOCK_TESTIMONIALS } from '@/lib/data';
 import { testimonialsApi } from '@/lib/api';
 import type { Testimonial } from '@/lib/types';
 
@@ -31,15 +30,7 @@ try {
     ),
   ];
 } catch (error) {
-  console.error('Failed to fetch testimonials from API, falling back to mock data:', error);
-  testimonials = limit ? MOCK_TESTIMONIALS.slice(0, limit) : MOCK_TESTIMONIALS;
-  trekNames = [
-    ...new Set(
-      MOCK_TESTIMONIALS
-        .filter((t) => t.trek_name)
-        .map((t) => t.trek_name),
-    ),
-  ];
+  console.error('Failed to fetch testimonials from API:', error);
 }
 ---
 
@@ -140,7 +131,7 @@ try {
       </div>
     </div>
 
-    {limit && MOCK_TESTIMONIALS.length > limit && (
+    {limit && testimonials.length > 0 && (
       <div class="text-center mt-10">
         <a href="/testimonials" class="btn-secondary">
           Read All Reviews

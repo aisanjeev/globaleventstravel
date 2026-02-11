@@ -247,6 +247,7 @@ export interface Trek {
   meta_description?: string;
   meta_keywords?: string[];
   map_embed?: string;
+  itinerary_pdf_url?: string;
   itinerary: ItineraryDay[];
   faqs?: TrekFAQ[];
   rating?: number;
@@ -268,6 +269,7 @@ export interface TrekListItem {
   status: TrekStatus;
   featured: boolean;
   location: string;
+  best_season?: string[];
   rating?: number;
   review_count: number;
   created_at: string;
@@ -301,6 +303,7 @@ export interface TrekCreate {
   meta_description?: string;
   meta_keywords?: string[];
   map_embed?: string;
+  itinerary_pdf_url?: string;
   itinerary?: ItineraryDayCreate[];
   faqs?: TrekFAQCreate[];
 }
@@ -368,6 +371,7 @@ export interface Expedition {
   reviewCount: number;
   featured: boolean;
   status: ExpeditionStatus;
+  itineraryPdfUrl?: string;
   itinerary?: ExpeditionDay[];
   created_at: string;
   updated_at: string;
@@ -421,6 +425,7 @@ export interface ExpeditionCreate {
   reviewCount?: number;
   featured?: boolean;
   status?: ExpeditionStatus;
+  itineraryPdfUrl?: string;
   itinerary?: ExpeditionDayCreate[];
 }
 

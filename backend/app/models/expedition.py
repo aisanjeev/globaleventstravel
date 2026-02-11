@@ -83,6 +83,7 @@ class ExpeditionBase(BaseModel):
     review_count: int = Field(default=0, ge=0, alias="reviewCount")
     featured: bool = False
     status: str = Field(default="draft", pattern="^(draft|published|archived)$")
+    itinerary_pdf_url: Optional[str] = Field(None, alias="itineraryPdfUrl")
 
     class Config:
         populate_by_name = True
@@ -120,6 +121,7 @@ class ExpeditionUpdate(BaseModel):
     review_count: Optional[int] = Field(None, ge=0, alias="reviewCount")
     featured: Optional[bool] = None
     status: Optional[str] = Field(None, pattern="^(draft|published|archived)$")
+    itinerary_pdf_url: Optional[str] = Field(None, alias="itineraryPdfUrl")
     itinerary: Optional[List[ExpeditionDayCreate]] = None
 
     class Config:
@@ -188,6 +190,7 @@ class ExpeditionResponse(BaseModel):
             reviewCount=obj.review_count,
             featured=obj.featured,
             status=obj.status,
+            itineraryPdfUrl=getattr(obj, "itinerary_pdf_url", None),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )
@@ -228,6 +231,7 @@ class ExpeditionListResponse(BaseModel):
     reviewCount: int
     featured: bool
     status: str
+    itineraryPdfUrl: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -256,6 +260,7 @@ class ExpeditionListResponse(BaseModel):
             reviewCount=obj.review_count,
             featured=obj.featured,
             status=obj.status,
+            itineraryPdfUrl=getattr(obj, "itinerary_pdf_url", None),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )

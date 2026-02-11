@@ -11,6 +11,8 @@ import type {
   Testimonial,
   Office,
   BlogPost,
+  BlogCategory,
+  BlogTag,
   Booking,
   PaginatedResponse,
   ContactForm,
@@ -86,6 +88,7 @@ export interface TrekFilters {
   maxPrice?: number;
   featured?: boolean;
   season?: string;
+  status?: string;
   skip?: number;
   limit?: number;
 }
@@ -98,6 +101,7 @@ export const treksApi = {
     if (filters.maxPrice) params.append('max_price', filters.maxPrice.toString());
     if (filters.featured !== undefined) params.append('featured', filters.featured.toString());
     if (filters.season) params.append('season', filters.season);
+    if (filters.status) params.append('status', filters.status);
     if (filters.skip) params.append('skip', filters.skip.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());
     
@@ -178,7 +182,7 @@ export const guidesApi = {
 
 export interface LeadData {
   name: string;
-  email: string;
+  email?: string;
   whatsapp: string;
   trek_slug: string;
   trek_name?: string;
@@ -319,13 +323,17 @@ export const blogApi = {
     skip = 0,
     limit = 10,
     category?: string,
-    featured?: boolean
+    featured?: boolean,
+    search?: string,
+    status?: string,
   ): Promise<PaginatedResponse<BlogPost>> {
     const params = new URLSearchParams();
     params.append('skip', skip.toString());
     params.append('limit', limit.toString());
     if (category) params.append('category', category);
     if (featured !== undefined) params.append('featured', featured.toString());
+    if (search) params.append('search', search);
+    if (status) params.append('status', status);
     
     return api.get<PaginatedResponse<BlogPost>>(`/blog/posts?${params}`);
   },
@@ -349,7 +357,117 @@ export const blogApi = {
   async getRelatedPosts(slug: string, limit = 3): Promise<BlogPost[]> {
     return api.get<BlogPost[]>(`/blog/posts/${slug}/related?limit=${limit}`);
   },
+
+  async getCategories(activeOnly = true): Promise<BlogCategory[]> {
+    return api.get<BlogCategory[]>(`/blog/categories?active_only=${activeOnly}`);
+  },
+
+  async getTags(): Promise<BlogTag[]> {
+    return api.get<BlogTag[]>(`/blog/tags`);
+  },
 };
+
+// ============================================
+// Site Settings API
+// ============================================
+
+export interface SiteSettingsApiResponse {
+  id: number;
+  company_name: string;
+  tagline: string | null;
+  description: string | null;
+  url: string | null;
+  email: string;
+  phone: string;
+  address: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  twitter_url: string | null;
+  youtube_url: string | null;
+}
+
+export interface SiteConfig {
+  name: string;
+  tagline: string;
+  description: string;
+  url: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface SocialLinks {
+  facebook: string;
+  instagram: string;
+  twitter: string;
+  youtube: string;
+}
+
+function siteSettingsToConfig(data: SiteSettingsApiResponse): {
+  siteConfig: SiteConfig;
+  socialLinks: SocialLinks;
+} {
+  return {
+    siteConfig: {
+      name: data.company_name,
+      tagline: data.tagline || '',
+      description: data.description || '',
+      url: data.url || '',
+      email: data.email,
+      phone: data.phone,
+      address: data.address || '',
+    },
+    socialLinks: {
+      facebook: data.facebook_url || '#',
+      instagram: data.instagram_url || '#',
+      twitter: data.twitter_url || '#',
+      youtube: data.youtube_url || '#',
+    },
+  };
+}
+
+export async function getSiteSettings(): Promise<{
+  siteConfig: SiteConfig;
+  socialLinks: SocialLinks;
+}> {
+  try {
+    const data = await api.get<SiteSettingsApiResponse>('/site-settings');
+    return siteSettingsToConfig(data);
+  } catch {
+    const { SITE_CONFIG, SOCIAL_LINKS } = await import('./constants');
+    return {
+      siteConfig: SITE_CONFIG,
+      socialLinks: SOCIAL_LINKS,
+    };
+  }
+}
+
+// ============================================
+// Google Reviews API
+// ============================================
+
+export interface GoogleReviewItem {
+  id: number;
+  place_id: string;
+  author_name: string;
+  rating: number;
+  text: string;
+  review_time?: number;
+  relative_time_description?: string;
+  profile_photo_url?: string;
+}
+
+export interface GoogleReviewsResponse {
+  reviews: GoogleReviewItem[];
+  place_name: string;
+  rating: number | null;
+  user_ratings_total: number | null;
+  last_synced_at: string | null;
+}
+
+export async function getGoogleReviews(): Promise<GoogleReviewsResponse> {
+  return api.get<GoogleReviewsResponse>('/google-reviews');
+}
 
 // ============================================
 // Health Check API

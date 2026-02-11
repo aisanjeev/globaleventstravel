@@ -43,6 +43,13 @@ export default {
           800: '#2C2C2C', // Dark Gray (text)
           900: '#1a1a1a',
         },
+        // Royal Blue - Logo-matching (header, strong sections)
+        royal: {
+          50: '#F4F7FB',
+          600: '#1E2A78',
+          700: '#182366',
+          800: '#141B52',
+        },
         // Accent colors for status/alerts
         accent: {
           green: '#10b981',

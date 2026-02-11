@@ -92,6 +92,29 @@ export const blogService = {
       throw handleApiError(error);
     }
   },
+
+  async updateAuthor(
+    id: number,
+    data: Partial<Omit<BlogAuthor, "id">>
+  ): Promise<BlogAuthor> {
+    try {
+      const response = await apiClient.put<BlogAuthor>(
+        `/api/v1/blog/authors/${id}`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async deleteAuthor(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/v1/blog/authors/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };
 
 

@@ -5,7 +5,6 @@ import CTA from '@/components/sections/CTA.astro';
 import { Image } from 'astro:assets';
 import { guidesApi, api } from '@/lib/api';
 import type { Guide } from '@/lib/types';
-import { MOCK_GUIDES } from '@/lib/data';
 
 let guides: Guide[] = [];
 let aboutSections: any[] = [];
@@ -18,9 +17,7 @@ try {
   guides = guidesResponse.items || [];
   aboutSections = contentSections || [];
 } catch (error) {
-  console.error('Failed to fetch guides or about content from API, using defaults:', error);
-  guides = MOCK_GUIDES;
-  aboutSections = [];
+  console.error('Failed to fetch guides or about content from API:', error);
 }
 
 const heroSection = aboutSections.find((s) => s.key === 'hero');

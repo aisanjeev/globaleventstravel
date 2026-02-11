@@ -2,7 +2,6 @@
 import OfficeCard from './OfficeCard.astro';
 import { officesApi } from '@/lib/api';
 import type { Office } from '@/lib/types';
-import { OFFICES } from '@/lib/data';
 
 interface Props {
   showTitle?: boolean;
@@ -15,8 +14,7 @@ let offices: Office[] = [];
 try {
   offices = await officesApi.list();
 } catch (error) {
-  console.error('Failed to fetch offices from API, falling back to static data:', error);
-  offices = OFFICES;
+  console.error('Failed to fetch offices from API:', error);
 }
 ---
 

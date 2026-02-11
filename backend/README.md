@@ -118,6 +118,10 @@ Once running, visit:
 - `GET /api/v1/blog/posts/featured` - Get featured posts
 - `GET /api/v1/blog/posts/{slug}` - Get post by slug
 
+### Google Reviews
+- `GET /api/v1/google-reviews` - Get cached Google reviews (public)
+- `POST /api/v1/google-reviews/sync` - Trigger sync from Google Places API (admin or X-Sync-Key)
+
 ### Other
 - `GET /api/v1/guides` - List guides
 - `GET /api/v1/offices` - List offices
@@ -300,6 +304,75 @@ curl "http://localhost:8000/api/v1/auth/me" \
 - **user** - Regular user (can access their profile)
 - **admin** - Admin user (can manage users and content)
 - **superadmin** - Full access (cannot be deactivated)
+
+## Google Reviews - Weekly Sync
+
+Google reviews are cached in the database and synced from the Google Places API. Configure and run sync as follows.
+
+### Environment Variables
+
+Add to `.env`:
+
+```env
+GOOGLE_MAPS_API_KEY=your_google_places_api_key
+GOOGLE_REVIEWS_PLACE_ID=ChIJGQi8B8FdBDkROs-J97u89T0
+GOOGLE_REVIEWS_SYNC_KEY=optional_secret_for_cron
+```
+
+- **GOOGLE_MAPS_API_KEY** - Required for sync. Get from [Google Cloud Console](https://console.cloud.google.com/) with Places API enabled.
+- **GOOGLE_REVIEWS_PLACE_ID** - Your Google Business Place ID (default: Global Events Travels).
+- **GOOGLE_REVIEWS_SYNC_KEY** - Optional. When set, cron can pass `X-Sync-Key: <value>` instead of admin auth.
+
+### Initial Sync
+
+Run sync once to populate the database:
+
+**Option 1 – Admin panel / API**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/google-reviews/sync" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+Or with sync key (if configured):
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/google-reviews/sync" \
+  -H "X-Sync-Key: your_GOOGLE_REVIEWS_SYNC_KEY"
+```
+
+**Option 2 – CLI**
+
+```bash
+cd backend
+poetry run sync-google-reviews
+```
+
+### Weekly Cron Setup
+
+To keep reviews up to date, run sync weekly.
+
+**System cron (curl):**
+
+```bash
+0 0 * * 0 curl -X POST "https://your-api.com/api/v1/google-reviews/sync" \
+  -H "X-Sync-Key: your_GOOGLE_REVIEWS_SYNC_KEY"
+```
+
+Runs every Sunday at midnight. Requires `GOOGLE_REVIEWS_SYNC_KEY` in `.env`.
+
+**System cron (CLI):**
+
+```bash
+0 0 * * 0 cd /path/to/backend && poetry run sync-google-reviews
+```
+
+**External service (cron-job.org, Uptime Robot, etc.):**
+
+- URL: `https://your-api.com/api/v1/google-reviews/sync`
+- Method: POST
+- Header: `X-Sync-Key: your_GOOGLE_REVIEWS_SYNC_KEY`
+- Schedule: Weekly (e.g., Sunday 00:00)
 
 ## CORS Configuration
 

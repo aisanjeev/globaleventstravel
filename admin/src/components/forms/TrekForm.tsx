@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { GalleryUpload } from "@/components/ui/GalleryUpload";
+import { PdfItineraryUpload } from "@/components/ui/PdfItineraryUpload";
 import type { Trek, TrekDifficulty, TrekStatus } from "@/types/api";
 import { cn } from "@/lib/utils";
 import {
@@ -53,10 +54,8 @@ const difficultyOptions: { value: TrekDifficulty; label: string; description: st
 ];
 
 const seasonOptions = [
-  "Spring (Mar-May)",
-  "Summer (Jun-Aug)",
-  "Autumn (Sep-Nov)",
-  "Winter (Dec-Feb)",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ];
 
 const statusOptions: { value: TrekStatus; label: string; description: string }[] = [
@@ -109,6 +108,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
       meta_description: trek?.meta_description || "",
       meta_keywords: trek?.meta_keywords || [],
       map_embed: trek?.map_embed || "",
+      itinerary_pdf_url: trek?.itinerary_pdf_url || "",
       itinerary: trek?.itinerary?.map(day => ({
         day: day.day,
         title: day.title,
@@ -710,32 +710,63 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
               <FormField
                 label="Best Seasons"
                 error={errors.best_season?.message}
-                hint="Select the best times of year for this trek"
+                hint="Select the best months for this trek"
+                required
               >
                 <Controller
                   control={control}
                   name="best_season"
                   render={({ field }) => (
-                    <div className="grid grid-cols-2 gap-2">
-                      {seasonOptions.map((season) => (
-                        <label key={season} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={field.value?.includes(season) || false}
-                            onChange={(e) => {
-                              const newSeasons = field.value || [];
-                              if (e.target.checked) {
-                                field.onChange([...newSeasons, season]);
-                              } else {
-                                field.onChange(newSeasons.filter(s => s !== season));
-                              }
-                            }}
-                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                          />
-                          <span className="text-sm">{season}</span>
-                        </label>
+                    <div className="flex flex-wrap gap-2">
+                      {seasonOptions.map((month) => (
+                        <button
+                          key={month}
+                          type="button"
+                          onClick={() => {
+                            const current = field.value || [];
+                            if (current.includes(month)) {
+                              field.onChange(current.filter((m: string) => m !== month));
+                            } else {
+                              field.onChange([...current, month]);
+                            }
+                          }}
+                          className={cn(
+                            "px-3 py-1 text-xs rounded-full border transition-colors",
+                            (field.value || []).includes(month)
+                              ? "bg-primary-500 text-white border-primary-500"
+                              : "bg-white text-gray-700 border-gray-300 hover:border-primary-500"
+                          )}
+                        >
+                          {month.slice(0, 3)}
+                        </button>
                       ))}
                     </div>
+                  )}
+                />
+              </FormField>
+            </CardContent>
+          </Card>
+
+          {/* PDF Itinerary */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">PDF Itinerary</h3>
+            </CardHeader>
+            <CardContent>
+              <FormField
+                label="Itinerary PDF"
+                error={errors.itinerary_pdf_url?.message}
+                hint="Upload a PDF or paste URL. Used for automated emails when leads request itinerary."
+              >
+                <Controller
+                  control={control}
+                  name="itinerary_pdf_url"
+                  render={({ field }) => (
+                    <PdfItineraryUpload
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      error={!!errors.itinerary_pdf_url}
+                    />
                   )}
                 />
               </FormField>

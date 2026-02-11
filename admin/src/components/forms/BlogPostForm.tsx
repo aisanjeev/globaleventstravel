@@ -61,6 +61,7 @@ export function BlogPostForm({ post, onSubmit, isLoading }: BlogPostFormProps) {
       featured_image: post?.featuredImage || "",
       meta_title: post?.metaTitle || "",
       meta_description: post?.metaDescription || "",
+      meta_keywords: post?.metaKeywords?.join(", ") || "",
       author_id: post?.author?.id || 1,
       tag_ids: post?.tagsList?.map((t) => t.id) || [],
     },
@@ -378,6 +379,16 @@ export function BlogPostForm({ post, onSubmit, isLoading }: BlogPostFormProps) {
                   rows={3}
                   maxLength={160}
                   {...register("meta_description")}
+                />
+              </FormField>
+
+              <FormField
+                label="Meta Keywords"
+                hint="Comma-separated keywords for SEO"
+              >
+                <Input
+                  placeholder="trekking, himalayas, adventure, travel"
+                  {...register("meta_keywords")}
                 />
               </FormField>
             </CardContent>

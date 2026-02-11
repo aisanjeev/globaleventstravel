@@ -17,7 +17,9 @@ from app.db.models import (
     Expedition, ExpeditionDay,
     Guide, Testimonial, Office,
     BlogPost, BlogAuthor, User,
+    SiteSettings,
 )
+from app.db.models.blog import BlogCategory, BlogTag, blog_post_tags
 from app.db.models.page_content import PageSection
 from app.core.security import get_password_hash
 
@@ -561,16 +563,138 @@ def seed_offices(db: Session):
 def seed_page_content(db: Session):
     """Seed editable page content sections for home, about, and expeditions."""
     sections_data = [
-        # Home hero
+        # Home hero (booking-focused)
         {
             "page": "home",
             "key": "hero",
-            "title": "Get Your Custom Himalayan Trek Itinerary",
-            "subtitle": "Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp.",
+            "title": "Plan Your Perfect Himalayan Trek",
+            "subtitle": "Book trusted treks across the Himalayas with expert guides.",
             "badge_text": "Now booking for 2026 season",
             "body_html": None,
             "image_url": None,
             "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Home hero primary CTA
+        {
+            "page": "home",
+            "key": "hero_primary_cta",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": "Explore Treks",
+            "cta_url": "/treks",
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Home hero secondary CTA
+        {
+            "page": "home",
+            "key": "hero_secondary_cta",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": "Get Free Itinerary on WhatsApp",
+            "cta_url": "#whatsapp-form",
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Featured treks urgency defaults (JSON: next_batch, seats_text)
+        {
+            "page": "home",
+            "key": "featured_defaults",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": json.dumps({"next_batch": "14 Jan 2026", "seats_text": "Only 6 seats left"}),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Why Choose Us - trust stats (JSON array: { value, label })
+        {
+            "page": "home",
+            "key": "why_choose_us",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": json.dumps([
+                {"value": "10,000+", "label": "Happy Trekkers"},
+                {"value": "4.8", "label": "Average Rating"},
+                {"value": "8+", "label": "Years Experience"},
+                {"value": "✓", "label": "No Hidden Costs"},
+            ]),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Budget treks section
+        {
+            "page": "home",
+            "key": "budget_treks",
+            "title": "Budget Friendly Treks",
+            "subtitle": "Amazing treks under ₹10,000",
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Popular destinations (JSON array: { name, slug, image, trek_count })
+        {
+            "page": "home",
+            "key": "destinations",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": json.dumps([
+                {"name": "Uttarakhand", "slug": "uttarakhand", "image": "https://media3.thrillophilia.com/filestore/efftugji6q4448bt7s45z1js5tp5_1600680960_shutterstock_562139776.jpg?w=400&dpr=2", "trek_count": 9},
+                {"name": "Himachal Pradesh", "slug": "himachal-pradesh", "image": "https://res.cloudinary.com/dyiffrkzh/image/upload/c_fill,f_auto,fl_progressive.strip_profile,g_center,h_400,q_auto,w_700/v1728899306/banbanjara/vtbgtzdxrbbyjjo2s1wc.webp", "trek_count": 10},
+                {"name": "Uttarkashi", "slug": "uttarkashi", "image": "https://media1.thrillophilia.com/filestore/ylm7jv5cf5sf8nzp45db2rdh20om_shutterstock_1151786492.jpg?w=400&dpr=2", "trek_count": 1},
+                {"name": "Srinagar", "slug": "srinagar", "image": "https://d26dp53kz39178.cloudfront.net/media/uploads/products/5_result_3-1683719790067.webp", "trek_count": 1},
+            ]),
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Home expeditions section
+        {
+            "page": "home",
+            "key": "expeditions",
+            "title": "Himalayan Expeditions",
+            "subtitle": "Push your limits with our expertly guided mountaineering expeditions. Conquer legendary peaks with safety and expertise.",
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": None,
+            "cta_url": None,
+            "display_order": 0,
+            "is_active": True,
+        },
+        # Sticky WhatsApp button label
+        {
+            "page": "home",
+            "key": "whatsapp_cta",
+            "title": None,
+            "subtitle": None,
+            "badge_text": None,
+            "body_html": None,
+            "image_url": None,
+            "cta_label": "Chat for Itinerary",
             "cta_url": None,
             "display_order": 0,
             "is_active": True,
@@ -731,8 +855,10 @@ def seed_page_content(db: Session):
 
 
 def seed_blog(db: Session):
-    """Seed blog authors and posts."""
-    # First create authors
+    """Seed blog authors, categories, tags, and posts with proper relationships."""
+    from datetime import datetime
+
+    # --- Authors ---
     authors_data = [
         {
             "name": "Rajesh Kumar",
@@ -753,21 +879,70 @@ def seed_blog(db: Session):
             "role": "Expedition Leader",
         },
     ]
-    
+
     author_map = {}
-    for author_data in authors_data:
-        existing = db.query(BlogAuthor).filter(BlogAuthor.name == author_data["name"]).first()
+    for ad in authors_data:
+        existing = db.query(BlogAuthor).filter(BlogAuthor.name == ad["name"]).first()
         if existing:
-            author_map[author_data["name"]] = existing.id
+            author_map[ad["name"]] = existing.id
         else:
-            author = BlogAuthor(**author_data)
+            author = BlogAuthor(**ad)
             db.add(author)
             db.flush()
-            author_map[author_data["name"]] = author.id
+            author_map[ad["name"]] = author.id
     db.commit()
     print(f"[OK] Seeded {len(authors_data)} blog authors")
-    
-    # Now create posts
+
+    # --- Categories ---
+    categories_data = [
+        {"name": "Trek Guides", "slug": "trek-guide", "display_order": 1},
+        {"name": "Budget Tips", "slug": "budget-tips", "display_order": 2},
+        {"name": "Destinations", "slug": "destination", "display_order": 3},
+        {"name": "Gear Reviews", "slug": "gear-review", "display_order": 4},
+        {"name": "Safety", "slug": "safety", "display_order": 5},
+        {"name": "Season Guides", "slug": "season-guide", "display_order": 6},
+        {"name": "Travel Tips", "slug": "travel-tips", "display_order": 7},
+    ]
+
+    cat_map = {}  # slug -> id
+    created_cats = 0
+    for cd in categories_data:
+        existing = db.query(BlogCategory).filter(BlogCategory.slug == cd["slug"]).first()
+        if existing:
+            cat_map[cd["slug"]] = existing.id
+        else:
+            cat = BlogCategory(**cd)
+            db.add(cat)
+            db.flush()
+            cat_map[cd["slug"]] = cat.id
+            created_cats += 1
+    db.commit()
+    print(f"[OK] Seeded {len(categories_data)} blog categories ({created_cats} new)")
+
+    # --- Tags ---
+    all_tag_names = [
+        "Summer Treks", "India", "2025", "Best Treks", "Himalayas",
+        "Kheerganga", "Kasol", "Beginners", "Budget Trek", "Himachal",
+        "Gear", "Packing", "Equipment", "Tips", "Preparation",
+    ]
+
+    tag_map = {}  # name -> id
+    created_tags = 0
+    for tname in all_tag_names:
+        tslug = tname.lower().replace(" ", "-")
+        existing = db.query(BlogTag).filter(BlogTag.slug == tslug).first()
+        if existing:
+            tag_map[tname] = existing.id
+        else:
+            t = BlogTag(name=tname, slug=tslug)
+            db.add(t)
+            db.flush()
+            tag_map[tname] = t.id
+            created_tags += 1
+    db.commit()
+    print(f"[OK] Seeded {len(all_tag_names)} blog tags ({created_tags} new)")
+
+    # --- Posts ---
     posts_data = [
         {
             "title": "13 Best Summer Treks in India for 2025",
@@ -778,10 +953,13 @@ def seed_blog(db: Session):
             "publish_date": "2024-12-20",
             "featured_image": "/images/blog/summer-treks.jpg",
             "category": "season-guide",
-            "tags": ["Summer Treks", "India", "2025", "Best Treks", "Himalayas"],
+            "category_id": cat_map["season-guide"],
             "read_time": 12,
             "featured": True,
+            "status": "published",
+            "published_at": datetime(2024, 12, 20),
             "meta_description": "Complete guide to the 13 best summer treks in India for 2025.",
+            "_tags": ["Summer Treks", "India", "2025", "Best Treks", "Himalayas"],
         },
         {
             "title": "Complete Guide: Kasol to Kheerganga Trek",
@@ -792,10 +970,13 @@ def seed_blog(db: Session):
             "publish_date": "2024-12-15",
             "featured_image": "/images/blog/kheerganga.jpg",
             "category": "trek-guide",
-            "tags": ["Kheerganga", "Kasol", "Beginners", "Budget Trek", "Himachal"],
+            "category_id": cat_map["trek-guide"],
             "read_time": 8,
             "featured": True,
+            "status": "published",
+            "published_at": datetime(2024, 12, 15),
             "meta_description": "Complete beginner guide to Kasol Kheerganga trek.",
+            "_tags": ["Kheerganga", "Kasol", "Beginners", "Budget Trek", "Himachal"],
         },
         {
             "title": "Essential Trekking Gear: What to Pack",
@@ -806,20 +987,64 @@ def seed_blog(db: Session):
             "publish_date": "2024-12-10",
             "featured_image": "/images/blog/trekking-gear.jpg",
             "category": "gear-review",
-            "tags": ["Gear", "Packing", "Equipment", "Tips", "Preparation"],
+            "category_id": cat_map["gear-review"],
             "read_time": 10,
             "featured": False,
+            "status": "published",
+            "published_at": datetime(2024, 12, 10),
             "meta_description": "Complete packing guide for Himalayan treks.",
+            "_tags": ["Gear", "Packing", "Equipment", "Tips", "Preparation"],
         },
     ]
-    
-    for post_data in posts_data:
-        existing = db.query(BlogPost).filter(BlogPost.slug == post_data["slug"]).first()
+
+    for pd in posts_data:
+        tag_names = pd.pop("_tags")
+        existing = db.query(BlogPost).filter(BlogPost.slug == pd["slug"]).first()
         if not existing:
-            post = BlogPost(**post_data)
+            post = BlogPost(**pd)
+            # Assign tags via relationship
+            post.tags_rel = [
+                db.query(BlogTag).get(tag_map[tn]) for tn in tag_names if tn in tag_map
+            ]
             db.add(post)
+        else:
+            # Update existing posts to use category_id and tags_rel
+            if not existing.category_id and pd.get("category_id"):
+                existing.category_id = pd["category_id"]
+            if not existing.tags_rel:
+                existing.tags_rel = [
+                    db.query(BlogTag).get(tag_map[tn]) for tn in tag_names if tn in tag_map
+                ]
+            if existing.status != "published":
+                existing.status = "published"
+                existing.published_at = pd.get("published_at")
     db.commit()
-    print(f"[OK] Seeded {len(posts_data)} blog posts")
+    print(f"[OK] Seeded {len(posts_data)} blog posts with categories and tags")
+
+
+def seed_site_settings(db: Session):
+    """Seed default site settings (single row)."""
+    existing = db.query(SiteSettings).filter(SiteSettings.id == 1).first()
+    if not existing:
+        settings = SiteSettings(
+            id=1,
+            company_name="Global Events Travels",
+            tagline="Adventure Awaits in the Himalayas",
+            description="Discover amazing treks and expeditions in the Himalayas with experienced guides and unforgettable experiences.",
+            url="https://globaleventstravels.com",
+            email="info@globaleventstravels.com",
+            phone="+91 63833 13359",
+            address="Manali, Himachal Pradesh, India",
+            facebook_url="https://www.facebook.com/TheTrekkingCommunity",
+            instagram_url="https://www.instagram.com/global_events_travels",
+            twitter_url="#",
+            youtube_url="https://www.youtube.com/@globaleventstravels6010",
+        )
+        db.add(settings)
+        db.commit()
+        print("[OK] Seeded site settings")
+    else:
+        print("[OK] Site settings already exist")
 
 
 def seed_admin_user(db: Session):
@@ -861,6 +1086,7 @@ def seed_all(drop_all: bool = True):
     
     try:
         seed_admin_user(db)
+        seed_site_settings(db)
         seed_guides(db)
         seed_treks(db)
         seed_expeditions(db)

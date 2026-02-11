@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { leadsApi, type LeadData } from '@/lib/api';
+import { useTrekOptions } from '@/lib/useTrekOptions';
 
 interface FormData {
   name: string;
@@ -15,20 +16,13 @@ interface FormErrors {
   trek?: string;
 }
 
-const TREK_OPTIONS = [
-  { value: '', label: 'Select a Trek' },
-  { value: 'hampta-pass', label: 'Hampta Pass Trek' },
-  { value: 'kedarkantha', label: 'Kedarkantha Trek' },
-  { value: 'valley-of-flowers', label: 'Valley of Flowers' },
-  { value: 'roopkund', label: 'Roopkund Trek' },
-  { value: 'sar-pass', label: 'Sar Pass Trek' },
-  { value: 'brahmatal', label: 'Brahmatal Trek' },
-  { value: 'chadar', label: 'Chadar Trek' },
-  { value: 'goechala', label: 'Goechala Trek' },
-  { value: 'custom', label: 'Custom Trek / Not Sure' },
-];
+interface MobileStickyFormProps {
+  variant?: 'full' | 'minimal';
+}
 
-export default function MobileStickyForm() {
+export default function MobileStickyForm({ variant = 'minimal' }: MobileStickyFormProps) {
+  const { trekOptions, loading: trekLoading } = useTrekOptions();
+  const isMinimal = variant === 'minimal';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [formData, setFormData] = useState<FormData>({
@@ -55,6 +49,20 @@ export default function MobileStickyForm() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Open modal when navigated to #whatsapp-form on mobile
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkHash = () => {
+      const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+      if (isMobile && window.location.hash === '#whatsapp-form') {
+        setIsModalOpen(true);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, []);
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isModalOpen) {
@@ -76,9 +84,13 @@ export default function MobileStickyForm() {
       newErrors.name = 'Name must be at least 2 characters';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!isMinimal) {
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email';
+      }
+    } else if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
 
@@ -106,12 +118,12 @@ export default function MobileStickyForm() {
 
     try {
       // Get trek name from options
-      const trekOption = TREK_OPTIONS.find(opt => opt.value === formData.trek);
+      const trekOption = trekOptions.find(opt => opt.value === formData.trek);
       
       // Submit to API
       const leadData: LeadData = {
         name: formData.name,
-        email: formData.email,
+        email: formData.email.trim() || undefined,
         whatsapp: formData.whatsapp,
         trek_slug: formData.trek,
         trek_name: trekOption?.label,
@@ -251,10 +263,10 @@ export default function MobileStickyForm() {
                       {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
                     </div>
 
-                    {/* Email */}
+                    {/* Email - optional in minimal, required in full */}
                     <div>
                       <label htmlFor="mobile-email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address
+                        Email Address {isMinimal && <span className="text-gray-400 font-normal">(optional)</span>}
                       </label>
                       <input
                         type="email"
@@ -299,11 +311,12 @@ export default function MobileStickyForm() {
                         id="mobile-trek"
                         value={formData.trek}
                         onChange={(e) => handleChange('trek', e.target.value)}
+                        disabled={trekLoading}
                         className={`w-full px-4 py-3 border rounded-xl text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 ${
                           errors.trek ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-orange-500'
-                        } ${!formData.trek ? 'text-gray-400' : ''}`}
+                        } ${!formData.trek ? 'text-gray-400' : ''} disabled:opacity-70 disabled:cursor-not-allowed`}
                       >
-                        {TREK_OPTIONS.map((option) => (
+                        {trekOptions.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>

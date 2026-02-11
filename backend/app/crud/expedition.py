@@ -135,6 +135,8 @@ class CRUDExpedition(CRUDBase[Expedition, ExpeditionCreate, ExpeditionUpdate]):
             exp_data["safety_info"] = exp_data.pop("safetyInfo")
         if "reviewCount" in exp_data:
             exp_data["review_count"] = exp_data.pop("reviewCount")
+        if "itineraryPdfUrl" in exp_data:
+            exp_data["itinerary_pdf_url"] = exp_data.pop("itineraryPdfUrl")
         
         # Convert nested models to dict
         if "requirements" in exp_data and hasattr(exp_data["requirements"], "model_dump"):
@@ -180,6 +182,8 @@ class CRUDExpedition(CRUDBase[Expedition, ExpeditionCreate, ExpeditionUpdate]):
             update_data["safety_info"] = update_data.pop("safetyInfo")
         if "reviewCount" in update_data:
             update_data["review_count"] = update_data.pop("reviewCount")
+        if "itineraryPdfUrl" in update_data:
+            update_data["itinerary_pdf_url"] = update_data.pop("itineraryPdfUrl")
         
         # Handle itinerary separately if provided
         itinerary_data = update_data.pop("itinerary", None)

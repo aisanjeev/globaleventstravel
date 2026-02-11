@@ -2,6 +2,11 @@
 // Global Events Travels - Constants
 // ============================================
 
+export const WHATSAPP = {
+  number: '916383313359',
+  prefilledMessage: "Hi, I'm interested in trekking. Can you send me itinerary options?",
+};
+
 export const SITE_CONFIG = {
   name: 'Global Events Travels',
   tagline: 'Adventure Awaits in the Himalayas',
@@ -66,6 +71,14 @@ export const LEAD_FORM_CONFIG = {
   formTitle: 'Get Your Free Trek Guide',
   formSubtitle: 'Personalized itinerary sent to WhatsApp',
 };
+
+// Trek regions for Explore by Region section
+export const TREK_REGIONS = [
+  { name: 'Uttarakhand', slug: 'Uttarakhand', image: '/images/destinations/uttarakhand.jpg' },
+  { name: 'Himachal Pradesh', slug: 'Himachal', image: '/images/destinations/himachal.jpg' },
+  { name: 'Kashmir', slug: 'Kashmir', image: '/images/destinations/srinagar.jpg' },
+  { name: 'Sikkim', slug: 'Sikkim', image: '/images/destinations/himachal.jpg' },
+] as const;
 
 // Hero section content
 export const HERO_CONTENT = {

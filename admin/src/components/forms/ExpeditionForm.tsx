@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { GalleryUpload } from "@/components/ui/GalleryUpload";
+import { PdfItineraryUpload } from "@/components/ui/PdfItineraryUpload";
 import type { Expedition, ExpeditionDifficulty, ExpeditionStatus } from "@/types/api";
 import { cn } from "@/lib/utils";
 import {
@@ -103,6 +104,7 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
       safetyInfo: expedition?.safetyInfo || "",
       featured: expedition?.featured || false,
       status: expedition?.status || "draft",
+      itineraryPdfUrl: expedition?.itineraryPdfUrl || "",
       itinerary: expedition?.itinerary?.map(day => ({
         day: day.day,
         title: day.title,
@@ -350,6 +352,24 @@ export function ExpeditionForm({ expedition, onSubmit, isLoading, mode }: Expedi
                 />
               </FormField>
             </div>
+
+            <FormField
+              label="PDF Itinerary"
+              error={errors.itineraryPdfUrl?.message}
+              hint="Upload a PDF or paste URL. Used for automated emails when leads request itinerary."
+            >
+              <Controller
+                name="itineraryPdfUrl"
+                control={control}
+                render={({ field }) => (
+                  <PdfItineraryUpload
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    error={!!errors.itineraryPdfUrl}
+                  />
+                )}
+              />
+            </FormField>
           </CardContent>
         </Card>
       )}

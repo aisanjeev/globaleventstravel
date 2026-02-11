@@ -27,6 +27,7 @@ import {
   IndianRupee,
   MapPin,
   Star,
+  Calendar,
 } from "lucide-react";
 
 export default function TrekListPage() {
@@ -321,7 +322,7 @@ export default function TrekListPage() {
                     )}
 
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
                           {trek.duration} days
@@ -330,6 +331,12 @@ export default function TrekListPage() {
                           <MapPin className="h-4 w-4 mr-1" />
                           {trek.location}
                         </div>
+                        {trek.best_season && trek.best_season.length > 0 && (
+                          <div className="flex items-center text-amber-600">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {trek.best_season.join(", ")}
+                          </div>
+                        )}
                       </div>
                     </div>
 

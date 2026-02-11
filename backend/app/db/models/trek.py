@@ -58,6 +58,9 @@ class Trek(Base):
     
     # Map embed code for Google Maps
     map_embed: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # PDF Itinerary (upload URL or external URL)
+    itinerary_pdf_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     
     # Ratings
     rating: Mapped[float] = mapped_column(Float, default=0.0)

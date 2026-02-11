@@ -37,6 +37,7 @@ export const blogPostSchema = z.object({
     .max(160, "Meta description should be under 160 characters")
     .optional()
     .or(z.literal("")),
+  meta_keywords: z.string().optional().or(z.literal("")),
   published_at: z.string().optional().or(z.literal("")),
   tag_ids: z.array(z.number()).optional(),
   author_id: z.number({ message: "Author is required" }),
@@ -143,6 +144,7 @@ export const trekSchema = z.object({
     .or(z.literal("")),
   meta_keywords: z.array(z.string()).optional(),
   map_embed: z.string().optional().or(z.literal("")),
+  itinerary_pdf_url: z.string().url("Invalid PDF URL").optional().or(z.literal("")),
   itinerary: z.array(itineraryDaySchema).optional(),
   faqs: z.array(trekFAQSchema).optional(),
 }).refine(
@@ -241,6 +243,7 @@ export const expeditionSchema = z.object({
   safetyInfo: z.string().optional().or(z.literal("")),
   featured: z.boolean().default(false),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
+  itineraryPdfUrl: z.string().url("Invalid PDF URL").optional().or(z.literal("")),
   itinerary: z.array(expeditionDaySchema).optional(),
 }).refine(
   (data) => data.group_size_max >= data.group_size_min,

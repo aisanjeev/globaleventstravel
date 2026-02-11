@@ -20,6 +20,7 @@ import {
   ChevronRight,
   MessagesSquare,
   Mail,
+  Inbox,
   Users,
 } from "lucide-react";
 
@@ -75,6 +76,11 @@ const navigationSections: NavigationSection[] = [
         href: "/dashboard/contacts",
         icon: Mail,
       },
+      {
+        name: "Email Logs",
+        href: "/dashboard/email-logs",
+        icon: Inbox,
+      },
     ],
   },
   {
@@ -98,6 +104,11 @@ const navigationSections: NavigationSection[] = [
             name: "Tags",
             href: "/dashboard/blog/tags",
             icon: Tags,
+          },
+          {
+            name: "Authors",
+            href: "/dashboard/blog/authors",
+            icon: Users,
           },
         ],
       },

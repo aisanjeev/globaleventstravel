@@ -1,7 +1,27 @@
 ---
+// Fetch offices and treks at request time for dynamic contact info
+export const prerender = false;
+
 import MainLayout from '@/layouts/MainLayout.astro';
 import OfficesList from '@/components/offices/OfficesList.astro';
-import { SITE_CONFIG } from '@/lib/constants';
+import { getSiteSettings, officesApi, treksApi } from '@/lib/api';
+import type { Office } from '@/lib/types';
+import type { Trek } from '@/lib/types';
+
+const { siteConfig } = await getSiteSettings();
+
+let offices: Office[] = [];
+let trekOptions: { value: string; label: string }[] = [];
+try {
+  const [officesList, treksResponse] = await Promise.all([
+    officesApi.list(),
+    treksApi.list({ status: 'published', limit: 50 }),
+  ]);
+  offices = officesList;
+  trekOptions = (treksResponse.items || []).map((t: Trek) => ({ value: t.slug, label: t.name }));
+} catch (error) {
+  console.error('Failed to fetch offices or treks:', error);
+}
 ---
 
 <MainLayout 
@@ -31,49 +51,49 @@ import { SITE_CONFIG } from '@/lib/constants';
           </p>
 
           <div class="space-y-6">
-            <!-- Address -->
-            <div class="flex gap-4">
-              <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-secondary-600 mb-1">Our Office</h3>
-                <p class="text-neutral-600">{SITE_CONFIG.address}</p>
-              </div>
-            </div>
-
-            <!-- Phone -->
-            <div class="flex gap-4">
-              <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-secondary-600 mb-1">Phone</h3>
-                <a href={`tel:${SITE_CONFIG.phone}`} class="text-secondary-500 hover:text-primary-500">
-                  {SITE_CONFIG.phone}
-                </a>
-              </div>
-            </div>
-
-            <!-- Email -->
-            <div class="flex gap-4">
-              <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-secondary-600 mb-1">Email</h3>
-                <a href={`mailto:${SITE_CONFIG.email}`} class="text-secondary-500 hover:text-primary-500">
-                  {SITE_CONFIG.email}
-                </a>
-              </div>
-            </div>
+            {offices.length === 0 && (
+              <>
+                <!-- Company contact when no offices configured -->
+                <div class="flex gap-4">
+                  <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-secondary-600 mb-1">Our Office</h3>
+                    <p class="text-neutral-600">{siteConfig.address}</p>
+                  </div>
+                </div>
+                <div class="flex gap-4">
+                  <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-secondary-600 mb-1">Phone</h3>
+                    <a href={`tel:${siteConfig.phone}`} class="text-secondary-500 hover:text-primary-500">{siteConfig.phone}</a>
+                  </div>
+                </div>
+                <div class="flex gap-4">
+                  <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-secondary-600 mb-1">Email</h3>
+                    <a href={`mailto:${siteConfig.email}`} class="text-secondary-500 hover:text-primary-500">{siteConfig.email}</a>
+                  </div>
+                </div>
+              </>
+            )}
+            {offices.length > 0 && (
+              <p class="text-neutral-600 text-sm">
+                We have {offices.length} office{offices.length > 1 ? 's' : ''} across India. Visit our locations with maps below.
+              </p>
+            )}
 
             <!-- Hours -->
             <div class="flex gap-4">
@@ -129,7 +149,7 @@ import { SITE_CONFIG } from '@/lib/constants';
                     type="tel" 
                     id="phone" 
                     name="phone"
-                placeholder="+91 63833 13359"
+                placeholder={offices.length > 0 ? offices[0].phone : siteConfig.phone}
                     class="input"
                   />
                 </div>
@@ -150,11 +170,9 @@ import { SITE_CONFIG } from '@/lib/constants';
                 <label for="trek" class="input-label">Interested Trek (Optional)</label>
                 <select id="trek" name="trek" class="input">
                   <option value="">Select a trek</option>
-                  <option value="hampta-pass">Hampta Pass Trek</option>
-                  <option value="kedarkantha">Kedarkantha Trek</option>
-                  <option value="valley-of-flowers">Valley of Flowers</option>
-                  <option value="roopkund">Roopkund Trek</option>
-                  <option value="sar-pass">Sar Pass Trek</option>
+                  {trekOptions.map((opt) => (
+                    <option value={opt.value}>{opt.label}</option>
+                  ))}
                   <option value="other">Other / Not Sure</option>
                 </select>
               </div>

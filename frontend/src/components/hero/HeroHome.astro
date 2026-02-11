@@ -13,35 +13,34 @@ const {
 } = Astro.props;
 
 interface PageSection {
+  key: string;
   title?: string | null;
   subtitle?: string | null;
   badge_text?: string | null;
-  body_html?: string | null;
+  cta_label?: string | null;
+  cta_url?: string | null;
 }
 
-let heroContent: PageSection = {};
-let statsContent: PageSection | null = null;
+let heroContent: PageSection | null = null;
+let primaryCta: { label: string; url: string } = { label: 'Explore Treks', url: '/treks' };
+let secondaryCta: { label: string; url: string } = { label: 'Get Free Itinerary on WhatsApp', url: '#whatsapp-form' };
 
 try {
-  const [sections] = await Promise.all([
-    api.get<PageSection[]>(`/content/home`),
-  ]);
+  const sections = await api.get<PageSection[]>(`/content/home`);
 
   const heroSection = sections.find((s) => s.key === "hero");
-  const statsSection = sections.find((s) => s.key === "hero_stats");
+  const primarySection = sections.find((s) => s.key === "hero_primary_cta");
+  const secondarySection = sections.find((s) => s.key === "hero_secondary_cta");
 
-  if (heroSection) {
-    heroContent = heroSection;
-  }
-  if (statsSection) {
-    statsContent = statsSection;
-  }
+  if (heroSection) heroContent = heroSection;
+  if (primarySection?.cta_label) primaryCta = { label: primarySection.cta_label, url: primarySection.cta_url || '/treks' };
+  if (secondarySection?.cta_label) secondaryCta = { label: secondarySection.cta_label, url: secondarySection.cta_url || '#whatsapp-form' };
 } catch (error) {
   console.error('Failed to fetch home hero content, using defaults:', error);
 }
 ---
 
-<section class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden">
+<section id="whatsapp-form" class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden scroll-mt-20">
   <!-- Background Image -->
   <div class="absolute inset-0">
     <Image
@@ -71,68 +70,48 @@ try {
       <!-- Left Content (60% on desktop) -->
       <div class="lg:col-span-3 text-white">
         <!-- Badge -->
-        {(heroContent.badge_text || 'Now booking for 2026 season') && (
+        {((heroContent?.badge_text) || 'Now booking for 2026 season') && (
           <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
             <span class="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></span>
             <span class="text-sm font-medium">
-              {heroContent.badge_text || 'Now booking for 2026 season'}
+              {heroContent?.badge_text || 'Now booking for 2026 season'}
             </span>
           </div>
         )}
 
-        <!-- Main Headline - Benefit focused -->
+        <!-- Main Headline - Booking focused -->
         <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
-          {heroContent.title || 'Get Your Custom Himalayan Trek Itinerary'}
+          {heroContent?.title || 'Plan Your Perfect Himalayan Trek'}
         </h1>
 
         <!-- Subheadline -->
         <p class="text-lg md:text-xl text-white/90 mb-8 max-w-xl leading-relaxed drop-shadow">
-          {heroContent.subtitle || 'Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp'}
+          {heroContent?.subtitle || 'Book trusted treks across the Himalayas with expert guides.'}
         </p>
 
-        <!-- Social Proof Stats -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div class="text-center sm:text-left">
-            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">
-              {(statsContent && statsContent.body_html) ? (
-                <span set:html={statsContent.body_html.split('|')[0] || '50+'}></span>
-              ) : '50+'}
-            </div>
-            <div class="text-white/70 text-sm">
-              {(statsContent && statsContent.body_html) ? (
-                <span set:html={statsContent.body_html.split('|')[1] || 'Trek Routes'}></span>
-              ) : 'Trek Routes'}
-            </div>
-          </div>
-          <div class="text-center sm:text-left">
-            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">10k+</div>
-            <div class="text-white/70 text-sm">Happy Trekkers</div>
-          </div>
-          <div class="text-center sm:text-left">
-            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">15+</div>
-            <div class="text-white/70 text-sm">Expert Guides</div>
-          </div>
-          <div class="text-center sm:text-left">
-            <div class="text-2xl md:text-3xl font-bold text-primary-300 drop-shadow">8+</div>
-            <div class="text-white/70 text-sm">Years Experience</div>
-          </div>
+        <!-- Primary & Secondary CTAs -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+          <a
+            href={primaryCta.url}
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white font-semibold rounded-xl shadow-lg shadow-primary-500/30 transition-all duration-200 text-lg"
+          >
+            {primaryCta.label}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+          <a
+            href={secondaryCta.url}
+            class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl transition-all duration-200 text-lg"
+          >
+            {secondaryCta.label}
+          </a>
         </div>
 
-        <!-- Mini Testimonial -->
-        <div class="hidden md:block bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 max-w-md">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0">
-              <span class="text-white font-bold text-sm">PS</span>
-            </div>
-            <div>
-              <p class="text-white/90 text-sm italic mb-2">
-                "Best trekking experience of my life! The guides were amazing and the itinerary was perfect."
-              </p>
-              <p class="text-white/60 text-xs">
-                <span class="font-medium text-white/80">Priya S.</span> — Kedarkantha Trek
-              </p>
-            </div>
-          </div>
+        <!-- Subtle stats (small white text) - moved to Why Choose Us, minimal here -->
+        <div class="flex flex-wrap gap-6 text-white/70 text-sm mb-6">
+          <span>10,000+ Happy Trekkers</span>
+          <span>4.8★ Average Rating</span>
         </div>
 
         <!-- Trust Badges (Mobile) -->
@@ -158,9 +137,9 @@ try {
         </div>
       </div>
 
-      <!-- Right Form Panel (40% on desktop) - Hidden on mobile -->
+      <!-- Right Form Panel (40% on desktop) - Hidden on mobile, minimal variant -->
       <div class="hidden lg:block lg:col-span-2">
-        <LeadCaptureForm client:load />
+        <LeadCaptureForm client:load variant="minimal" />
       </div>
     </div>
   </div>

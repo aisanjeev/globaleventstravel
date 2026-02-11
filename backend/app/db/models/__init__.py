@@ -16,6 +16,10 @@ from app.db.models.blog import (
 )
 from app.db.models.user import User
 from app.db.models.media import Media
+from app.db.models.email_log import EmailLog
+from app.db.models.site_settings import SiteSettings
+from app.db.models.google_review import GoogleReview
+from app.db.models.google_reviews_meta import GoogleReviewsMeta
 
 __all__ = [
     "Trek",
@@ -39,5 +43,9 @@ __all__ = [
     "ContentType",
     "User",
     "Media",
+    "EmailLog",
+    "SiteSettings",
+    "GoogleReview",
+    "GoogleReviewsMeta",
 ]
 

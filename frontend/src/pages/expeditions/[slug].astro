@@ -1,6 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
-import { SITE_CONFIG } from '@/lib/constants';
+import ExpeditionLayout from '@/layouts/ExpeditionLayout.astro';
 import { expeditionsApi } from '@/lib/api';
 import type { Expedition } from '@/lib/types';
 import TrekLeadForm from '@/components/forms/TrekLeadForm';
@@ -39,15 +38,15 @@ const difficultyColors = {
 };
 ---
 
-<MainLayout title={title} description={description}>
+<ExpeditionLayout title={title} description={description}>
   <!-- Hero Section -->
-  <section class="relative h-[60vh] min-h-[500px]">
+  <section class="relative h-[65vh] min-h-[500px]">
     <img
       src={expedition.image}
       alt={expedition.name}
       class="w-full h-full object-cover"
     />
-    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-royal-800/80 via-royal-600/50 to-royal-600/30"></div>
     
     <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12">
       <div class="container-custom">
@@ -55,10 +54,10 @@ const difficultyColors = {
           <span class={`px-3 py-1.5 rounded-full text-sm font-semibold capitalize border ${difficultyColors[expedition.difficulty]}`}>
             {expedition.difficulty}
           </span>
-          <span class="px-3 py-1.5 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium">
+          <span class="px-3 py-1.5 bg-primary-500/20 backdrop-blur-sm text-white rounded-full text-sm font-medium border border-primary-400/30">
             {expedition.duration} Days
           </span>
-          <span class="px-3 py-1.5 bg-green-500/20 backdrop-blur-sm text-green-300 rounded-full text-sm font-medium flex items-center gap-1">
+          <span class="px-3 py-1.5 bg-primary-500/20 backdrop-blur-sm text-white rounded-full text-sm font-medium flex items-center gap-1 border border-primary-400/30">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -66,11 +65,12 @@ const difficultyColors = {
           </span>
         </div>
         
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">
           {expedition.name}
         </h1>
+        <p class="text-primary-400 text-lg mb-4">Apply for the {expedition.summitAltitude.toLocaleString()}m technical ascent</p>
         
-        <div class="flex items-center gap-4 text-white/80">
+        <div class="flex items-center gap-4 text-white/90">
           <span class="flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -366,11 +366,15 @@ const difficultyColors = {
         <div class="lg:col-span-1">
           <div class="sticky top-24 space-y-6">
             <!-- Booking Card -->
-            <div class="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
-              <div class="text-center mb-6">
-                <span class="text-sm text-neutral-500">Starting from</span>
-                <div class="text-4xl font-bold text-secondary-600">{formatPrice(expedition.price)}</div>
-                <span class="text-sm text-neutral-500">per person</span>
+            <div class="bg-white rounded-2xl border border-neutral-200 p-6 shadow-lg">
+              <div class="mb-6">
+                <p class="text-primary-600 font-semibold text-sm mb-2">Designed for experienced climbers</p>
+                <p class="text-neutral-600 text-sm mb-4 line-clamp-2">{expedition.requirements.experience}</p>
+                <div class="pt-4 border-t border-neutral-100">
+                  <span class="text-xs text-neutral-500">Starting from</span>
+                  <div class="text-2xl font-bold text-secondary-600">{formatPrice(expedition.price)}</div>
+                  <span class="text-xs text-neutral-500">per person</span>
+                </div>
               </div>
 
               <!-- Quick Facts -->
@@ -381,7 +385,7 @@ const difficultyColors = {
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-neutral-600 text-sm">Summit Altitude</span>
-                  <span class="font-semibold text-secondary-600">{expedition.summitAltitude.toLocaleString()}m</span>
+                  <span class="font-semibold text-primary-600">{expedition.summitAltitude.toLocaleString()}m</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-neutral-600 text-sm">Group Size</span>
@@ -399,7 +403,7 @@ const difficultyColors = {
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-neutral-600 text-sm">Success Rate</span>
-                  <span class="font-semibold text-green-600">{expedition.successRate}%</span>
+                  <span class="font-semibold text-primary-600">{expedition.successRate}%</span>
                 </div>
               </div>
 
@@ -418,17 +422,17 @@ const difficultyColors = {
               <!-- CTA Buttons -->
               <div class="space-y-3">
                 <a
-                  href={`https://wa.me/916383313359?text=Hi%2C%20I%27m%20interested%20in%20the%20${expedition.name}%20Expedition.`}
+                  href={`https://wa.me/916383313359?text=Hi%2C%20I%20would%20like%20to%20apply%20for%20the%20${encodeURIComponent(expedition.name)}%20Expedition%20(${expedition.summitAltitude}m).`}
                   target="_blank"
                   rel="noopener noreferrer"
                   class="btn-primary w-full justify-center"
                 >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.929C.15 5.184 5.185.15 12.201.15c3.611 0 7.043 1.411 9.592 3.959 2.549 2.549 3.96 5.98 3.96 9.592 0 7.016-5.035 12.05-12.051 12.05-1.981 0-3.91-.555-5.618-1.617l-6.177 1.688z" />
+                  Apply Now
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
-                  Enquire on WhatsApp
                 </a>
-                <a href="/contact" class="btn-secondary w-full justify-center">
+                <a href="/contact?interest=expedition" class="w-full justify-center inline-flex items-center px-6 py-3 border-2 border-secondary-600 text-secondary-600 font-medium rounded-lg hover:bg-secondary-50 transition-colors">
                   Contact Us
                 </a>
               </div>
@@ -437,9 +441,9 @@ const difficultyColors = {
             <!-- Rating Card -->
             <div class="bg-white rounded-2xl border border-neutral-200 p-6">
               <div class="flex items-center gap-3 mb-4">
-                <div class="text-3xl font-bold text-secondary-600">{expedition.rating}</div>
+                <div class="text-3xl font-bold text-primary-600">{expedition.rating}</div>
                 <div>
-                  <div class="flex text-yellow-400">
+                  <div class="flex text-primary-500">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <svg class={`w-5 h-5 ${i <= Math.floor(expedition.rating) ? '' : 'opacity-30'}`} fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -459,6 +463,7 @@ const difficultyColors = {
                 trekSlug={expedition.slug}
                 trekPrice={formatPrice(expedition.price)}
                 source="expedition_page"
+                variant="expedition"
               />
             </div>
           </div>
@@ -468,26 +473,26 @@ const difficultyColors = {
   </section>
 
   <!-- Mobile Sticky CTA -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 p-4 shadow-lg z-40 lg:hidden">
+  <div class="fixed bottom-0 left-0 right-0 bg-royal-600 border-t border-royal-700 p-4 shadow-lg z-40 lg:hidden">
     <div class="flex items-center justify-between">
       <div>
-        <span class="text-sm text-neutral-500">Starting from</span>
-        <div class="text-xl font-bold text-secondary-600">{formatPrice(expedition.price)}</div>
+        <span class="text-sm text-white/80">Starting from</span>
+        <div class="text-xl font-bold text-white">{formatPrice(expedition.price)}</div>
       </div>
       <a
-        href={`https://wa.me/916383313359?text=Hi%2C%20I%27m%20interested%20in%20the%20${expedition.name}%20Expedition.`}
+        href={`https://wa.me/916383313359?text=Hi%2C%20I%20would%20like%20to%20apply%20for%20the%20${encodeURIComponent(expedition.name)}%20Expedition.`}
         target="_blank"
         rel="noopener noreferrer"
         class="btn-primary flex items-center gap-2"
       >
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.929C.15 5.184 5.185.15 12.201.15c3.611 0 7.043 1.411 9.592 3.959 2.549 2.549 3.96 5.98 3.96 9.592 0 7.016-5.035 12.05-12.051 12.05-1.981 0-3.91-.555-5.618-1.617l-6.177 1.688z" />
+        Apply Now
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
-        Enquire Now
       </a>
     </div>
   </div>
-</MainLayout>
+</ExpeditionLayout>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {

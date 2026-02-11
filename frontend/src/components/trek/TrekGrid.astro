@@ -6,9 +6,11 @@ interface Props {
   treks: Trek[];
   columns?: 2 | 3 | 4;
   showEmpty?: boolean;
+  /** Default urgency text for featured treks (from page_content featured_defaults) */
+  urgencyDefaults?: { nextBatch?: string; seatsText?: string };
 }
 
-const { treks, columns = 3, showEmpty = true } = Astro.props;
+const { treks, columns = 3, showEmpty = true, urgencyDefaults } = Astro.props;
 
 const gridCols = {
   2: 'md:grid-cols-2',
@@ -20,7 +22,12 @@ const gridCols = {
 {treks.length > 0 ? (
   <div class={`grid grid-cols-1 ${gridCols[columns]} gap-6`}>
     {treks.map((trek) => (
-      <TrekCard trek={trek} />
+      <TrekCard
+        trek={trek}
+        nextBatch={urgencyDefaults?.nextBatch}
+        seatsLeft={urgencyDefaults?.seatsText}
+        bestSeller={trek.featured}
+      />
     ))}
   </div>
 ) : showEmpty ? (

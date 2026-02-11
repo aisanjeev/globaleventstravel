@@ -183,3 +183,31 @@
     scrollbar-width: none;
   }
 }
+
+/* Trek hero snow animation (winter treks) */
+.trek-snow-overlay {
+  z-index: 1;
+}
+
+.trek-snowflake {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  left: var(--x, 0);
+  top: -10px;
+  animation: trek-snow-fall var(--duration, 10s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes trek-snow-fall {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(110vh) translateX(10px);
+    opacity: 0.1;
+  }
+}

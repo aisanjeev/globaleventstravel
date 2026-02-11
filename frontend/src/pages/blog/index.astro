@@ -2,27 +2,67 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import BlogCard from '@/components/blog/BlogCard.astro';
 import { blogApi } from '@/lib/api';
-import { BLOG_CATEGORIES } from '@/lib/data';
+import type { BlogPost, BlogCategory, BlogTag } from '@/lib/types';
+
+export const prerender = false;
 
 const title = 'Trekking Blog | Tips, Guides & Stories';
 const description = 'Expert trekking guides, travel tips, gear reviews, and inspiring stories from the Himalayas. Plan your next adventure with our comprehensive articles.';
 
-// Fetch blog posts from API
-let featuredPosts: any[] = [];
-let recentPosts: any[] = [];
-let allTags: string[] = [];
+// Read query params for filtering, search, pagination
+const url = Astro.url;
+const activeCategory = url.searchParams.get('category') || '';
+const searchQuery = url.searchParams.get('search') || '';
+const pageParam = parseInt(url.searchParams.get('page') || '1', 10);
+const currentPage = Math.max(1, pageParam);
+const perPage = 9;
+
+// Fetch data from API
+let featuredPosts: BlogPost[] = [];
+let posts: BlogPost[] = [];
+let total = 0;
+let categories: BlogCategory[] = [];
+let tags: BlogTag[] = [];
 
 try {
-  featuredPosts = await blogApi.getFeaturedPosts(1);
-  const response = await blogApi.listPosts(0, 10);
-  recentPosts = response.items || [];
-  
-  // Extract unique tags from all posts
-  allTags = [...new Set(recentPosts.flatMap((post: any) => post.tags || []))];
+  const [featuredRes, postsRes, catsRes, tagsRes] = await Promise.all([
+    blogApi.getFeaturedPosts(1),
+    blogApi.listPosts(
+      (currentPage - 1) * perPage,
+      perPage,
+      activeCategory || undefined,
+      undefined,
+      searchQuery || undefined,
+      'published',
+    ),
+    blogApi.getCategories(true),
+    blogApi.getTags(),
+  ]);
+
+  featuredPosts = featuredRes || [];
+  posts = postsRes.items || [];
+  total = postsRes.total || 0;
+  categories = catsRes || [];
+  tags = (tagsRes || []).filter((t: BlogTag) => (t.post_count || 0) > 0);
 } catch (error) {
-  console.error('Error fetching blog posts:', error);
-  // Fallback to empty arrays if API fails
+  console.error('Error fetching blog data:', error);
 }
+
+const totalPages = Math.ceil(total / perPage);
+
+// Show featured only on page 1 with no filters
+const showFeatured = currentPage === 1 && !activeCategory && !searchQuery && featuredPosts.length > 0;
+const featuredIds = featuredPosts.map((p: BlogPost) => p.id);
+const displayPosts = showFeatured ? posts.filter((p: BlogPost) => !featuredIds.includes(p.id)) : posts;
+
+// Build URL helper
+const buildUrl = (params: Record<string, string>) => {
+  const u = new URL(url.pathname, url.origin);
+  for (const [k, v] of Object.entries(params)) {
+    if (v) u.searchParams.set(k, v);
+  }
+  return u.pathname + u.search;
+};
 ---
 
 <MainLayout title={title} description={description}>
@@ -31,9 +71,9 @@ try {
     <div class="container-custom">
       <div class="max-w-3xl">
         <span class="inline-block px-4 py-1.5 bg-white/10 border border-white/20 text-white/90 rounded-full text-sm font-medium mb-6">
-          📚 Trekking Knowledge Hub
+          Trekking Knowledge Hub
         </span>
-        <h1 class="text-4xl md:text-5xl font-bold mb-6">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">
           Trek Guides, Tips & <span class="text-primary-400">Stories</span>
         </h1>
         <p class="text-xl text-neutral-300 mb-8">
@@ -41,17 +81,18 @@ try {
         </p>
         
         <!-- Search Bar -->
-        <div class="relative max-w-xl">
+        <form action="/blog" method="get" class="relative max-w-xl">
           <input
             type="search"
-            id="blog-search"
+            name="search"
+            value={searchQuery}
             placeholder="Search articles..."
             class="w-full px-5 py-4 pl-12 rounded-xl bg-white/10 backdrop-blur border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-        </div>
+        </form>
       </div>
     </div>
   </section>
@@ -59,9 +100,18 @@ try {
   <!-- Main Content -->
   <section class="section">
     <div class="container-custom">
-      {recentPosts.length === 0 ? (
+      {posts.length === 0 && !showFeatured ? (
         <div class="text-center py-12">
-          <p class="text-neutral-500 text-lg">No blog posts available yet. Check back soon!</p>
+          <p class="text-neutral-500 text-lg">
+            {searchQuery
+              ? `No articles found for "${searchQuery}".`
+              : activeCategory
+                ? 'No articles in this category yet.'
+                : 'No blog posts available yet. Check back soon!'}
+          </p>
+          {(searchQuery || activeCategory) && (
+            <a href="/blog" class="inline-block mt-4 text-primary-600 hover:underline">Clear filters</a>
+          )}
         </div>
       ) : (
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -69,47 +119,90 @@ try {
           <!-- Main Content Column -->
           <div class="lg:col-span-3">
             
+            <!-- Active search indicator -->
+            {searchQuery && (
+              <div class="mb-6 flex items-center gap-2 text-neutral-600">
+                <span>Results for <strong>"{searchQuery}"</strong></span>
+                <span class="text-sm text-neutral-400">({total} found)</span>
+                <a href="/blog" class="ml-2 text-sm text-primary-600 hover:underline">Clear</a>
+              </div>
+            )}
+
             <!-- Featured Post -->
-            {featuredPosts.length > 0 && (
+            {showFeatured && (
               <div class="mb-12">
                 <h2 class="text-2xl font-bold text-secondary-600 mb-6 flex items-center gap-2">
-                  <span class="text-primary-500">⭐</span> Featured Article
+                  <span class="text-primary-500">&#11088;</span> Featured Article
                 </h2>
                 <BlogCard post={featuredPosts[0]} featured={true} />
               </div>
             )}
 
             <!-- Category Pills -->
-            <div class="flex flex-wrap gap-2 mb-8">
-              <button class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-primary-500 text-white transition-colors" data-category="all">
-                All Posts
-              </button>
-              {BLOG_CATEGORIES.map((category) => (
-                <button 
-                  class="category-btn px-4 py-2 rounded-full text-sm font-medium bg-neutral-100 text-neutral-600 hover:bg-primary-100 hover:text-primary-700 transition-colors"
-                  data-category={category.value}
+            {categories.length > 0 && (
+              <div class="flex flex-wrap gap-2 mb-8">
+                <a
+                  href="/blog"
+                  class:list={[
+                    'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                    !activeCategory ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-primary-100 hover:text-primary-700',
+                  ]}
                 >
-                  {category.icon} {category.label}
-                </button>
-              ))}
-            </div>
+                  All Posts
+                </a>
+                {categories.map((cat: BlogCategory) => (
+                  <a
+                    href={buildUrl({ category: cat.slug })}
+                    class:list={[
+                      'px-4 py-2 rounded-full text-sm font-medium transition-colors',
+                      activeCategory === cat.slug ? 'bg-primary-500 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-primary-100 hover:text-primary-700',
+                    ]}
+                  >
+                    {cat.name}
+                  </a>
+                ))}
+              </div>
+            )}
 
             <!-- Articles Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {recentPosts.filter((p: any) => !featuredPosts.some((f: any) => f.id === p.id)).map((post: any) => (
+              {displayPosts.map((post: BlogPost) => (
                 <BlogCard post={post} />
               ))}
             </div>
 
-            <!-- Load More -->
-            <div class="text-center mt-12">
-              <button id="load-more" class="btn-secondary">
-                Load More Articles
-                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+            <!-- Pagination -->
+            {totalPages > 1 && (
+              <div class="flex items-center justify-center gap-3 mt-12">
+                {currentPage > 1 && (
+                  <a
+                    href={buildUrl({
+                      ...(activeCategory ? { category: activeCategory } : {}),
+                      ...(searchQuery ? { search: searchQuery } : {}),
+                      page: String(currentPage - 1),
+                    })}
+                    class="px-5 py-2.5 rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-50 transition-colors"
+                  >
+                    &larr; Previous
+                  </a>
+                )}
+                <span class="text-sm text-neutral-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+                {currentPage < totalPages && (
+                  <a
+                    href={buildUrl({
+                      ...(activeCategory ? { category: activeCategory } : {}),
+                      ...(searchQuery ? { search: searchQuery } : {}),
+                      page: String(currentPage + 1),
+                    })}
+                    class="px-5 py-2.5 rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-50 transition-colors"
+                  >
+                    Next &rarr;
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <!-- Sidebar -->
@@ -117,41 +210,37 @@ try {
             <div class="sticky top-24 space-y-8">
               
               <!-- Categories Widget -->
-              <div class="bg-white rounded-2xl border border-neutral-200 p-6">
-                <h3 class="font-bold text-secondary-600 mb-4">Categories</h3>
-                <ul class="space-y-2">
-                  {BLOG_CATEGORIES.map((category) => {
-                    const count = recentPosts.filter((p: any) => p.category === category.value).length;
-                    return (
+              {categories.length > 0 && (
+                <div class="bg-white rounded-2xl border border-neutral-200 p-6">
+                  <h3 class="font-bold text-secondary-600 mb-4">Categories</h3>
+                  <ul class="space-y-2">
+                    {categories.map((cat: BlogCategory) => (
                       <li>
                         <a 
-                          href={`/blog?category=${category.value}`}
-                          class="flex items-center justify-between py-2 text-neutral-600 hover:text-primary-600 transition-colors"
+                          href={buildUrl({ category: cat.slug })}
+                          class:list={[
+                            'flex items-center justify-between py-2 transition-colors',
+                            activeCategory === cat.slug ? 'text-primary-600 font-medium' : 'text-neutral-600 hover:text-primary-600',
+                          ]}
                         >
-                          <span class="flex items-center gap-2">
-                            <span>{category.icon}</span>
-                            {category.label}
-                          </span>
-                          <span class="text-sm bg-neutral-100 px-2 py-0.5 rounded-full">{count}</span>
+                          <span>{cat.name}</span>
+                          <span class="text-sm bg-neutral-100 px-2 py-0.5 rounded-full">{cat.post_count || 0}</span>
                         </a>
                       </li>
-                    );
-                  })}
-                </ul>
-              </div>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <!-- Popular Tags -->
-              {allTags.length > 0 && (
+              {tags.length > 0 && (
                 <div class="bg-white rounded-2xl border border-neutral-200 p-6">
                   <h3 class="font-bold text-secondary-600 mb-4">Popular Tags</h3>
                   <div class="flex flex-wrap gap-2">
-                    {allTags.slice(0, 15).map((tag: string) => (
-                      <a 
-                        href={`/blog?tag=${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                        class="text-sm bg-neutral-100 text-neutral-600 px-3 py-1.5 rounded-full hover:bg-primary-100 hover:text-primary-700 transition-colors"
-                      >
-                        #{tag}
-                      </a>
+                    {tags.slice(0, 15).map((tag: BlogTag) => (
+                      <span class="text-sm bg-neutral-100 text-neutral-600 px-3 py-1.5 rounded-full">
+                        #{tag.name}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -176,11 +265,11 @@ try {
               </div>
 
               <!-- Popular Posts -->
-              {featuredPosts.length > 0 && (
+              {posts.length > 0 && (
                 <div class="bg-white rounded-2xl border border-neutral-200 p-6">
                   <h3 class="font-bold text-secondary-600 mb-4">Popular Articles</h3>
                   <ul class="space-y-4">
-                    {recentPosts.slice(0, 4).map((post: any, index: number) => (
+                    {posts.slice(0, 4).map((post: BlogPost, index: number) => (
                       <li>
                         <a href={`/blog/${post.slug}`} class="flex gap-3 group">
                           <span class="text-2xl font-bold text-primary-200 group-hover:text-primary-400 transition-colors">
@@ -190,7 +279,7 @@ try {
                             <h4 class="text-sm font-medium text-secondary-600 group-hover:text-primary-600 transition-colors line-clamp-2">
                               {post.title}
                             </h4>
-                            <span class="text-xs text-neutral-500">{post.readTime} min read</span>
+                            <span class="text-xs text-neutral-500">{post.readTime || post.readTime} min read</span>
                           </div>
                         </a>
                       </li>
@@ -206,27 +295,3 @@ try {
     </div>
   </section>
 </MainLayout>
-
-<script>
-  // Category filtering (client-side for demo)
-  const categoryBtns = document.querySelectorAll('.category-btn');
-  categoryBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      categoryBtns.forEach(b => {
-        b.classList.remove('bg-primary-500', 'text-white');
-        b.classList.add('bg-neutral-100', 'text-neutral-600');
-      });
-      btn.classList.add('bg-primary-500', 'text-white');
-      btn.classList.remove('bg-neutral-100', 'text-neutral-600');
-      // In production, this would filter posts
-    });
-  });
-
-  // Search functionality (client-side for demo)
-  const searchInput = document.getElementById('blog-search') as HTMLInputElement;
-  searchInput?.addEventListener('input', (e) => {
-    const query = (e.target as HTMLInputElement).value.toLowerCase();
-    // In production, this would filter/search posts
-    console.log('Searching for:', query);
-  });
-</script>

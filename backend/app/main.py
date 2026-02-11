@@ -25,8 +25,8 @@ async def lifespan(app: FastAPI):
     
     # Import all models to register them
     from app.db.models import (
-        Trek, TrekFAQ, Expedition, Guide, Booking, Lead, 
-        ContactMessage, Testimonial, Office, BlogPost, Media
+        Trek, TrekFAQ, Expedition, Guide, Booking, Lead,
+        ContactMessage, Testimonial, Office, BlogPost, Media, EmailLog
     )
     
     # Use Alembic migrations if enabled, otherwise use create_all()

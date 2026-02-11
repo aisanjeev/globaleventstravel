@@ -83,6 +83,12 @@ class BlogTagCreate(BlogTagBase):
     pass
 
 
+class BlogTagUpdate(BaseModel):
+    """Schema for updating a blog tag."""
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    slug: Optional[str] = Field(None, min_length=1, max_length=50)
+
+
 class BlogTagResponse(BlogTagBase):
     """Schema for blog tag response."""
     id: int
@@ -108,6 +114,14 @@ class BlogAuthorBase(BaseModel):
 class BlogAuthorCreate(BlogAuthorBase):
     """Schema for creating a blog author."""
     pass
+
+
+class BlogAuthorUpdate(BaseModel):
+    """Schema for updating a blog author."""
+    name: Optional[str] = Field(None, min_length=2, max_length=255)
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+    role: Optional[str] = None
 
 
 class BlogAuthorResponse(BlogAuthorBase):

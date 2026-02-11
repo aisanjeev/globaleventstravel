@@ -134,6 +134,7 @@ class TrekBase(BaseModel):
     meta_description: Optional[str] = Field(None, max_length=160)
     meta_keywords: Optional[List[str]] = None
     map_embed: Optional[str] = None
+    itinerary_pdf_url: Optional[str] = None
 
 
 class TrekCreate(TrekBase):
@@ -172,6 +173,7 @@ class TrekUpdate(BaseModel):
     meta_description: Optional[str] = Field(None, max_length=160)
     meta_keywords: Optional[List[str]] = None
     map_embed: Optional[str] = None
+    itinerary_pdf_url: Optional[str] = None
     guide_id: Optional[int] = None
     itinerary: Optional[List[ItineraryDayCreate]] = None
     faqs: Optional[List[TrekFAQCreate]] = None
@@ -206,6 +208,7 @@ class TrekResponse(BaseModel):
     meta_description: Optional[str] = None
     meta_keywords: Optional[List[str]] = None
     map_embed: Optional[str] = None
+    itinerary_pdf_url: Optional[str] = None
     rating: float
     review_count: int
     guide_id: Optional[int] = None
@@ -242,6 +245,7 @@ class TrekListResponse(BaseModel):
     status: str
     featured: bool
     location: str
+    best_season: List[str] = Field(default_factory=list)
     rating: float
     review_count: int
     created_at: datetime

@@ -26,6 +26,12 @@ def list_treks(
     status: Optional[str] = Query(None, pattern="^(draft|published|archived|seasonal)$"),
     location: Optional[str] = None,
     search: Optional[str] = None,
+    season: Optional[str] = Query(None, description="Filter by best season (e.g. May, June)"),
+    sort: Optional[str] = Query(
+        None,
+        description="Sort order: popularity, price_asc, price_desc, rating, newest",
+        pattern="^(popularity|price_asc|price_desc|rating|newest)$",
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -56,6 +62,8 @@ def list_treks(
         status=status,
         location=location,
         search=search,
+        season=season,
+        sort=sort,
     )
     total = trek_crud.get_count_with_filters(
         db,
@@ -66,6 +74,7 @@ def list_treks(
         status=status,
         location=location,
         search=search,
+        season=season,
     )
     
     return PaginatedResponse(

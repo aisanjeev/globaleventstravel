@@ -4,7 +4,7 @@ CRUD operations for Trek model.
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, cast, String
 from app.crud.base import CRUDBase
 from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ
 from app.models.trek import TrekCreate, TrekUpdate, ItineraryDayCreate, TrekImageCreate, TrekFAQCreate
@@ -43,7 +43,9 @@ class CRUDTrek(CRUDBase[Trek, TrekCreate, TrekUpdate]):
         featured: Optional[bool] = None,
         status: Optional[str] = None,
         location: Optional[str] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        season: Optional[str] = None,
+        sort: Optional[str] = None,
     ) -> List[Trek]:
         """Get treks with various filters."""
         query = db.query(Trek)
@@ -66,8 +68,24 @@ class CRUDTrek(CRUDBase[Trek, TrekCreate, TrekUpdate]):
                 (Trek.short_description.ilike(f"%{search}%")) |
                 (Trek.location.ilike(f"%{search}%"))
             )
+        if season:
+            # best_season is JSON array; match if season appears as array element
+            query = query.filter(cast(Trek.best_season, String).contains(f'"{season}"'))
         
-        return query.order_by(Trek.created_at.desc()).offset(skip).limit(limit).all()
+        # Apply sort
+        if sort == "popularity":
+            query = query.order_by(Trek.review_count.desc(), Trek.rating.desc())
+        elif sort == "price_asc":
+            query = query.order_by(Trek.price.asc())
+        elif sort == "price_desc":
+            query = query.order_by(Trek.price.desc())
+        elif sort == "rating":
+            query = query.order_by(Trek.rating.desc())
+        else:
+            # newest (default)
+            query = query.order_by(Trek.created_at.desc())
+        
+        return query.offset(skip).limit(limit).all()
     
     def get_count_with_filters(
         self,
@@ -79,7 +97,8 @@ class CRUDTrek(CRUDBase[Trek, TrekCreate, TrekUpdate]):
         featured: Optional[bool] = None,
         status: Optional[str] = None,
         location: Optional[str] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
+        season: Optional[str] = None,
     ) -> int:
         """Get count of treks with filters."""
         query = db.query(func.count(Trek.id))
@@ -102,6 +121,8 @@ class CRUDTrek(CRUDBase[Trek, TrekCreate, TrekUpdate]):
                 (Trek.short_description.ilike(f"%{search}%")) |
                 (Trek.location.ilike(f"%{search}%"))
             )
+        if season:
+            query = query.filter(cast(Trek.best_season, String).contains(f'"{season}"'))
         
         return query.scalar() or 0
     

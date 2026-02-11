@@ -8,13 +8,13 @@ from app.crud.base import CRUDBase
 from app.db.models.blog import BlogPost, BlogAuthor, BlogCategory, BlogTag, blog_post_tags
 from app.models.blog import (
     BlogPostCreate, BlogPostUpdate,
-    BlogAuthorCreate, BlogAuthorResponse,
+    BlogAuthorCreate, BlogAuthorUpdate,
     BlogCategoryCreate, BlogCategoryUpdate,
-    BlogTagCreate
+    BlogTagCreate, BlogTagUpdate
 )
 
 
-class CRUDBlogAuthor(CRUDBase[BlogAuthor, BlogAuthorCreate, BlogAuthorResponse]):
+class CRUDBlogAuthor(CRUDBase[BlogAuthor, BlogAuthorCreate, BlogAuthorUpdate]):
     """CRUD operations for BlogAuthor model."""
     
     def get_by_name(self, db: Session, name: str) -> Optional[BlogAuthor]:
@@ -66,7 +66,7 @@ class CRUDBlogCategory(CRUDBase[BlogCategory, BlogCategoryCreate, BlogCategoryUp
         ).order_by(BlogCategory.display_order, BlogCategory.name).all()
 
 
-class CRUDBlogTag(CRUDBase[BlogTag, BlogTagCreate, BlogTagCreate]):
+class CRUDBlogTag(CRUDBase[BlogTag, BlogTagCreate, BlogTagUpdate]):
     """CRUD operations for BlogTag model."""
     
     def get_by_slug(self, db: Session, slug: str) -> Optional[BlogTag]:
@@ -132,7 +132,8 @@ class CRUDBlogPost(CRUDBase[BlogPost, BlogPostCreate, BlogPostUpdate]):
         )
         
         if category:
-            query = query.filter(BlogPost.category == category)
+            # Filter by category slug via FK relationship
+            query = query.join(BlogCategory, BlogPost.category_id == BlogCategory.id).filter(BlogCategory.slug == category)
         if category_id:
             query = query.filter(BlogPost.category_id == category_id)
         if featured is not None:
@@ -157,13 +158,19 @@ class CRUDBlogPost(CRUDBase[BlogPost, BlogPostCreate, BlogPostUpdate]):
         
         if filters:
             if filters.get("category"):
-                query = query.filter(BlogPost.category == filters["category"])
+                query = query.join(BlogCategory, BlogPost.category_id == BlogCategory.id).filter(BlogCategory.slug == filters["category"])
             if filters.get("category_id"):
                 query = query.filter(BlogPost.category_id == filters["category_id"])
             if filters.get("featured") is not None:
                 query = query.filter(BlogPost.featured == filters["featured"])
             if filters.get("status"):
                 query = query.filter(BlogPost.status == filters["status"])
+            if filters.get("search"):
+                s = filters["search"]
+                query = query.filter(
+                    BlogPost.title.ilike(f"%{s}%") |
+                    BlogPost.content.ilike(f"%{s}%")
+                )
         
         return query.scalar() or 0
     
@@ -174,13 +181,15 @@ class CRUDBlogPost(CRUDBase[BlogPost, BlogPostCreate, BlogPostUpdate]):
         skip: int = 0,
         limit: int = 100
     ) -> List[BlogPost]:
-        """Get blog posts by category."""
+        """Get blog posts by category slug."""
         return db.query(BlogPost).options(
             joinedload(BlogPost.author),
             joinedload(BlogPost.category_rel),
             joinedload(BlogPost.tags_rel)
+        ).join(
+            BlogCategory, BlogPost.category_id == BlogCategory.id
         ).filter(
-            BlogPost.category == category
+            BlogCategory.slug == category
         ).order_by(BlogPost.created_at.desc()).offset(skip).limit(limit).all()
     
     def get_by_tag(
