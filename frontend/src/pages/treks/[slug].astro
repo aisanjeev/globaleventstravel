@@ -602,7 +602,7 @@ const isWinterTrek = bestSeason.some((s) => winterMonths.some((m) => s.toLowerCa
             <!-- Lead Capture Form -->
             <div id="trek-lead-form" class="hidden lg:block scroll-mt-24">
               <TrekLeadForm 
-                client:load
+                client:idle
                 trekName={trek.name}
                 trekSlug={trek.slug}
                 trekPrice={formatPrice(trek.price)}
