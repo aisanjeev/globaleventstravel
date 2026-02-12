@@ -39,6 +39,33 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 10
     MAX_PAGE_SIZE: int = 100
     
+    # Storage Configuration
+    STORAGE_TYPE: str = "local"  # "local" or "azure"
+    AZURE_STORAGE_CONNECTION_STRING: str = ""
+    AZURE_CONTAINER_NAME: str = "global-events-travels"
+    LOCAL_UPLOAD_DIR: str = "uploads"
+    
+    # Database Migrations
+    USE_ALEMBIC_MIGRATIONS: bool = False  # Set to True to use Alembic migrations on startup
+
+    # Brevo Email
+    BREVO_API_KEY: str = ""
+    ADMIN_EMAIL: str = ""
+    SENDER_EMAIL: str = "noreply@example.com"
+    SENDER_NAME: str = "Global Events Travels"
+    FRONTEND_URL: str = "http://localhost:4321"
+    API_BASE_URL: str = "http://localhost:8000"  # For building absolute PDF URLs
+
+    # Google Places API (for reviews sync)
+    GOOGLE_MAPS_API_KEY: str = ""
+    GOOGLE_REVIEWS_PLACE_ID: str = "ChIJGQi8B8FdBDkROs-J97u89T0"
+    GOOGLE_REVIEWS_SYNC_KEY: str = ""  # Optional: cron can pass X-Sync-Key header instead of admin auth
+
+    @property
+    def is_azure_storage(self) -> bool:
+        """Check if using Azure Blob Storage."""
+        return self.STORAGE_TYPE.lower() == "azure"
+    
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""

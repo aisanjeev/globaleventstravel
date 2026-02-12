@@ -2,15 +2,64 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import HeroHome from '@/components/hero/HeroHome.astro';
 import FeaturedTreks from '@/components/sections/FeaturedTreks.astro';
+import BudgetTreks from '@/components/sections/BudgetTreks.astro';
 import WhyChooseUs from '@/components/sections/WhyChooseUs.astro';
-import Statistics from '@/components/sections/Statistics.astro';
-import TestimonialSection from '@/components/testimonial/TestimonialSection.astro';
+import PopularDestinations from '@/components/sections/PopularDestinations.astro';
+import GoogleReviews from '@/components/sections/GoogleReviews';
 import ExpeditionList from '@/components/expedition/ExpeditionList.astro';
 import CTA from '@/components/sections/CTA.astro';
 
-import { getFeaturedTreks } from '@/lib/data';
+import { treksApi, expeditionsApi, api } from '@/lib/api';
 
-const featuredTreks = getFeaturedTreks();
+// Enable SSR for dynamic data fetching
+export const prerender = false;
+
+// Fetch featured treks from API only (no mock fallback)
+let featuredTreks = [];
+try {
+  featuredTreks = await treksApi.getFeatured(6);
+} catch (error) {
+  console.error('Failed to fetch featured treks from API:', error);
+}
+
+// Fetch expeditions from API for home page (no mock fallback)
+let homeExpeditions = [];
+try {
+  const expRes = await expeditionsApi.list({ status: 'published', limit: 2 });
+  homeExpeditions = expRes.items || [];
+} catch (error) {
+  console.error('Failed to fetch expeditions from API:', error);
+}
+
+// Fetch budget treks (max price 10000)
+let budgetTreks = [];
+try {
+  const budgetRes = await treksApi.list({ maxPrice: 10000, limit: 4 });
+  budgetTreks = budgetRes.items || [];
+} catch (error) {
+  console.error('Failed to fetch budget treks:', error);
+}
+
+// Fetch page content for featured_defaults (urgency text)
+let featuredDefaults: { nextBatch?: string; seatsText?: string } | undefined;
+try {
+  const fdSection = await api.get<{ body_html?: string | null }>('/content/home/featured_defaults');
+  if (fdSection?.body_html) {
+    featuredDefaults = JSON.parse(fdSection.body_html) as { nextBatch?: string; seatsText?: string };
+  }
+} catch (error) {
+  // Section may not exist yet; ignore
+}
+
+// Fetch expeditions section content
+let expeditionsContent: { title?: string; subtitle?: string } = {};
+try {
+  const expSection = await api.get<{ title?: string | null; subtitle?: string | null }>('/content/home/expeditions');
+  if (expSection?.title) expeditionsContent.title = expSection.title;
+  if (expSection?.subtitle) expeditionsContent.subtitle = expSection.subtitle;
+} catch (error) {
+  // Use defaults
+}
 ---
 
 <MainLayout title="Home" description="Discover amazing treks and expeditions in the Himalayas with Global Events Travels. Expert guides, safety first, unforgettable experiences.">
@@ -19,56 +68,22 @@ const featuredTreks = getFeaturedTreks();
   <HeroHome />
 
   <!-- Featured Treks -->
-  <FeaturedTreks treks={featuredTreks} />
+  <FeaturedTreks treks={featuredTreks} urgencyDefaults={featuredDefaults} />
+
+  <!-- Budget Treks -->
+  <BudgetTreks treks={budgetTreks} />
 
   <!-- Why Choose Us -->
   <WhyChooseUs />
 
-  <!-- Statistics -->
-  <Statistics />
+  <!-- Popular Destinations -->
+  <PopularDestinations />
 
-  <!-- Expeditions Section -->
-  <ExpeditionList limit={2} />
+  <!-- Expeditions Section (compact on homepage) -->
+  <ExpeditionList expeditions={homeExpeditions} showTitle={true} compact={true} title={expeditionsContent.title} subtitle={expeditionsContent.subtitle} />
 
-  <!-- Testimonials Section -->
-  <TestimonialSection limit={3} />
-
-  <!-- Popular Destinations Quick Links -->
-  <section class="section bg-white">
-    <div class="container-custom">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
-          Popular Destinations
-        </h2>
-        <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-          Explore the most sought-after trekking regions in the Himalayas
-        </p>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { name: 'Uttarakhand', image: 'https://media3.thrillophilia.com/filestore/efftugji6q4448bt7s45z1js5tp5_1600680960_shutterstock_562139776.jpg?w=400&dpr=2', treks: 9 },
-          { name: 'Himachal Pradesh', image: 'https://res.cloudinary.com/dyiffrkzh/image/upload/c_fill,f_auto,fl_progressive.strip_profile,g_center,h_400,q_auto,w_700/v1728899306/banbanjara/vtbgtzdxrbbyjjo2s1wc.webp', treks: 10 },
-          { name: 'Uttarkashi', image: 'https://media1.thrillophilia.com/filestore/ylm7jv5cf5sf8nzp45db2rdh20om_shutterstock_1151786492.jpg?w=400&dpr=2', treks: 1 },
-          { name: 'Srinagar', image: 'https://d26dp53kz39178.cloudfront.net/media/uploads/products/5_result_3-1683719790067.webp', treks: 1 },
-        ].map((destination) => (
-          <a href={`/treks?region=${destination.name.toLowerCase()}`} class="group relative aspect-square rounded-2xl overflow-hidden">
-            <img 
-              src={destination.image} 
-              alt={destination.name}
-              class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-              loading="lazy"
-            />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-            <div class="absolute bottom-4 left-4 right-4 text-white">
-              <h3 class="text-lg text-white font-semibold">{destination.name}</h3>
-              <p class="text-sm text-white/70">{destination.treks} treks</p>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
+  <!-- Google Reviews (replaces testimonials) -->
+  <GoogleReviews client:visible />
 
   <!-- CTA Section -->
   <CTA />

@@ -82,6 +82,8 @@ class ExpeditionBase(BaseModel):
     rating: float = Field(default=0.0, ge=0, le=5)
     review_count: int = Field(default=0, ge=0, alias="reviewCount")
     featured: bool = False
+    status: str = Field(default="draft", pattern="^(draft|published|archived)$")
+    itinerary_pdf_url: Optional[str] = Field(None, alias="itineraryPdfUrl")
 
     class Config:
         populate_by_name = True
@@ -118,6 +120,9 @@ class ExpeditionUpdate(BaseModel):
     rating: Optional[float] = Field(None, ge=0, le=5)
     review_count: Optional[int] = Field(None, ge=0, alias="reviewCount")
     featured: Optional[bool] = None
+    status: Optional[str] = Field(None, pattern="^(draft|published|archived)$")
+    itinerary_pdf_url: Optional[str] = Field(None, alias="itineraryPdfUrl")
+    itinerary: Optional[List[ExpeditionDayCreate]] = None
 
     class Config:
         populate_by_name = True
@@ -149,6 +154,7 @@ class ExpeditionResponse(BaseModel):
     rating: float
     reviewCount: int
     featured: bool
+    status: str
     created_at: datetime
     updated_at: datetime
 
@@ -183,6 +189,8 @@ class ExpeditionResponse(BaseModel):
             rating=obj.rating,
             reviewCount=obj.review_count,
             featured=obj.featured,
+            status=obj.status,
+            itineraryPdfUrl=getattr(obj, "itinerary_pdf_url", None),
             created_at=obj.created_at,
             updated_at=obj.updated_at,
         )
@@ -191,6 +199,16 @@ class ExpeditionResponse(BaseModel):
 class ExpeditionDetailResponse(ExpeditionResponse):
     """Schema for detailed expedition response."""
     itinerary: List[ExpeditionDayResponse] = []
+
+    @classmethod
+    def from_orm_model(cls, obj):
+        """Convert ORM model (with itinerary) to detailed response schema."""
+        # Reuse base mapping logic
+        base = ExpeditionResponse.from_orm_model(obj)
+        return cls(
+            **base.model_dump(),
+            itinerary=[ExpeditionDayResponse.model_validate(day) for day in getattr(obj, "itinerary", [])],
+        )
 
 
 class ExpeditionListResponse(BaseModel):
@@ -205,12 +223,17 @@ class ExpeditionListResponse(BaseModel):
     region: str
     shortDescription: str
     price: float
+    groupSize: GroupSize
     season: List[str]
     successRate: int
     image: str
     rating: float
     reviewCount: int
     featured: bool
+    status: str
+    itineraryPdfUrl: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
@@ -229,11 +252,16 @@ class ExpeditionListResponse(BaseModel):
             region=obj.region,
             shortDescription=obj.short_description,
             price=obj.price,
+            groupSize=GroupSize(min=obj.group_size_min, max=obj.group_size_max),
             season=obj.season,
             successRate=obj.success_rate,
             image=obj.image,
             rating=obj.rating,
             reviewCount=obj.review_count,
             featured=obj.featured,
+            status=obj.status,
+            itineraryPdfUrl=getattr(obj, "itinerary_pdf_url", None),
+            created_at=obj.created_at,
+            updated_at=obj.updated_at,
         )
 

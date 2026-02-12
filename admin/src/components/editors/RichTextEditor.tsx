@@ -27,18 +27,22 @@ import {
 } from "lucide-react";
 
 interface RichTextEditorProps {
-  content: string;
+  value?: string;
+  content?: string; // Alias for value (backward compatibility)
   onChange: (content: string) => void;
   placeholder?: string;
   error?: boolean;
 }
 
 export function RichTextEditor({
+  value,
   content,
   onChange,
   placeholder = "Start writing...",
   error,
 }: RichTextEditorProps) {
+  // Support both 'value' (react-hook-form) and 'content' props
+  const editorContent = value ?? content ?? "";
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -62,7 +66,7 @@ export function RichTextEditor({
         placeholder,
       }),
     ],
-    content,
+    content: editorContent,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -75,10 +79,10 @@ export function RichTextEditor({
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && editorContent !== editor.getHTML()) {
+      editor.commands.setContent(editorContent);
     }
-  }, [content, editor]);
+  }, [editorContent, editor]);
 
   if (!editor) {
     return (

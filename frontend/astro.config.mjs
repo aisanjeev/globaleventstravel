@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 
 export default defineConfig({
   site: 'https://globaleventstravels.com',
@@ -14,9 +14,7 @@ export default defineConfig({
     sitemap(),
   ],
   output: 'static',
-  adapter: node({
-    mode: 'standalone',
-  }),
+  adapter: vercel(),
   vite: {
     define: {
       __API_BASE_URL__: JSON.stringify(

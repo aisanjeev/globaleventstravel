@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { leadsApi, type LeadData } from '@/lib/api';
+import { useTrekOptions } from '@/lib/useTrekOptions';
 
 interface FormData {
   name: string;
@@ -15,20 +16,13 @@ interface FormErrors {
   trek?: string;
 }
 
-const TREK_OPTIONS = [
-  { value: '', label: 'Select a Trek' },
-  { value: 'hampta-pass', label: 'Hampta Pass Trek' },
-  { value: 'kedarkantha', label: 'Kedarkantha Trek' },
-  { value: 'valley-of-flowers', label: 'Valley of Flowers' },
-  { value: 'roopkund', label: 'Roopkund Trek' },
-  { value: 'sar-pass', label: 'Sar Pass Trek' },
-  { value: 'brahmatal', label: 'Brahmatal Trek' },
-  { value: 'chadar', label: 'Chadar Trek' },
-  { value: 'goechala', label: 'Goechala Trek' },
-  { value: 'custom', label: 'Custom Trek / Not Sure' },
-];
+interface LeadCaptureFormProps {
+  variant?: 'full' | 'minimal';
+}
 
-export default function LeadCaptureForm() {
+export default function LeadCaptureForm({ variant = 'full' }: LeadCaptureFormProps) {
+  const { trekOptions, loading: trekLoading } = useTrekOptions();
+  const isMinimal = variant === 'minimal';
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -40,9 +34,12 @@ export default function LeadCaptureForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Calculate form completion progress
-  const filledFields = Object.values(formData).filter(Boolean).length;
-  const progress = (filledFields / 4) * 100;
+  // Calculate form completion progress (3 required for minimal, 4 for full; email optional)
+  const fieldsToFill = isMinimal ? 3 : 4;
+  const filledFields = isMinimal
+    ? [formData.name, formData.whatsapp, formData.trek].filter(Boolean).length
+    : Object.values(formData).filter(Boolean).length;
+  const progress = (filledFields / fieldsToFill) * 100;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -53,9 +50,13 @@ export default function LeadCaptureForm() {
       newErrors.name = 'Name must be at least 2 characters';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!isMinimal) {
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email';
+      }
+    } else if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email';
     }
 
@@ -83,12 +84,12 @@ export default function LeadCaptureForm() {
 
     try {
       // Get trek name from options
-      const trekOption = TREK_OPTIONS.find(opt => opt.value === formData.trek);
+      const trekOption = trekOptions.find(opt => opt.value === formData.trek);
       
       // Submit to API
       const leadData: LeadData = {
         name: formData.name,
-        email: formData.email,
+        email: formData.email.trim() || undefined,
         whatsapp: formData.whatsapp,
         trek_slug: formData.trek,
         trek_name: trekOption?.label,
@@ -156,7 +157,7 @@ export default function LeadCaptureForm() {
       <div className="mb-5">
         <div className="flex justify-between text-xs text-gray-500 mb-1">
           <span>Completion</span>
-          <span>{filledFields}/4 fields</span>
+          <span>{filledFields}/{fieldsToFill} fields</span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div 
@@ -185,10 +186,10 @@ export default function LeadCaptureForm() {
           {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
         </div>
 
-        {/* Email Field */}
+        {/* Email Field - required in full variant, optional in minimal */}
         <div>
           <label htmlFor="lead-email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address
+            Email Address {isMinimal && <span className="text-gray-400 font-normal">(optional)</span>}
           </label>
           <input
             type="email"
@@ -215,7 +216,7 @@ export default function LeadCaptureForm() {
               id="lead-whatsapp"
               value={formData.whatsapp}
               onChange={(e) => handleWhatsAppChange(e.target.value)}
-              placeholder="98765 43210"
+              placeholder="63833 13359"
               className={`w-full pl-12 pr-4 py-2.5 border rounded-lg text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 ${
                 errors.whatsapp ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-orange-500'
               }`}
@@ -233,11 +234,12 @@ export default function LeadCaptureForm() {
             id="lead-trek"
             value={formData.trek}
             onChange={(e) => handleChange('trek', e.target.value)}
+            disabled={trekLoading}
             className={`w-full px-4 py-2.5 border rounded-lg text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 ${
               errors.trek ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-orange-500'
-            } ${!formData.trek ? 'text-gray-400' : ''}`}
+            } ${!formData.trek ? 'text-gray-400' : ''} disabled:opacity-70 disabled:cursor-not-allowed`}
           >
-            {TREK_OPTIONS.map((option) => (
+            {trekOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -286,7 +288,8 @@ export default function LeadCaptureForm() {
         <span>Your data is 100% safe. We never share your information.</span>
       </div>
 
-      {/* Value Props */}
+      {/* Value Props - full variant only */}
+      {!isMinimal && (
       <div className="mt-4 pt-4 border-t border-gray-100">
         <p className="text-xs text-gray-500 text-center mb-2">What you'll get:</p>
         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -316,6 +319,7 @@ export default function LeadCaptureForm() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

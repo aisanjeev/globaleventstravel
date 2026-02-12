@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Home } from "lucide-react";
 
 interface Breadcrumb {
   label: string;
@@ -24,14 +24,22 @@ export function PageHeader({
   return (
     <div className="mb-8">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="mb-4 flex items-center gap-2 text-sm">
+        <nav className="mb-4 flex items-center gap-2 text-sm" aria-label="Breadcrumb">
+          {/* Home icon */}
+          <Link
+            href="/dashboard"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Dashboard"
+          >
+            <Home className="h-4 w-4" />
+          </Link>
           {breadcrumbs.map((crumb, index) => (
             <div key={index} className="flex items-center gap-2">
-              {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
+              <ChevronRight className="h-4 w-4 text-gray-400" />
               {crumb.href ? (
                 <Link
                   href={crumb.href}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   {crumb.label}
                 </Link>

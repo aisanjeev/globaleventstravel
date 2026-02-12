@@ -2,13 +2,18 @@
 // Global Events Travels - Constants
 // ============================================
 
+export const WHATSAPP = {
+  number: '916383313359',
+  prefilledMessage: "Hi, I'm interested in trekking. Can you send me itinerary options?",
+};
+
 export const SITE_CONFIG = {
   name: 'Global Events Travels',
   tagline: 'Adventure Awaits in the Himalayas',
   description: 'Discover amazing treks and expeditions in the Himalayas with experienced guides and unforgettable experiences.',
   url: 'https://globaleventstravels.com',
   email: 'info@globaleventstravels.com',
-  phone: '+91 98765 43210',
+  phone: '+91 63833 13359',
   address: 'Manali, Himachal Pradesh, India',
 };
 
@@ -22,17 +27,18 @@ export const NAV_LINKS = [
 ];
 
 export const SOCIAL_LINKS = {
-  facebook: 'https://facebook.com/globaleventstravels',
-  instagram: 'https://instagram.com/globaleventstravels',
-  twitter: 'https://twitter.com/globaleventstravels',
-  youtube: 'https://youtube.com/globaleventstravels',
+  facebook: 'https://www.facebook.com/TheTrekkingCommunity',
+  instagram: 'https://www.instagram.com/global_events_travels',
+  twitter: '#',
+  youtube: 'https://www.youtube.com/@globaleventstravels6010',
 };
 
 export const DIFFICULTY_LABELS: Record<string, { label: string; color: string }> = {
   easy: { label: 'Easy', color: 'badge-easy' },
   moderate: { label: 'Moderate', color: 'badge-moderate' },
-  hard: { label: 'Hard', color: 'badge-hard' },
-  expert: { label: 'Expert', color: 'badge-expert' },
+  difficult: { label: 'Difficult', color: 'badge-hard' },
+  challenging: { label: 'Challenging', color: 'badge-expert' },
+  extreme: { label: 'Extreme', color: 'badge-extreme' },
 };
 
 export const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
@@ -66,9 +72,17 @@ export const LEAD_FORM_CONFIG = {
   formSubtitle: 'Personalized itinerary sent to WhatsApp',
 };
 
+// Trek regions for Explore by Region section
+export const TREK_REGIONS = [
+  { name: 'Uttarakhand', slug: 'Uttarakhand', image: '/images/destinations/uttarakhand.jpg' },
+  { name: 'Himachal Pradesh', slug: 'Himachal', image: '/images/destinations/himachal.jpg' },
+  { name: 'Kashmir', slug: 'Kashmir', image: '/images/destinations/srinagar.jpg' },
+  { name: 'Sikkim', slug: 'Sikkim', image: '/images/destinations/himachal.jpg' },
+] as const;
+
 // Hero section content
 export const HERO_CONTENT = {
-  badge: 'Now booking for 2025 season',
+  badge: 'Now booking for 2026 season',
   headline: 'Get Your Custom Himalayan Trek Itinerary',
   subheadline: 'Free personalized trek guide with day-by-day plan, packing list & budget breakdown — sent instantly to WhatsApp',
   stats: [

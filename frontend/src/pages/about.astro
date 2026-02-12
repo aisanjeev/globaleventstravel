@@ -2,10 +2,27 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import Statistics from '@/components/sections/Statistics.astro';
 import CTA from '@/components/sections/CTA.astro';
-import { MOCK_GUIDES } from '@/lib/data';
 import { Image } from 'astro:assets';
+import { guidesApi, api } from '@/lib/api';
+import type { Guide } from '@/lib/types';
 
-const guides = MOCK_GUIDES;
+let guides: Guide[] = [];
+let aboutSections: any[] = [];
+
+try {
+  const [guidesResponse, contentSections] = await Promise.all([
+    guidesApi.list(0, 12),
+    api.get<any[]>(`/content/about`),
+  ]);
+  guides = guidesResponse.items || [];
+  aboutSections = contentSections || [];
+} catch (error) {
+  console.error('Failed to fetch guides or about content from API:', error);
+}
+
+const heroSection = aboutSections.find((s) => s.key === 'hero');
+const storySection = aboutSections.find((s) => s.key === 'story');
+
 const values = [
   {
     icon: `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>`,
@@ -37,9 +54,11 @@ const values = [
   <!-- Page Header - Blue theme -->
   <section class="bg-gradient-to-br from-secondary-600 to-secondary-500 py-16 md:py-24">
     <div class="container-custom text-center text-white">
-      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white">About Us</h1>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white">
+        {heroSection?.title || 'About Us'}
+      </h1>
       <p class="text-lg text-white/80 max-w-2xl mx-auto">
-        Passionate about mountains, committed to your safety, dedicated to creating unforgettable experiences.
+        {heroSection?.subtitle || 'Passionate about mountains, committed to your safety, dedicated to creating unforgettable experiences.'}
       </p>
     </div>
   </section>
@@ -50,21 +69,27 @@ const values = [
       <div class="grid lg:grid-cols-2 gap-12 items-center">
         <div>
           <span class="inline-block text-primary-500 font-semibold text-sm uppercase tracking-wider mb-4">
-            Our Story
+            {storySection?.badge_text || 'Our Story'}
           </span>
           <h2 class="text-3xl md:text-4xl font-bold text-secondary-600 mb-6">
-            Born in the Mountains, Built for Adventure
+            {storySection?.title || 'Born in the Mountains, Built for Adventure'}
           </h2>
           <div class="space-y-4 text-neutral-600 leading-relaxed">
-            <p>
-              Global Events Travels was founded in 2016 by a group of passionate mountaineers who believed that everyone deserves to experience the magic of the Himalayas. What started as a small team of friends leading treks has grown into one of the most trusted adventure travel companies in India.
-            </p>
-            <p>
-              Our founders grew up in the mountains of Uttarakhand and Himachal Pradesh. They know every trail, every peak, and every hidden gem. This deep local knowledge, combined with international safety standards, is what sets us apart.
-            </p>
-            <p>
-              Today, we've helped over 10,000 trekkers from around the world discover the beauty of the Indian Himalayas. But our mission remains the same: to provide safe, sustainable, and unforgettable mountain experiences.
-            </p>
+            {storySection?.body_html ? (
+              <div class="prose prose-neutral max-w-none" set:html={storySection.body_html}></div>
+            ) : (
+              <>
+                <p>
+                  Global Events Travels was founded in 2016 by a group of passionate mountaineers who believed that everyone deserves to experience the magic of the Himalayas. What started as a small team of friends leading treks has grown into one of the most trusted adventure travel companies in India.
+                </p>
+                <p>
+                  Our founders grew up in the mountains of Uttarakhand and Himachal Pradesh. They know every trail, every peak, and every hidden gem. This deep local knowledge, combined with international safety standards, is what sets us apart.
+                </p>
+                <p>
+                  Today, we've helped over 10,000 trekkers from around the world discover the beauty of the Indian Himalayas. But our mission remains the same: to provide safe, sustainable, and unforgettable mountain experiences.
+                </p>
+              </>
+            )}
           </div>
         </div>
         <div class="relative">

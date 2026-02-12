@@ -1,0 +1,25 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description, ogImage } = Astro.props;
+---
+
+<MainLayout title={title} description={description} ogImage={ogImage} headerVariant="expedition">
+  <div data-theme="expedition" class="expedition-theme min-h-screen">
+    <slot />
+  </div>
+</MainLayout>
+
+<style is:global>
+  /* Expedition theme – royal blue + orange (logo-aligned) */
+  [data-theme="expedition"] {
+    --color-expedition-primary: #1E2A78;
+    --color-expedition-accent: #F39C12;
+  }
+</style>

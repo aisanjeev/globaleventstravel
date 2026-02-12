@@ -1,6 +1,5 @@
 ---
 import type { BlogPost } from '@/lib/types';
-import { BLOG_CATEGORIES } from '@/lib/data';
 
 interface Props {
   post: BlogPost;
@@ -18,7 +17,8 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const categoryInfo = BLOG_CATEGORIES.find(c => c.value === post.category);
+// Use categoryName from API response (already resolved on the backend)
+const categoryLabel = (post as any).categoryName || post.category || 'General';
 
 // Handle both API format (camelCase) and legacy format
 const publishDate = post.publishDate || (post as any).publish_date || '';
@@ -39,7 +39,7 @@ const tags = post.tags || [];
       <!-- Category Badge -->
       <div class="absolute top-4 left-4">
         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-secondary-600">
-          {categoryInfo?.icon || '📝'} {categoryInfo?.label || post.category}
+          {categoryLabel}
         </span>
       </div>
       {featured && (
@@ -87,27 +87,11 @@ const tags = post.tags || [];
     )}
 
     <!-- Author -->
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-neutral-100 overflow-hidden">
-        {post.author.avatar ? (
-          <img
-            src={post.author.avatar}
-            alt={post.author.name}
-            class="w-full h-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 font-semibold">
-            {post.author.name.charAt(0)}
-          </div>
-        )}
-      </div>
-      <div>
-        <div class="font-medium text-secondary-600 text-sm">{post.author.name}</div>
-        {post.author.role && (
-          <div class="text-xs text-neutral-500">{post.author.role}</div>
-        )}
-      </div>
+    <div class="flex items-center gap-2">
+      <div class="font-medium text-secondary-600 text-sm">{post.author.name}</div>
+      {post.author.role && (
+        <span class="text-xs text-neutral-500">· {post.author.role}</span>
+      )}
     </div>
   </div>
 </article>

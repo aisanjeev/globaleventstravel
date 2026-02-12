@@ -19,13 +19,17 @@ export function TopNav() {
   return (
     <header
       className={cn(
-        "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 transition-all duration-300",
-        sidebarOpen ? "left-64" : "left-20"
+        "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6 transition-all duration-300",
+        // Mobile: full width
+        "left-0",
+        // Desktop: adjust based on sidebar state
+        sidebarOpen ? "lg:left-64" : "lg:left-20"
       )}
     >
       <button
         onClick={toggleSidebar}
-        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 lg:hidden"
+        className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+        aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
       >
         <Menu className="h-5 w-5" />
       </button>

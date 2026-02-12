@@ -1,9 +1,10 @@
 // ============================================
 // Mock Data for Development
-// Replace with API calls in production
+// NOTE: In production, all user-facing pages now use live API data.
+// These mocks are kept only as safe fallbacks or for local demos.
 // ============================================
 
-import type { Trek, Testimonial, Guide, Office, Expedition, BlogPost } from './types';
+import type { Trek, Testimonial, Guide, Office, Expedition } from './types';
 
 export const MOCK_TREKS: Trek[] = [
   {
@@ -13,12 +14,16 @@ export const MOCK_TREKS: Trek[] = [
     difficulty: 'moderate',
     duration: 5,
     price: 12999,
-    season: ['May', 'June', 'September', 'October'],
-    elevation: 4270,
+    best_season: ['May', 'June', 'September', 'October'],
+    max_altitude: 4270,
     distance: 35,
     description: 'One of the most dramatic crossovers in the Himalayas, Hampta Pass takes you from the lush green valleys of Kullu to the barren landscapes of Lahaul.',
     short_description: 'Cross from lush Kullu valley to barren Lahaul desert in this dramatic Himalayan crossover trek.',
-    image: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=800',
+    location: 'Kullu-Lahaul, Himachal Pradesh',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 15,
     rating: 4.8,
     review_count: 124,
     featured: true,
@@ -32,12 +37,16 @@ export const MOCK_TREKS: Trek[] = [
     difficulty: 'easy',
     duration: 6,
     price: 9999,
-    season: ['December', 'January', 'February', 'March'],
-    elevation: 3810,
+    best_season: ['December', 'January', 'February', 'March'],
+    max_altitude: 3810,
     distance: 20,
     description: 'Perfect winter trek with stunning snow-covered trails and panoramic views of Himalayan peaks.',
     short_description: 'A perfect winter trek with pristine snow trails and 360-degree summit views.',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800',
+    location: 'Uttarkashi, Uttarakhand',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 20,
     rating: 4.9,
     review_count: 256,
     featured: true,
@@ -51,12 +60,16 @@ export const MOCK_TREKS: Trek[] = [
     difficulty: 'moderate',
     duration: 6,
     price: 14999,
-    season: ['July', 'August', 'September'],
-    elevation: 3658,
+    best_season: ['July', 'August', 'September'],
+    max_altitude: 3658,
     distance: 38,
     description: 'UNESCO World Heritage Site featuring over 600 species of exotic flowers blooming in the monsoon.',
     short_description: 'Walk through a UNESCO World Heritage Site carpeted with exotic Himalayan flowers.',
-    image: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=800',
+    location: 'Chamoli, Uttarakhand',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 16,
     rating: 4.7,
     review_count: 89,
     featured: true,
@@ -67,15 +80,19 @@ export const MOCK_TREKS: Trek[] = [
     id: 4,
     name: 'Roopkund Trek',
     slug: 'roopkund',
-    difficulty: 'hard',
+    difficulty: 'difficult',
     duration: 8,
     price: 18999,
-    season: ['May', 'June', 'September', 'October'],
-    elevation: 5029,
+    best_season: ['May', 'June', 'September', 'October'],
+    max_altitude: 5029,
     distance: 53,
     description: 'The mysterious skeleton lake trek - one of the most challenging and rewarding treks in India.',
     short_description: 'Trek to the mysterious skeleton lake at 5,029m - a challenging high-altitude adventure.',
-    image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=800',
+    location: 'Chamoli, Uttarakhand',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 12,
     rating: 4.6,
     review_count: 67,
     featured: false,
@@ -89,12 +106,16 @@ export const MOCK_TREKS: Trek[] = [
     difficulty: 'moderate',
     duration: 5,
     price: 11999,
-    season: ['April', 'May', 'June'],
-    elevation: 4200,
+    best_season: ['April', 'May', 'June'],
+    max_altitude: 4200,
     distance: 48,
     description: 'Experience thrilling snow slides and stunning meadows on this classic Himalayan trek from Kasol.',
     short_description: 'Classic trek from Kasol featuring snow slides, alpine meadows, and stunning vistas.',
-    image: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800',
+    location: 'Kasol, Himachal Pradesh',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 15,
     rating: 4.5,
     review_count: 98,
     featured: false,
@@ -108,12 +129,16 @@ export const MOCK_TREKS: Trek[] = [
     difficulty: 'moderate',
     duration: 6,
     price: 10999,
-    season: ['December', 'January', 'February', 'March'],
-    elevation: 3425,
+    best_season: ['December', 'January', 'February', 'March'],
+    max_altitude: 3425,
     distance: 24,
     description: 'A winter wonderland trek with frozen lakes and spectacular views of Mt. Trishul and Nanda Ghunti.',
     short_description: 'Winter trek featuring frozen alpine lakes and views of majestic Himalayan peaks.',
-    image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800',
+    featured_image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800',
+    location: 'Chamoli, Uttarakhand',
+    status: 'published',
+    group_size_min: 4,
+    group_size_max: 18,
     rating: 4.8,
     review_count: 112,
     featured: true,
@@ -258,7 +283,7 @@ export const OFFICES: Office[] = [
     state: 'Himachal Pradesh',
     pincode: '175131',
     landmarks: 'Near Aleo Road Petrol Pump, NSB Hotel',
-    phone: '+91 98765 43210',
+    phone: '+91 63833 13359',
     email: 'himachal@globaleventstravels.com',
     coordinates: { lat: 32.2299, lng: 77.1889 },
     mapUrl: 'https://maps.google.com/?q=32.2299,77.1889',
@@ -271,7 +296,7 @@ export const OFFICES: Office[] = [
     city: 'Chennai',
     state: 'Tamil Nadu',
     pincode: '600039',
-    phone: '+91 98765 43211',
+    phone: '+91 63833 13359',
     email: 'chennai@globaleventstravels.com',
     coordinates: { lat: 13.1175, lng: 80.1434 },
     mapUrl: 'https://maps.google.com/?q=13.1175,80.1434',
@@ -285,7 +310,7 @@ export const OFFICES: Office[] = [
     state: 'Himachal Pradesh',
     pincode: '175101',
     landmarks: 'Choj Bridge, Near Volvo Bus Stand',
-    phone: '+91 98765 43212',
+    phone: '+91 63833 13359',
     email: 'kasol@globaleventstravels.com',
     coordinates: { lat: 32.0167, lng: 77.3167 },
     mapUrl: 'https://maps.google.com/?q=32.0167,77.3167',
@@ -299,7 +324,7 @@ export const OFFICES: Office[] = [
     state: 'Uttarakhand',
     pincode: '248001',
     landmarks: 'Near Kukreja Institute, Mata Mandir Road',
-    phone: '+91 98765 43213',
+    phone: '+91 63833 13359',
     email: 'dehradun@globaleventstravels.com',
     coordinates: { lat: 30.2871, lng: 78.0211 },
     mapUrl: 'https://maps.google.com/?q=30.2871,78.0211',
@@ -475,7 +500,7 @@ export const filterTreks = (filters: {
   return MOCK_TREKS.filter(trek => {
     if (filters.difficulty && trek.difficulty !== filters.difficulty) return false;
     if (filters.maxPrice && trek.price > filters.maxPrice) return false;
-    if (filters.season && !trek.season.includes(filters.season)) return false;
+    if (filters.season && !trek.best_season.includes(filters.season)) return false;
     return true;
   });
 };
@@ -493,469 +518,6 @@ export const getExpeditionBySlug = (slug: string) => EXPEDITIONS.find(e => e.slu
 export const getOfficeByCity = (city: string) => OFFICES.find(o => o.city.toLowerCase().includes(city.toLowerCase()));
 
 // ============================================
-// Blog Posts Data
+// Blog data is now fully dynamic via API.
+// See frontend/src/lib/api.ts → blogApi
 // ============================================
-
-export const BLOG_POSTS: BlogPost[] = [
-  {
-    id: 1,
-    title: '13 Best Summer Treks in India for 2025',
-    slug: 'best-summer-treks-india-2025',
-    excerpt: 'Discover the most breathtaking summer treks in India. From the Valley of Flowers to Hampta Pass, find your perfect adventure for the 2025 trekking season.',
-    content: `
-# 13 Best Summer Treks in India for 2025
-
-Summer in India (April to June) is the perfect time to escape the scorching plains and head to the cool mountains. Here are our top picks for summer treks that offer stunning views, manageable weather, and unforgettable experiences.
-
-## 1. Valley of Flowers Trek, Uttarakhand
-
-The Valley of Flowers is a UNESCO World Heritage Site that comes alive with over 600 species of wildflowers during summer. This moderate trek takes you through alpine meadows carpeted with vibrant blooms.
-
-**Best Time:** July - September
-**Duration:** 6 Days
-**Difficulty:** Moderate
-
-## 2. Hampta Pass Trek, Himachal Pradesh
-
-One of the most dramatic crossover treks, Hampta Pass takes you from lush green valleys to barren moonscapes in just 5 days. The contrast is breathtaking!
-
-**Best Time:** June - October
-**Duration:** 5 Days
-**Difficulty:** Moderate
-
-## 3. Rupin Pass Trek
-
-For those seeking adventure, Rupin Pass offers hanging villages, dramatic waterfalls, and a challenging climb to 15,250 ft.
-
-**Best Time:** May - June, September - October
-**Duration:** 8 Days
-**Difficulty:** Difficult
-
-... Continue reading for all 13 treks with detailed information on difficulty, best time to visit, and what makes each trek special.
-    `,
-    author: {
-      name: 'Rajesh Kumar',
-      avatar: '/images/team/rajesh.jpg',
-      bio: 'Senior Trek Leader with 15+ years of Himalayan experience',
-      role: 'Head Guide',
-    },
-    publishDate: '2024-12-20',
-    featuredImage: '/images/blog/summer-treks.jpg',
-    category: 'season-guide',
-    tags: ['Summer Treks', 'India', '2025', 'Best Treks', 'Himalayas'],
-    readTime: 12,
-    featured: true,
-    metaDescription: 'Complete guide to the 13 best summer treks in India for 2025. Find difficulty levels, best times, and expert tips.',
-  },
-  {
-    id: 2,
-    title: 'Complete Guide: Kasol to Kheerganga Trek for Beginners',
-    slug: 'kasol-kheerganga-trek-beginners-guide',
-    excerpt: 'Everything you need to know about the famous Kasol to Kheerganga trek. Perfect for first-time trekkers looking for an easy yet rewarding Himalayan experience.',
-    content: `
-# Complete Guide: Kasol to Kheerganga Trek for Beginners
-
-The Kasol to Kheerganga trek is one of the most popular beginner-friendly treks in Himachal Pradesh. Known for its natural hot springs at the top and the vibrant backpacker culture of Kasol, this trek is perfect for first-timers.
-
-## Trek Overview
-
-- **Starting Point:** Barshaini (accessible from Kasol)
-- **End Point:** Kheerganga
-- **Distance:** 12-13 km one way
-- **Duration:** 1-2 days
-- **Altitude:** 2,960 meters
-- **Difficulty:** Easy to Moderate
-
-## Day-by-Day Itinerary
-
-### Day 1: Kasol to Barshaini to Kheerganga
-Start early from Kasol and take a shared taxi to Barshaini. The trek begins from here...
-
-## What to Pack
-
-- Comfortable trekking shoes
-- Light backpack (if camping) or just essentials (if staying at camps)
-- Water bottle
-- Snacks
-- Rain jacket
-- Warm layers for evening
-
-## Cost Breakdown
-
-| Item | Cost (INR) |
-|------|------------|
-| Shared taxi from Kasol to Barshaini | 50-100 |
-| Trek guide (optional) | 500-1000 |
-| Accommodation at camps | 200-500 |
-| Meals | 300-500 |
-| **Total Budget** | **1,000 - 2,000** |
-
-This is one of the most budget-friendly treks in India!
-    `,
-    author: {
-      name: 'Deepa Negi',
-      avatar: '/images/team/deepa.jpg',
-      bio: 'Passionate about making trekking accessible to everyone',
-      role: 'Trek Leader',
-    },
-    publishDate: '2024-12-15',
-    featuredImage: '/images/blog/kheerganga.jpg',
-    category: 'trek-guide',
-    tags: ['Kheerganga', 'Kasol', 'Beginners', 'Budget Trek', 'Himachal'],
-    readTime: 8,
-    featured: true,
-    metaDescription: 'Complete beginner guide to Kasol Kheerganga trek. Includes itinerary, cost breakdown, packing list, and expert tips.',
-  },
-  {
-    id: 3,
-    title: 'Essential Trekking Gear: What to Pack for Himalayan Treks',
-    slug: 'essential-trekking-gear-himalayan-treks',
-    excerpt: 'A comprehensive packing guide for Himalayan treks. Learn what gear is essential, what to skip, and how to pack light without compromising safety.',
-    content: `
-# Essential Trekking Gear: What to Pack for Himalayan Treks
-
-Packing for a Himalayan trek can be overwhelming. Pack too much and you'll struggle with weight; pack too little and you'll be uncomfortable or unsafe. Here's our definitive guide.
-
-## The Essentials Checklist
-
-### Clothing
-- **Base Layer:** Moisture-wicking thermal top and bottom
-- **Mid Layer:** Fleece jacket
-- **Outer Layer:** Waterproof jacket and pants
-- **Trekking Pants:** Quick-dry, comfortable
-- **Warm Hat & Gloves:** Even in summer at high altitude
-
-### Footwear
-- **Trekking Boots:** Ankle support, waterproof, broken-in
-- **Sandals:** For camp
-- **Socks:** Wool or synthetic, 3-4 pairs
-
-### Gear
-- **Backpack:** 40-60L with rain cover
-- **Sleeping Bag:** Rated for expected temperatures
-- **Trekking Poles:** Highly recommended
-- **Headlamp:** With extra batteries
-
-## What NOT to Pack
-
-- Heavy jeans (cotton is terrible for trekking)
-- Multiple gadgets
-- Full-size toiletries
-- Too many "just in case" items
-    `,
-    author: {
-      name: 'Vikram Singh',
-      avatar: '/images/team/vikram.jpg',
-      bio: 'Certified mountaineer and gear expert',
-      role: 'Expedition Leader',
-    },
-    publishDate: '2024-12-10',
-    featuredImage: '/images/blog/trekking-gear.jpg',
-    category: 'gear-review',
-    tags: ['Gear', 'Packing', 'Equipment', 'Tips', 'Preparation'],
-    readTime: 10,
-    featured: false,
-    metaDescription: 'Complete packing guide for Himalayan treks. Essential gear list, what to skip, and expert packing tips.',
-  },
-  {
-    id: 4,
-    title: 'Altitude Sickness: Prevention, Symptoms & Treatment',
-    slug: 'altitude-sickness-prevention-symptoms-treatment',
-    excerpt: 'Everything trekkers need to know about altitude sickness (AMS). Learn how to prevent it, recognize symptoms early, and what to do if it strikes.',
-    content: `
-# Altitude Sickness: Prevention, Symptoms & Treatment
-
-Altitude sickness, or Acute Mountain Sickness (AMS), is a common concern for Himalayan trekkers. Understanding it can be the difference between a successful summit and a medical emergency.
-
-## What is Altitude Sickness?
-
-AMS occurs when you ascend to high altitudes faster than your body can adjust. Above 2,500m, the air has less oxygen, and your body needs time to acclimatize.
-
-## Symptoms to Watch For
-
-### Mild AMS
-- Headache
-- Nausea
-- Fatigue
-- Dizziness
-- Loss of appetite
-
-### Severe AMS (Seek Help Immediately)
-- Confusion
-- Difficulty walking
-- Shortness of breath at rest
-- Persistent vomiting
-
-## Prevention Tips
-
-1. **Ascend Gradually:** Follow the "climb high, sleep low" principle
-2. **Stay Hydrated:** Drink 3-4 liters daily
-3. **Avoid Alcohol:** Especially first few days at altitude
-4. **Listen to Your Body:** Don't push through symptoms
-5. **Acclimatization Days:** Build rest days into your itinerary
-
-## Treatment
-
-The only cure for AMS is descent. If symptoms are severe, descend immediately.
-    `,
-    author: {
-      name: 'Dr. Ananya Patel',
-      avatar: '/images/team/ananya.jpg',
-      bio: 'Trek doctor and wilderness medicine specialist',
-      role: 'Medical Advisor',
-    },
-    publishDate: '2024-12-05',
-    featuredImage: '/images/blog/altitude-sickness.jpg',
-    category: 'safety',
-    tags: ['Safety', 'Altitude Sickness', 'AMS', 'Health', 'Prevention'],
-    readTime: 7,
-    featured: true,
-    metaDescription: 'Complete guide to altitude sickness for trekkers. Prevention tips, symptoms to watch, and treatment options.',
-  },
-  {
-    id: 5,
-    title: 'Budget Trekking: How to Trek in India Under ₹10,000',
-    slug: 'budget-trekking-india-under-10000',
-    excerpt: 'Yes, you can trek in the Himalayas on a budget! Here are our top tips for experiencing incredible treks without breaking the bank.',
-    content: `
-# Budget Trekking: How to Trek in India Under ₹10,000
-
-Think Himalayan trekking is expensive? Think again! With smart planning, you can experience breathtaking trails for under ₹10,000 including travel.
-
-## Budget-Friendly Treks
-
-### 1. Triund Trek (Dharamshala)
-- **Cost:** ₹2,000-3,000
-- **Duration:** 1-2 days
-- **What's included:** Transport, food, basic camping
-
-### 2. Kheerganga Trek (Kasol)
-- **Cost:** ₹2,000-4,000
-- **Duration:** 2 days
-- **What's included:** Everything!
-
-### 3. Nag Tibba Trek (Uttarakhand)
-- **Cost:** ₹4,000-6,000
-- **Duration:** 2-3 days
-- **What's included:** Organized trek with meals
-
-## Money-Saving Tips
-
-1. **Travel by Bus:** Save 50-70% compared to flights
-2. **Go in Groups:** Share transport and guide costs
-3. **Carry Your Own Snacks:** Trail food is expensive
-4. **Off-Season Travel:** April and November have lower prices
-5. **Book Directly:** Avoid middlemen and aggregators
-    `,
-    author: {
-      name: 'Rahul Verma',
-      avatar: '/images/team/rahul.jpg',
-      bio: 'Budget travel enthusiast and trek blogger',
-      role: 'Content Writer',
-    },
-    publishDate: '2024-11-28',
-    featuredImage: '/images/blog/budget-trekking.jpg',
-    category: 'budget-tips',
-    tags: ['Budget', 'Cheap Treks', 'Money Saving', 'India', 'Tips'],
-    readTime: 6,
-    featured: false,
-    metaDescription: 'Complete guide to budget trekking in India. Trek in the Himalayas for under ₹10,000 with these expert tips.',
-  },
-  {
-    id: 6,
-    title: 'Kedarkantha Trek: Complete Winter Trekking Guide',
-    slug: 'kedarkantha-trek-winter-guide',
-    excerpt: 'The ultimate guide to Kedarkantha, India\'s most popular winter trek. Everything from preparation to summit day, with insider tips.',
-    content: `
-# Kedarkantha Trek: Complete Winter Trekking Guide
-
-Kedarkantha is often called the "Queen of Winter Treks" in India. With pristine snow trails, 360-degree summit views, and a relatively easy grade, it's perfect for beginners experiencing their first snow trek.
-
-## Why Kedarkantha?
-
-- **Stunning Snow:** Guaranteed snow from December to March
-- **360° Summit Views:** See dozens of Himalayan peaks
-- **Beginner-Friendly:** Easy to moderate difficulty
-- **Short Duration:** Just 6 days from Delhi
-
-## Trek Details
-
-| Parameter | Details |
-|-----------|---------|
-| Altitude | 12,500 ft (3,810m) |
-| Distance | 20 km total |
-| Duration | 6 days |
-| Best Time | December - March |
-| Difficulty | Easy to Moderate |
-
-## Day-by-Day Itinerary
-
-### Day 1: Dehradun to Sankri
-Drive through scenic Mussoorie and Purola to reach Sankri village.
-
-### Day 2: Sankri to Juda Ka Talab
-Trek through oak and pine forests to the beautiful frozen lake.
-
-### Day 3: Juda Ka Talab to Kedarkantha Base
-Short trek to base camp with stunning views opening up.
-
-### Day 4: Summit Day!
-Start at 3 AM for sunrise at the summit. Descend to Hargaon.
-
-### Day 5: Buffer Day
-Extra day for weather contingency.
-
-### Day 6: Return to Dehradun
-Trek down and drive back.
-    `,
-    author: {
-      name: 'Rajesh Kumar',
-      avatar: '/images/team/rajesh.jpg',
-      bio: 'Senior Trek Leader with 15+ years of Himalayan experience',
-      role: 'Head Guide',
-    },
-    publishDate: '2024-11-20',
-    featuredImage: '/images/blog/kedarkantha.jpg',
-    category: 'trek-guide',
-    tags: ['Kedarkantha', 'Winter Trek', 'Snow Trek', 'Uttarakhand', 'Beginners'],
-    readTime: 15,
-    featured: true,
-    metaDescription: 'Complete Kedarkantha trek guide. Itinerary, best time, difficulty, and expert tips for India\'s best winter trek.',
-  },
-  {
-    id: 7,
-    title: 'Best Time to Visit Ladakh: Month-by-Month Guide',
-    slug: 'best-time-visit-ladakh-monthly-guide',
-    excerpt: 'Planning a Ladakh trip? This month-by-month guide helps you choose the perfect time based on weather, crowds, and activities.',
-    content: `
-# Best Time to Visit Ladakh: Month-by-Month Guide
-
-Ladakh's extreme climate means timing is everything. Here's what to expect each month.
-
-## Quick Overview
-
-| Month | Weather | Crowds | Best For |
-|-------|---------|--------|----------|
-| Jan-Feb | Extreme cold (-20°C) | None | Chadar Trek |
-| Mar-Apr | Cold, melting snow | Low | Early season |
-| May-Jun | Pleasant, clear | Medium | Trekking, driving |
-| Jul-Aug | Warm, monsoon elsewhere | High | Peak season |
-| Sep-Oct | Cool, clear | Medium | Photography, festivals |
-| Nov-Dec | Cold, closing down | Very Low | Solitude |
-
-## Best Months: June - September
-
-This is peak season for good reason:
-- All roads open
-- Pleasant temperatures
-- Maximum activities available
-- Festivals like Hemis
-
-## Winter: Only for the Brave
-
-The famous Chadar Trek (frozen river) happens in January-February. Not for casual tourists!
-    `,
-    author: {
-      name: 'Vikram Singh',
-      avatar: '/images/team/vikram.jpg',
-      bio: 'Certified mountaineer and Ladakh specialist',
-      role: 'Expedition Leader',
-    },
-    publishDate: '2024-11-15',
-    featuredImage: '/images/blog/ladakh-guide.jpg',
-    category: 'destination',
-    tags: ['Ladakh', 'Best Time', 'Travel Guide', 'Planning', 'Weather'],
-    readTime: 9,
-    featured: false,
-    metaDescription: 'Month-by-month guide to visiting Ladakh. Find the best time based on weather, crowds, and your travel goals.',
-  },
-  {
-    id: 8,
-    title: 'Solo Trekking in India: Safety Tips for Solo Travelers',
-    slug: 'solo-trekking-india-safety-tips',
-    excerpt: 'Want to trek solo in the Himalayas? Here\'s everything you need to know about staying safe while enjoying the freedom of solo adventure.',
-    content: `
-# Solo Trekking in India: Safety Tips for Solo Travelers
-
-Solo trekking offers unmatched freedom, but it comes with responsibilities. Here's how to stay safe while enjoying the mountains alone.
-
-## Is Solo Trekking Safe in India?
-
-The short answer: It depends. Popular trails like Triund or Kheerganga are generally safe. Remote high-altitude treks? Join a group.
-
-## Essential Safety Tips
-
-### Before You Go
-1. **Share Your Itinerary:** Tell family/friends your exact plan
-2. **Research Thoroughly:** Know the trail, weather, and emergency contacts
-3. **Check Weather:** Mountain weather changes fast
-4. **Get Insurance:** Evacuation coverage is essential
-
-### On the Trail
-1. **Start Early:** More daylight = safer
-2. **Stay on Marked Trails:** Getting lost is the #1 danger
-3. **Trust Your Instincts:** If something feels wrong, turn back
-4. **Keep Your Phone Charged:** Carry a power bank
-5. **Make Friends:** Chat with fellow trekkers on popular trails
-
-### Emergency Preparedness
-- Carry a first aid kit
-- Know basic navigation (compass/GPS)
-- Have emergency contact numbers saved offline
-- Carry emergency shelter (space blanket)
-
-## Recommended Solo Treks
-
-1. Triund (Easy, crowded, safe)
-2. Kheerganga (Easy, popular)
-3. Nag Tibba (Moderate, local guides available)
-4. Prashar Lake (Easy, day trek possible)
-    `,
-    author: {
-      name: 'Deepa Negi',
-      avatar: '/images/team/deepa.jpg',
-      bio: 'Passionate about empowering solo travelers',
-      role: 'Trek Leader',
-    },
-    publishDate: '2024-11-10',
-    featuredImage: '/images/blog/solo-trekking.jpg',
-    category: 'safety',
-    tags: ['Solo Travel', 'Safety', 'Tips', 'Women Travelers', 'India'],
-    readTime: 8,
-    featured: false,
-    metaDescription: 'Complete safety guide for solo trekking in India. Tips for staying safe while enjoying the freedom of solo adventure.',
-  },
-];
-
-// Blog utilities
-export const getFeaturedPosts = () => BLOG_POSTS.filter(post => post.featured);
-export const getPostBySlug = (slug: string) => BLOG_POSTS.find(post => post.slug === slug);
-export const getPostsByCategory = (category: string) => 
-  BLOG_POSTS.filter(post => post.category === category);
-export const getPostsByTag = (tag: string) => 
-  BLOG_POSTS.filter(post => post.tags.some(t => t.toLowerCase() === tag.toLowerCase()));
-export const getRecentPosts = (limit: number = 5) => 
-  [...BLOG_POSTS].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()).slice(0, limit);
-export const getRelatedPosts = (currentSlug: string, limit: number = 3) => {
-  const currentPost = getPostBySlug(currentSlug);
-  if (!currentPost) return [];
-  return BLOG_POSTS
-    .filter(post => post.slug !== currentSlug)
-    .filter(post => 
-      post.category === currentPost.category || 
-      post.tags.some(tag => currentPost.tags.includes(tag))
-    )
-    .slice(0, limit);
-};
-
-// Blog categories for filtering
-export const BLOG_CATEGORIES = [
-  { value: 'trek-guide', label: 'Trek Guides', icon: '🥾' },
-  { value: 'budget-tips', label: 'Budget Tips', icon: '💰' },
-  { value: 'destination', label: 'Destinations', icon: '📍' },
-  { value: 'gear-review', label: 'Gear Reviews', icon: '🎒' },
-  { value: 'safety', label: 'Safety', icon: '⛑️' },
-  { value: 'season-guide', label: 'Season Guides', icon: '📅' },
-  { value: 'travel-tips', label: 'Travel Tips', icon: '✈️' },
-];
-

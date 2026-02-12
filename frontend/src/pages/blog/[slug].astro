@@ -1,9 +1,9 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import BlogCard from '@/components/blog/BlogCard.astro';
-import { blogApi } from '@/lib/api';
-import { BLOG_CATEGORIES } from '@/lib/data';
-import { SITE_CONFIG } from '@/lib/constants';
+import { blogApi, getSiteSettings } from '@/lib/api';
+
+const { siteConfig } = await getSiteSettings();
 
 // Enable SSR for this page (fetch data at request time)
 export const prerender = false;
@@ -25,7 +25,8 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const categoryInfo = BLOG_CATEGORIES.find(c => c.value === post.category);
+// Use categoryName from API (already resolved on the backend)
+const categoryLabel = post.categoryName || post.category || 'General';
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
@@ -57,49 +58,36 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
       <div class="container-custom">
         <div class="max-w-4xl mx-auto">
           <!-- Breadcrumb -->
-          <nav class="flex items-center gap-2 text-sm text-white/70 mb-6">
-            <a href="/" class="hover:text-white">Home</a>
-            <span>/</span>
-            <a href="/blog" class="hover:text-white">Blog</a>
-            <span>/</span>
+          <nav class="flex items-center gap-2 text-sm mb-6">
+            <a href="/" class="text-white hover:text-primary-200 transition-colors">Home</a>
+            <span class="text-white/80">/</span>
+            <a href="/blog" class="text-white hover:text-primary-200 transition-colors">Blog</a>
+            <span class="text-white/80">/</span>
             <span class="text-white">{post.title.slice(0, 30)}...</span>
           </nav>
 
           <!-- Category -->
           <a 
             href={`/blog?category=${post.category}`}
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/20 rounded-full text-sm font-medium mb-6 hover:bg-white/20 transition-colors"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 text-white rounded-full text-sm font-medium mb-6 hover:bg-primary-400 transition-colors"
           >
-            {categoryInfo?.icon || '📝'} {categoryInfo?.label || post.category}
+            {categoryLabel}
           </a>
 
           <!-- Title -->
-          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight text-white">
             {post.title}
           </h1>
 
           <!-- Meta -->
-          <div class="flex flex-wrap items-center gap-6 text-white/80">
+          <div class="flex flex-wrap items-center gap-6 text-white">
             <!-- Author -->
             {post.author && (
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-full bg-white/10 overflow-hidden">
-                  {post.author.avatar ? (
-                    <img
-                      src={post.author.avatar}
-                      alt={post.author.name}
-                      class="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div class="w-full h-full flex items-center justify-center text-white font-semibold">
-                      {post.author.name?.charAt(0) || 'A'}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div class="font-medium text-white">{post.author.name}</div>
-                  <div class="text-sm text-white/60">{post.author.role}</div>
-                </div>
+              <div>
+                <span class="font-medium text-white">{post.author.name}</span>
+                {post.author.role && (
+                  <span class="text-sm text-white ml-2">· {post.author.role}</span>
+                )}
               </div>
             )}
             
@@ -152,7 +140,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                 <h3 class="font-bold text-secondary-600 mb-4">Share Article</h3>
                 <div class="flex gap-3">
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(siteConfig.url + '/blog/' + post.slug)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-colors"
@@ -162,7 +150,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                     </svg>
                   </a>
                   <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteConfig.url + '/blog/' + post.slug)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
@@ -172,7 +160,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                     </svg>
                   </a>
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + siteConfig.url + '/blog/' + post.slug)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-green-500 hover:text-white hover:border-green-500 transition-colors"
@@ -182,7 +170,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                     </svg>
                   </a>
                   <a
-                    href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}&title=${encodeURIComponent(post.title)}`}
+                    href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(siteConfig.url + '/blog/' + post.slug)}&title=${encodeURIComponent(post.title)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="w-10 h-10 rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-colors"
@@ -227,30 +215,13 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
               <!-- Author Bio -->
               {post.author && (
                 <div class="mt-12 bg-neutral-50 rounded-2xl p-8">
-                  <div class="flex items-start gap-6">
-                    <div class="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex-shrink-0">
-                      {post.author.avatar ? (
-                        <img
-                          src={post.author.avatar}
-                          alt={post.author.name}
-                          class="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div class="w-full h-full flex items-center justify-center bg-primary-100 text-primary-600 text-2xl font-bold">
-                          {post.author.name?.charAt(0) || 'A'}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 class="font-bold text-secondary-600 text-lg">{post.author.name}</h3>
-                      {post.author.role && (
-                        <p class="text-primary-600 text-sm mb-2">{post.author.role}</p>
-                      )}
-                      {post.author.bio && (
-                        <p class="text-neutral-600">{post.author.bio}</p>
-                      )}
-                    </div>
-                  </div>
+                  <h3 class="font-bold text-secondary-600 text-lg">{post.author.name}</h3>
+                  {post.author.role && (
+                    <p class="text-primary-600 text-sm mb-2">{post.author.role}</p>
+                  )}
+                  {post.author.bio && (
+                    <p class="text-neutral-600">{post.author.bio}</p>
+                  )}
                 </div>
               )}
 
@@ -259,7 +230,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                 <h3 class="font-bold text-secondary-600 mb-4">Share this article</h3>
                 <div class="flex gap-3">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(post.title + ' - ' + siteConfig.url + '/blog/' + post.slug)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium flex items-center justify-center gap-2"
@@ -270,7 +241,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
                     WhatsApp
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(SITE_CONFIG.url + '/blog/' + post.slug)}`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(siteConfig.url + '/blog/' + post.slug)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="flex-1 py-3 bg-black text-white rounded-xl font-medium flex items-center justify-center gap-2"
@@ -313,7 +284,7 @@ const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('#
         Turn what you've learned into an unforgettable experience. Our expert guides are ready to lead you.
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/treks" class="btn-primary bg-white text-primary-600 hover:bg-neutral-100">
+        <a href="/treks" class="btn bg-secondary-700 text-white hover:bg-secondary-600 px-6 py-3 font-semibold rounded-lg transition-colors">
           Browse Treks
         </a>
         <a href="/contact" class="btn-secondary border-white text-white hover:bg-white/10">

@@ -15,6 +15,12 @@ from app.api.v1.endpoints import (
     blog,
     health,
     uploads,
+    media,
+    page_content,
+    site_settings,
+    google_reviews,
+    webhooks,
+    email_logs,
 )
 
 api_router = APIRouter()
@@ -32,4 +38,10 @@ api_router.include_router(testimonials.router, prefix="/testimonials", tags=["Te
 api_router.include_router(offices.router, prefix="/offices", tags=["Offices"])
 api_router.include_router(blog.router, prefix="/blog", tags=["Blog"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
+api_router.include_router(media.router, prefix="/media", tags=["Media Library"])
+api_router.include_router(page_content.router, prefix="/content", tags=["Page Content"])
+api_router.include_router(site_settings.router, prefix="/site-settings", tags=["Site Settings"])
+api_router.include_router(google_reviews.router, prefix="/google-reviews", tags=["Google Reviews"])
+api_router.include_router(webhooks.router, prefix="/webhooks", tags=["Webhooks"])
+api_router.include_router(email_logs.router, prefix="/email-logs", tags=["Email Logs"])
 

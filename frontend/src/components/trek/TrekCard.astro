@@ -5,9 +5,12 @@ import { Image } from 'astro:assets';
 
 interface Props {
   trek: Trek;
+  nextBatch?: string;
+  seatsLeft?: string;
+  bestSeller?: boolean;
 }
 
-const { trek } = Astro.props;
+const { trek, nextBatch, seatsLeft, bestSeller = trek.featured } = Astro.props;
 
 const difficultyInfo = DIFFICULTY_LABELS[trek.difficulty] || DIFFICULTY_LABELS.moderate;
 
@@ -21,8 +24,17 @@ const formatPrice = (price: number) => {
 };
 
 // Generate star rating
-const fullStars = Math.floor(trek.rating);
-const hasHalfStar = trek.rating % 1 >= 0.5;
+const rating = trek.rating ?? 0;
+const fullStars = Math.floor(rating);
+const hasHalfStar = rating % 1 >= 0.5;
+
+// Get values with fallbacks for API compatibility
+const maxAltitude = trek.max_altitude ?? 0;
+const distance = trek.distance ?? 0;
+const bestSeason = trek.best_season ?? [];
+const featuredImage = trek.featured_image || '/images/treks/placeholder.jpg';
+const nights = Math.max(0, trek.duration - 1);
+const durationDisplay = `${nights}N/${trek.duration}D`;
 ---
 
 <article class="card group cursor-pointer">
@@ -30,31 +42,51 @@ const hasHalfStar = trek.rating % 1 >= 0.5;
     <!-- Image Container -->
     <div class="relative overflow-hidden aspect-[4/3]">
       <Image
-        src={trek.image || '/images/treks/placeholder.jpg'}
+        src={featuredImage}
         alt={trek.name}
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         width={800}
         height={600}
         loading="lazy"
       />
+      <!-- Gradient overlay at bottom -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
       <!-- Difficulty Badge -->
       <div class="absolute top-4 left-4">
         <span class={`badge ${difficultyInfo.color}`}>
           {difficultyInfo.label}
         </span>
       </div>
-      <!-- Featured Badge - Orange -->
-      {trek.featured && (
-        <div class="absolute top-4 right-4">
-          <span class="badge bg-gradient-to-r from-primary-600 to-primary-500 text-white">
-            Featured
-          </span>
+      <!-- Price Badge - Top Right -->
+      <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
+        {bestSeller && (
+          <span class="badge bg-gradient-to-r from-primary-600 to-primary-500 text-white">Best Seller</span>
+        )}
+        {!bestSeller && trek.featured && (
+          <span class="badge bg-gradient-to-r from-primary-600 to-primary-500 text-white">Featured</span>
+        )}
+        <div class="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+          <span class="text-lg font-bold text-secondary-600">{formatPrice(trek.price)}</span>
+          <span class="text-xs text-neutral-500 block">per person</span>
         </div>
-      )}
-      <!-- Price Tag -->
-      <div class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
-        <span class="text-lg font-bold text-secondary-600">{formatPrice(trek.price)}</span>
-        <span class="text-xs text-neutral-500 block">per person</span>
+      </div>
+      <!-- Urgency: Next Batch / Seats Left -->
+      <div class="absolute bottom-4 left-4 flex flex-wrap gap-2">
+        {nextBatch && (
+          <span class="text-xs font-medium text-white bg-black/40 backdrop-blur-sm px-2 py-1 rounded">Next Batch: {nextBatch}</span>
+        )}
+        {seatsLeft && (
+          <span class="text-xs font-medium text-white bg-amber-600/90 backdrop-blur-sm px-2 py-1 rounded">{seatsLeft}</span>
+        )}
+      </div>
+      <!-- View Details Button (visible on hover) -->
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <span class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white font-semibold rounded-lg shadow-lg">
+          View Details
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
       </div>
     </div>
 
@@ -79,7 +111,7 @@ const hasHalfStar = trek.rating % 1 >= 0.5;
           ))}
         </div>
         <span class="text-sm text-neutral-500">
-          {trek.rating.toFixed(1)} ({trek.review_count} reviews)
+          {rating.toFixed(1)} ({trek.review_count ?? 0} reviews)
         </span>
       </div>
 
@@ -89,19 +121,19 @@ const hasHalfStar = trek.rating % 1 >= 0.5;
           <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>{trek.duration} days</span>
+          <span>{durationDisplay}</span>
         </div>
         <div class="flex items-center gap-1.5">
           <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
-          <span>{trek.elevation.toLocaleString()}m</span>
+          <span>{maxAltitude.toLocaleString()}m</span>
         </div>
         <div class="flex items-center gap-1.5">
           <svg class="w-4 h-4 text-secondary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
-          <span>{trek.distance} km</span>
+          <span>{distance} km</span>
         </div>
       </div>
 
@@ -113,9 +145,9 @@ const hasHalfStar = trek.rating % 1 >= 0.5;
       )}
 
       <!-- Season Tags -->
-      {trek.season && trek.season.length > 0 && (
+      {bestSeason.length > 0 && (
         <div class="flex flex-wrap gap-2">
-          {trek.season.slice(0, 3).map((s) => (
+          {bestSeason.slice(0, 3).map((s) => (
             <span class="text-xs px-2 py-1 bg-neutral-100 text-neutral-600 rounded">
               {s}
             </span>

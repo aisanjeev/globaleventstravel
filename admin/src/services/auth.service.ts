@@ -19,18 +19,10 @@ export const authService = {
         }
       );
 
-      const token = response.data.access_token;
-
-      // Get user info
-      const userResponse = await apiClient.get<User>("/api/v1/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      // Backend returns user in login response, so no need for separate API call
       return {
-        token,
-        user: userResponse.data,
+        token: response.data.access_token,
+        user: response.data.user,
       };
     } catch (error) {
       throw handleApiError(error);

@@ -10,7 +10,7 @@ import { tagService } from "@/services/tag.service";
 import { useUIStore } from "@/store/ui.store";
 import { slugify } from "@/lib/utils";
 import type { BlogTag } from "@/types/api";
-import { Plus, Trash2, Tags, X } from "lucide-react";
+import { Plus, Trash2, Tags, X, Pencil, Check } from "lucide-react";
 
 export default function TagsPage() {
   const { addToast } = useUIStore();
@@ -19,9 +19,15 @@ export default function TagsPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Form state
+  // Create form state
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
 
   const fetchTags = async () => {
     try {
@@ -62,6 +68,45 @@ export default function TagsPage() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const startEdit = (tag: BlogTag) => {
+    setEditingId(tag.id);
+    setEditName(tag.name);
+    setEditSlug(tag.slug);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditSlug("");
+  };
+
+  const handleEditNameChange = (value: string) => {
+    setEditName(value);
+    setEditSlug(slugify(value));
+  };
+
+  const handleUpdate = async (id: number) => {
+    if (!editName.trim() || !editSlug.trim()) return;
+
+    setEditSaving(true);
+    try {
+      await tagService.update(id, {
+        name: editName.trim(),
+        slug: editSlug.trim(),
+      });
+      addToast({ type: "success", message: "Tag updated successfully" });
+      cancelEdit();
+      fetchTags();
+    } catch (error: any) {
+      addToast({
+        type: "error",
+        message: error.message || "Failed to update tag",
+      });
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -201,12 +246,30 @@ export default function TagsPage() {
                 {tags.map((tag) => (
                   <tr key={tag.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <span className="font-medium text-gray-900">
-                        {tag.name}
-                      </span>
+                      {editingId === tag.id ? (
+                        <Input
+                          value={editName}
+                          onChange={(e) => handleEditNameChange(e.target.value)}
+                          className="max-w-[200px]"
+                        />
+                      ) : (
+                        <span className="font-medium text-gray-900">
+                          {tag.name}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-gray-500">{tag.slug}</span>
+                      {editingId === tag.id ? (
+                        <Input
+                          value={editSlug}
+                          onChange={(e) => setEditSlug(e.target.value)}
+                          className="max-w-[200px]"
+                        />
+                      ) : (
+                        <span className="text-sm text-gray-500">
+                          {tag.slug}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-500">
@@ -214,13 +277,42 @@ export default function TagsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDelete(tag.id)}
-                        className="rounded p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {editingId === tag.id ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleUpdate(tag.id)}
+                            disabled={editSaving}
+                            className="rounded p-1.5 text-green-600 hover:bg-green-50"
+                            title="Save"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
+                            title="Cancel"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => startEdit(tag)}
+                            className="rounded p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(tag.id)}
+                            className="rounded p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -232,5 +324,3 @@ export default function TagsPage() {
     </div>
   );
 }
-
-

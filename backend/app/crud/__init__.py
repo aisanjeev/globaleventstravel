@@ -8,6 +8,7 @@ from app.crud.contact import contact_crud
 from app.crud.testimonial import testimonial_crud
 from app.crud.office import office_crud
 from app.crud.blog import blog_crud, blog_author_crud
+from app.crud.media import media as media_crud
 
 __all__ = [
     "trek_crud",
@@ -20,5 +21,6 @@ __all__ = [
     "office_crud",
     "blog_crud",
     "blog_author_crud",
+    "media_crud",
 ]
 

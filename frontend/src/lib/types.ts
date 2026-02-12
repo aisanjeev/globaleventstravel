@@ -2,31 +2,48 @@
 // Global Events Travels - Type Definitions
 // ============================================
 
-export type Difficulty = 'easy' | 'moderate' | 'hard' | 'expert';
+export type Difficulty = 'easy' | 'moderate' | 'difficult' | 'challenging' | 'extreme';
+export type TrekStatus = 'draft' | 'published' | 'archived' | 'seasonal';
 
 export interface Trek {
   id: number;
   name: string;
   slug: string;
+  short_description?: string;
+  description: string;
   difficulty: Difficulty;
   duration: number; // days
+  max_altitude: number; // meters
+  distance?: number; // kilometers
   price: number;
-  season: string[];
-  elevation: number; // meters
-  distance: number; // kilometers
-  description: string;
-  short_description?: string;
-  image: string;
+  featured_image?: string;
+  gallery?: string[];
+  status: TrekStatus;
+  featured: boolean;
+  location: string;
+  best_season: string[];
+  group_size_min: number;
+  group_size_max: number;
+  includes?: string[];
+  excludes?: string[];
+  equipment_list?: string[];
+  fitness_level?: string;
+  experience_required?: string;
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string[];
+  map_embed?: string;
   images?: TrekImage[];
   itinerary?: ItineraryDay[];
+  faqs?: TrekFAQ[];
   reviews?: Review[];
   guide_id?: number;
   guide?: Guide;
   rating: number;
   review_count: number;
-  featured?: boolean;
   created_at: string;
   updated_at: string;
+  published_at?: string;
 }
 
 export interface ItineraryDay {
@@ -35,6 +52,13 @@ export interface ItineraryDay {
   description: string;
   elevation_gain: number;
   distance: number;
+}
+
+export interface TrekFAQ {
+  id?: number;
+  question: string;
+  answer: string;
+  display_order: number;
 }
 
 export interface TrekImage {

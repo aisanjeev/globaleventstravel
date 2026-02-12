@@ -1,24 +1,46 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
-import { MOCK_TREKS, getTrekBySlug } from '@/lib/data';
 import { DIFFICULTY_LABELS } from '@/lib/constants';
+import { getSiteSettings } from '@/lib/api';
+
+const { siteConfig } = await getSiteSettings();
 import type { Trek } from '@/lib/types';
-import { Image } from 'astro:assets';
 import TrekLeadForm from '@/components/forms/TrekLeadForm';
 import MobileStickyForm from '@/components/forms/MobileStickyForm';
+import TrekCard from '@/components/trek/TrekCard.astro';
 
-export async function getStaticPaths() {
-  return MOCK_TREKS.map((trek) => ({
-    params: { slug: trek.slug },
-    props: { trek },
-  }));
+// Enable SSR for this page - fetch trek data dynamically at request time
+export const prerender = false;
+
+// Get the slug from URL params
+const { slug } = Astro.params;
+
+// Fetch trek data from API
+const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
+let trek: Trek | null = null;
+let errorMessage = '';
+
+try {
+  const response = await fetch(`${API_BASE_URL}/api/v1/treks/${slug}`);
+  
+  if (response.ok) {
+    trek = await response.json();
+  } else if (response.status === 404) {
+    errorMessage = 'Trek not found';
+  } else {
+    errorMessage = 'Failed to load trek details';
+  }
+} catch (error) {
+  console.error('Error fetching trek:', error);
+  errorMessage = 'Failed to connect to server';
 }
 
-interface Props {
-  trek: Trek;
+// If trek not found, return 404
+if (!trek) {
+  return Astro.redirect('/treks');
 }
 
-const { trek } = Astro.props;
 const difficultyInfo = DIFFICULTY_LABELS[trek.difficulty] || DIFFICULTY_LABELS.moderate;
 
 const formatPrice = (price: number) => {
@@ -29,31 +51,98 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-// Mock itinerary for demo
-const itinerary = [
-  { day: 1, title: 'Arrival & Orientation', description: 'Arrive at base camp, meet fellow trekkers and guides. Evening briefing about the trek.', elevation_gain: 0, distance: 0 },
-  { day: 2, title: 'Base Camp to Camp 1', description: 'Begin the trek through beautiful pine forests. Gradual ascent with stunning valley views.', elevation_gain: 800, distance: 8 },
-  { day: 3, title: 'Camp 1 to Camp 2', description: 'Continue ascending through alpine meadows. Acclimatization walks and rest periods.', elevation_gain: 600, distance: 6 },
-  { day: 4, title: 'Summit Day', description: 'Early morning start for summit push. Witness breathtaking sunrise from the peak.', elevation_gain: 500, distance: 5 },
-  { day: 5, title: 'Descent & Departure', description: 'Descend to base camp and transfer to departure point. Farewell and certificates.', elevation_gain: -1900, distance: 12 },
-];
+// Get values with fallbacks for API compatibility
+const maxAltitude = trek.max_altitude ?? 0;
+const distance = trek.distance ?? 0;
+const bestSeason = trek.best_season ?? [];
+const featuredImage = trek.featured_image || '/images/treks/placeholder.jpg';
+const rating = trek.rating ?? 0;
+const nights = Math.max(0, trek.duration - 1);
+const durationDisplay = `${nights}N / ${trek.duration}D`;
 
-const included = [
-  'Professional certified trek leader',
-  'All meals during the trek (veg & non-veg options)',
-  'Quality camping equipment',
-  'First aid medical kit',
-  'Forest permits and entry fees',
-  'Transport from pickup point to base camp',
-];
+// Fetch related treks by location
+let relatedTreks: Trek[] = [];
+try {
+  const relatedResponse = await fetch(
+    `${API_BASE_URL}/api/v1/treks?location=${encodeURIComponent(trek.location)}&status=published&limit=5`
+  );
+  if (relatedResponse.ok) {
+    const relatedData = await relatedResponse.json();
+    // Filter out the current trek and limit to 4
+    relatedTreks = (relatedData.items || [])
+      .filter((t: Trek) => t.id !== trek.id)
+      .slice(0, 4);
+  }
+} catch (error) {
+  console.error('Error fetching related treks:', error);
+}
 
-const notIncluded = [
-  'Personal trekking gear',
-  'Travel insurance',
-  'Tips and gratuities',
-  'Personal expenses',
-  'Anything not mentioned in inclusions',
-];
+// If no related treks by location, try fetching featured treks
+if (relatedTreks.length === 0) {
+  try {
+    const featuredResponse = await fetch(
+      `${API_BASE_URL}/api/v1/treks/featured?limit=5`
+    );
+    if (featuredResponse.ok) {
+      const featuredData = await featuredResponse.json();
+      relatedTreks = (featuredData || [])
+        .filter((t: Trek) => t.id !== trek.id)
+        .slice(0, 4);
+    }
+  } catch (error) {
+    console.error('Error fetching featured treks:', error);
+  }
+}
+
+// Use itinerary from API if available, otherwise use fallback
+const itinerary = trek.itinerary && trek.itinerary.length > 0 
+  ? trek.itinerary.map((day, index) => ({
+      day: day.day ?? index + 1,
+      title: day.title,
+      description: day.description,
+      elevation_gain: day.elevation_gain ?? 0,
+      distance: day.distance ?? 0,
+    }))
+  : [
+      { day: 1, title: 'Arrival & Orientation', description: 'Arrive at base camp, meet fellow trekkers and guides. Evening briefing about the trek.', elevation_gain: 0, distance: 0 },
+      { day: 2, title: 'Base Camp to Camp 1', description: 'Begin the trek through beautiful pine forests. Gradual ascent with stunning valley views.', elevation_gain: 800, distance: 8 },
+      { day: 3, title: 'Camp 1 to Camp 2', description: 'Continue ascending through alpine meadows. Acclimatization walks and rest periods.', elevation_gain: 600, distance: 6 },
+      { day: 4, title: 'Summit Day', description: 'Early morning start for summit push. Witness breathtaking sunrise from the peak.', elevation_gain: 500, distance: 5 },
+      { day: 5, title: 'Descent & Departure', description: 'Descend to base camp and transfer to departure point. Farewell and certificates.', elevation_gain: -1900, distance: 12 },
+    ];
+
+// Use includes from API if available, otherwise use fallback
+const included = trek.includes && trek.includes.length > 0
+  ? trek.includes
+  : [
+      'Professional certified trek leader',
+      'All meals during the trek (veg & non-veg options)',
+      'Quality camping equipment',
+      'First aid medical kit',
+      'Forest permits and entry fees',
+      'Transport from pickup point to base camp',
+    ];
+
+// Use excludes from API if available, otherwise use fallback
+const notIncluded = trek.excludes && trek.excludes.length > 0
+  ? trek.excludes
+  : [
+      'Personal trekking gear',
+      'Travel insurance',
+      'Tips and gratuities',
+      'Personal expenses',
+      'Anything not mentioned in inclusions',
+    ];
+
+// WhatsApp number for links (strip to digits, assume India +91)
+const whatsappNumber = (siteConfig.phone || '916383313359').replace(/\D/g, '').replace(/^0/, '91') || '916383313359';
+const whatsappBaseUrl = `https://wa.me/${whatsappNumber}`;
+const whatsappTrekMessage = encodeURIComponent(`Hi, I'm interested in the ${trek.name} trek. Please share details.`);
+const whatsappItineraryMessage = encodeURIComponent(`Hi, please send me the itinerary for ${trek.name} trek.`);
+
+// Winter trek check for snow animation (Dec, Jan, Feb)
+const winterMonths = ['Dec', 'Dec.', 'December', 'Jan', 'Jan.', 'January', 'Feb', 'Feb.', 'February'];
+const isWinterTrek = bestSeason.some((s) => winterMonths.some((m) => s.toLowerCase().includes(m.toLowerCase())));
 ---
 
 <MainLayout 
@@ -61,19 +150,38 @@ const notIncluded = [
   description={trek.short_description || trek.description}
 >
   <!-- Hero Section -->
-  <section class="relative h-[60vh] min-h-[400px]">
-    <Image 
-      src={trek.image} 
-      alt={trek.name}
-      class="w-full h-full object-cover"
-      width={1920}
-      height={800}
-      loading="eager"
+  <section class="relative h-[70vh] min-h-[500px] overflow-hidden">
+    <!-- Background with parallax (desktop) -->
+    <div 
+      class="absolute inset-0 bg-cover bg-center bg-no-repeat lg:bg-fixed" 
+      style={`background-image: url(${featuredImage})`}
+      aria-hidden="true"
+    ></div>
+    <!-- Fallback img for non-CSS backgrounds / SEO -->
+    <img 
+      src={featuredImage} 
+      alt=""
+      class="sr-only"
+      width="1920"
+      height="800"
     />
-    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+    <!-- Cinematic gradient overlay -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70"></div>
+
+    <!-- Snow overlay (winter treks only) -->
+    {isWinterTrek && (
+      <div class="trek-snow-overlay absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <span 
+            class="trek-snowflake" 
+            style={`--delay: ${(i * 0.25) % 6}s; --x: ${(i * 13) % 100}%; --duration: ${8 + (i % 4)}s`}
+          ></span>
+        ))}
+      </div>
+    )}
     
     <!-- Breadcrumb -->
-    <div class="absolute top-6 left-0 right-0">
+    <div class="absolute top-6 left-0 right-0 z-10">
       <div class="container-custom">
         <nav class="flex items-center gap-2 text-white/80 text-sm">
           <a href="/" class="hover:text-white">Home</a>
@@ -86,20 +194,105 @@ const notIncluded = [
     </div>
 
     <!-- Hero Content -->
-    <div class="absolute bottom-0 left-0 right-0 pb-12">
-      <div class="container-custom">
-        <span class={`badge ${difficultyInfo.color} mb-4`}>{difficultyInfo.label}</span>
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">{trek.name}</h1>
-        <div class="flex flex-wrap items-center gap-4 text-white/90">
-          <div class="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <svg class={`w-5 h-5 ${i < Math.floor(trek.rating) ? 'text-amber-400' : 'text-white/30'}`} fill="currentColor" viewBox="0 0 20 20">
+    <div class="absolute bottom-0 left-0 right-0 pb-12 pt-8 z-10">
+      <div class="container-custom relative">
+        <!-- Floating glass badges -->
+        <div class="flex flex-wrap gap-3 mb-6">
+          <span class="backdrop-blur-md bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-white text-sm font-medium">{durationDisplay}</span>
+          <span class="backdrop-blur-md bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-white text-sm font-medium">{maxAltitude.toLocaleString()}m</span>
+          <span class="backdrop-blur-md bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-white text-sm font-medium">{distance}km</span>
+          <span class="backdrop-blur-md bg-white/15 border border-white/20 rounded-xl px-4 py-2 text-white text-sm font-medium capitalize">{trek.difficulty}</span>
+        </div>
+
+        <!-- Emotional headline + trek name hierarchy -->
+        {(trek.short_description || trek.name) && (
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-2 max-w-3xl">
+            {trek.short_description || trek.name}
+          </h1>
+        )}
+        <p class="text-xl md:text-2xl lg:text-3xl font-semibold text-white/95 mb-4">{trek.name}</p>
+
+        <!-- Location + Best season -->
+        <div class="flex flex-wrap items-center gap-4 text-sm text-white/80 mb-6">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            </svg>
+            {trek.location}{trek.location.toLowerCase().includes('india') ? '' : ', India'}
+          </span>
+          {bestSeason.length > 0 && (
+            <span class="flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Best season: {bestSeason.join(' – ')}
+            </span>
+          )}
+        </div>
+
+        <!-- Premium rating block -->
+        <div class="flex flex-wrap items-center gap-4 mb-6">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 backdrop-blur-md bg-amber-500/30 border border-amber-400/40 rounded-lg px-3 py-1.5 text-white font-semibold text-sm">
+              <svg class="w-4 h-4 text-amber-300" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
-            ))}
-            <span class="ml-2">{trek.rating} ({trek.review_count} reviews)</span>
+              {rating > 0 ? rating.toFixed(1) : '—'}
+            </span>
+            <span class="text-white/90 text-sm">
+              {(trek.review_count ?? 0) > 0 ? `${trek.review_count} Happy Trekkers` : 'Rated by trekkers'}
+            </span>
           </div>
         </div>
+
+        <!-- Hero CTAs -->
+        <div class="flex flex-wrap gap-3">
+          <a 
+            href="#trek-lead-form" 
+            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+          >
+            <span>Book Now</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+          <a 
+            href={`${whatsappBaseUrl}?text=${whatsappItineraryMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white font-semibold rounded-xl transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Download Itinerary</span>
+          </a>
+          <a 
+            href={`${whatsappBaseUrl}?text=${whatsappTrekMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl shadow-lg transition-colors"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <span>Chat on WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky price card (desktop only) -->
+    <div class="hidden lg:block absolute right-4 xl:right-[max(1rem,calc((100vw-1280px)/2))] top-1/2 -translate-y-1/2 z-10">
+      <div class="backdrop-blur-md bg-white/15 border border-white/20 rounded-xl p-6 w-52 shadow-xl">
+        <div class="text-white/80 text-sm mb-1">Starting from</div>
+        <div class="text-2xl font-bold text-white mb-4">{formatPrice(trek.price)}</div>
+        <a 
+          href="#trek-lead-form"
+          class="block w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg text-center transition-colors"
+        >
+          Book Now
+        </a>
       </div>
     </div>
   </section>
@@ -112,58 +305,16 @@ const notIncluded = [
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-8">
           
-          <!-- Quick Stats -->
-          <div class="bg-white rounded-xl border border-neutral-200 p-6">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div class="text-center">
-                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-neutral-900">{trek.duration}</div>
-                <div class="text-sm text-neutral-500">Days</div>
-              </div>
-              <div class="text-center">
-                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-neutral-900">{trek.elevation.toLocaleString()}m</div>
-                <div class="text-sm text-neutral-500">Max Altitude</div>
-              </div>
-              <div class="text-center">
-                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-neutral-900">{trek.distance}km</div>
-                <div class="text-sm text-neutral-500">Total Distance</div>
-              </div>
-              <div class="text-center">
-                <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div class="text-2xl font-bold text-neutral-900 capitalize">{trek.difficulty}</div>
-                <div class="text-sm text-neutral-500">Difficulty</div>
-              </div>
-            </div>
-          </div>
-
           <!-- Description -->
           <div class="bg-white rounded-xl border border-neutral-200 p-6">
             <h2 class="text-2xl font-bold text-neutral-900 mb-4">About This Trek</h2>
-            <p class="text-neutral-600 leading-relaxed">{trek.description}</p>
+            <div class="text-neutral-600 leading-relaxed prose prose-neutral max-w-none" set:html={trek.description}></div>
             
             <!-- Best Season -->
             <div class="mt-6">
               <h3 class="font-semibold text-neutral-900 mb-3">Best Season</h3>
               <div class="flex flex-wrap gap-2">
-                {trek.season.map((s) => (
+                {bestSeason.map((s) => (
                   <span class="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium">
                     {s}
                   </span>
@@ -171,6 +322,113 @@ const notIncluded = [
               </div>
             </div>
           </div>
+
+          <!-- Gallery Section -->
+          {trek.gallery && trek.gallery.length > 0 && (
+            <div class="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 class="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Photo Gallery
+              </h2>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="gallery-grid">
+                {trek.gallery.map((imageUrl, index) => (
+                  <button 
+                    type="button"
+                    class="gallery-item group relative aspect-[4/3] rounded-lg overflow-hidden border border-neutral-200 hover:border-primary-500 transition-colors cursor-pointer"
+                    data-index={index}
+                    data-src={imageUrl}
+                  >
+                    <img 
+                      src={imageUrl} 
+                      alt={`${trek.name} - Photo ${index + 1}`}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Lightbox Modal -->
+          {trek.gallery && trek.gallery.length > 0 && (
+            <div id="lightbox" class="fixed inset-0 z-[100] hidden">
+              <!-- Backdrop -->
+              <div id="lightbox-backdrop" class="absolute inset-0 bg-black/95 backdrop-blur-sm"></div>
+              
+              <!-- Close Button -->
+              <button 
+                id="lightbox-close" 
+                type="button"
+                class="absolute top-4 right-4 z-10 p-2 text-white/80 hover:text-white transition-colors"
+              >
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <!-- Navigation - Previous -->
+              <button 
+                id="lightbox-prev" 
+                type="button"
+                class="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all"
+              >
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <!-- Navigation - Next -->
+              <button 
+                id="lightbox-next" 
+                type="button"
+                class="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 rounded-full transition-all"
+              >
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              <!-- Image Container -->
+              <div class="absolute inset-0 flex items-center justify-center p-4 md:p-16">
+                <img 
+                  id="lightbox-image" 
+                  src="" 
+                  alt="Gallery image"
+                  class="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                />
+              </div>
+
+              <!-- Image Counter -->
+              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/50 px-4 py-2 rounded-full">
+                <span id="lightbox-current">1</span> / <span id="lightbox-total">{trek.gallery.length}</span>
+              </div>
+
+              <!-- Thumbnail Strip -->
+              <div class="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[90vw] pb-2" id="lightbox-thumbnails">
+                {trek.gallery.map((imageUrl, index) => (
+                  <button 
+                    type="button"
+                    class="lightbox-thumb flex-shrink-0 w-16 h-12 rounded overflow-hidden opacity-50 hover:opacity-100 transition-opacity border-2 border-transparent"
+                    data-index={index}
+                  >
+                    <img 
+                      src={imageUrl} 
+                      alt={`Thumbnail ${index + 1}`}
+                      class="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <!-- Itinerary -->
           <div class="bg-white rounded-xl border border-neutral-200 p-6">
@@ -182,7 +440,7 @@ const notIncluded = [
                     {day.day}
                   </div>
                   <h3 class="text-lg font-semibold text-neutral-900 mb-2">{day.title}</h3>
-                  <p class="text-neutral-600 mb-3">{day.description}</p>
+                  <div class="text-neutral-600 mb-3" set:html={day.description}></div>
                   <div class="flex gap-4 text-sm text-neutral-500">
                     <span class="flex items-center gap-1">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,6 +499,98 @@ const notIncluded = [
               </ul>
             </div>
           </div>
+
+          <!-- Equipment List -->
+          {trek.equipment_list && trek.equipment_list.length > 0 && (
+            <div class="bg-white rounded-xl border border-neutral-200 p-6">
+              <h3 class="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Required Equipment
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {trek.equipment_list.map((item) => (
+                  <div class="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
+                    <svg class="w-5 h-5 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-neutral-700">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Fitness & Experience Requirements -->
+          {(trek.fitness_level || trek.experience_required) && (
+            <div class="bg-white rounded-xl border border-neutral-200 p-6">
+              <h3 class="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h2a5 5 0 0110 0h2a7 7 0 00-7-7z" />
+                </svg>
+                Who Can Do This Trek?
+              </h3>
+              <div class="space-y-4">
+                {trek.fitness_level && (
+                  <div class="border border-neutral-200 rounded-lg p-4 bg-neutral-50">
+                    <h4 class="text-lg font-semibold text-neutral-900 mb-2">Fitness Level Required</h4>
+                    <div class="text-neutral-600 leading-relaxed prose prose-neutral max-w-none" set:html={trek.fitness_level}></div>
+                  </div>
+                )}
+                {trek.experience_required && (
+                  <div class="border border-neutral-200 rounded-lg p-4 bg-neutral-50">
+                    <h4 class="text-lg font-semibold text-neutral-900 mb-2">Experience Required</h4>
+                    <div class="text-neutral-600 leading-relaxed prose prose-neutral max-w-none" set:html={trek.experience_required}></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <!-- FAQ Section -->
+          {trek.faqs && trek.faqs.length > 0 && (
+            <div class="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 class="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Frequently Asked Questions
+              </h2>
+              <div class="space-y-4" id="faq-accordion">
+                {trek.faqs.map((faq, index) => (
+                  <div class="border border-neutral-200 rounded-lg overflow-hidden faq-item">
+                    <button
+                      type="button"
+                      class="w-full px-5 py-4 flex items-center justify-between text-left bg-neutral-50 hover:bg-neutral-100 transition-colors faq-trigger"
+                      data-index={index}
+                    >
+                      <span class="font-semibold text-neutral-900">{faq.question}</span>
+                      <svg class="w-5 h-5 text-neutral-500 transition-transform duration-200 faq-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <div class="faq-content hidden">
+                      <div class="px-5 py-4 text-neutral-600 bg-white" set:html={faq.answer}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Trek Map Section -->
+          {trek.map_embed && (
+            <div class="bg-white rounded-xl border border-neutral-200 p-6">
+              <h2 class="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Trek Map of {trek.name}
+              </h2>
+              <div class="aspect-video rounded-lg overflow-hidden border border-neutral-200" set:html={trek.map_embed}></div>
+            </div>
+          )}
         </div>
 
         <!-- Sidebar -->
@@ -248,7 +598,7 @@ const notIncluded = [
           <div class="sticky top-24 space-y-6">
             
             <!-- Lead Capture Form -->
-            <div class="hidden lg:block">
+            <div id="trek-lead-form" class="hidden lg:block scroll-mt-24">
               <TrekLeadForm 
                 client:load
                 trekName={trek.name}
@@ -258,22 +608,22 @@ const notIncluded = [
             </div>
 
             <!-- Quick Info -->
-            <div class="bg-white rounded-xl border border-neutral-200 p-6">
-              <h3 class="font-bold text-neutral-900 mb-4">Need Help?</h3>
-              <p class="text-neutral-600 text-sm mb-4">
-                Our trek experts are ready to help you plan your adventure.
-              </p>
-              <a href="tel:+919876543210" class="flex items-center gap-3 p-3 bg-primary-50 rounded-lg text-primary-700 hover:bg-primary-100 transition-colors">
+          <div class="bg-white rounded-xl border border-neutral-200 p-6">
+            <h3 class="font-bold text-neutral-900 mb-4">Need Help?</h3>
+            <p class="text-neutral-600 text-sm mb-4">
+              Our trek experts are ready to help you plan your adventure.
+            </p>
+            <a href={`tel:${siteConfig.phone.replace(/\s/g, '')}`} class="flex items-center gap-3 p-3 bg-primary-50 rounded-lg text-primary-700 hover:bg-primary-100 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                <span class="font-medium">+91 98765 43210</span>
+                <span class="font-medium">{siteConfig.phone}</span>
               </a>
             </div>
 
             <!-- WhatsApp Chat -->
             <a 
-              href="https://wa.me/919876543210?text=Hi,%20I'm%20interested%20in%20the%20{trek.name.replace(/ /g, '%20')}%20trek.%20Can%20you%20share%20more%20details?"
+              href={`https://wa.me/916383313359?text=Hi,%20I'm%20interested%20in%20the%20${encodeURIComponent(trek.name)}%20trek.%20Can%20you%20share%20more%20details?`}
               target="_blank"
               rel="noopener noreferrer"
               class="flex items-center justify-center gap-2 w-full p-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
@@ -288,6 +638,37 @@ const notIncluded = [
       </div>
     </div>
   </section>
+
+  <!-- Other Related Treks Section -->
+  {relatedTreks.length > 0 && (
+    <section class="section bg-white">
+      <div class="container-custom">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl font-bold text-neutral-900 mb-3">Other Related Treks</h2>
+          <p class="text-neutral-600 max-w-2xl mx-auto">
+            Explore more adventures in {trek.location} and nearby regions
+          </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {relatedTreks.map((relatedTrek) => (
+            <TrekCard trek={relatedTrek} />
+          ))}
+        </div>
+        <div class="text-center mt-8">
+          <a 
+            href="/treks" 
+            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors"
+          >
+            <span>View All Treks</span>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- Mobile Sticky CTA -->
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-50 shadow-lg">
     <div class="flex items-center justify-between gap-4">
@@ -296,7 +677,7 @@ const notIncluded = [
         <div class="text-xl font-bold text-gray-900">{formatPrice(trek.price)}</div>
       </div>
       <a 
-        href={`https://wa.me/919876543210?text=Hi,%20I'm%20interested%20in%20the%20${encodeURIComponent(trek.name)}%20trek.%20Please%20share%20details.`}
+        href={`https://wa.me/916383313359?text=Hi,%20I'm%20interested%20in%20the%20${encodeURIComponent(trek.name)}%20trek.%20Please%20share%20details.`}
         target="_blank"
         rel="noopener noreferrer"
         class="flex-1 py-3 px-4 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold rounded-lg shadow-md text-center transition-all duration-200 flex items-center justify-center gap-2"
@@ -311,5 +692,165 @@ const notIncluded = [
   
   <!-- Bottom padding for mobile sticky CTA -->
   <div class="h-20 lg:hidden"></div>
-</MainLayout>
 
+  <script>
+    // FAQ Accordion functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const faqTriggers = document.querySelectorAll('.faq-trigger');
+      
+      faqTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+          const faqItem = trigger.closest('.faq-item');
+          const content = faqItem?.querySelector('.faq-content');
+          const icon = trigger.querySelector('.faq-icon');
+          
+          if (content && icon) {
+            const isOpen = !content.classList.contains('hidden');
+            
+            // Close all other FAQs
+            document.querySelectorAll('.faq-item').forEach((item) => {
+              const otherContent = item.querySelector('.faq-content');
+              const otherIcon = item.querySelector('.faq-icon');
+              if (otherContent && otherIcon && item !== faqItem) {
+                otherContent.classList.add('hidden');
+                otherIcon.classList.remove('rotate-180');
+              }
+            });
+            
+            // Toggle current FAQ
+            if (isOpen) {
+              content.classList.add('hidden');
+              icon.classList.remove('rotate-180');
+            } else {
+              content.classList.remove('hidden');
+              icon.classList.add('rotate-180');
+            }
+          }
+        });
+      });
+
+      // Lightbox Gallery functionality
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImage = document.getElementById('lightbox-image') as HTMLImageElement;
+      const lightboxCurrent = document.getElementById('lightbox-current');
+      const lightboxClose = document.getElementById('lightbox-close');
+      const lightboxBackdrop = document.getElementById('lightbox-backdrop');
+      const lightboxPrev = document.getElementById('lightbox-prev');
+      const lightboxNext = document.getElementById('lightbox-next');
+      const galleryItems = document.querySelectorAll('.gallery-item');
+      const thumbnails = document.querySelectorAll('.lightbox-thumb');
+
+      if (!lightbox || !lightboxImage || galleryItems.length === 0) return;
+
+      let currentIndex = 0;
+      const images: string[] = [];
+
+      // Collect all image URLs
+      galleryItems.forEach((item) => {
+        const src = item.getAttribute('data-src');
+        if (src) images.push(src);
+      });
+
+      // Open lightbox
+      const openLightbox = (index: number) => {
+        currentIndex = index;
+        updateLightbox();
+        lightbox.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      };
+
+      // Close lightbox
+      const closeLightbox = () => {
+        lightbox.classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+
+      // Update lightbox image and counter
+      const updateLightbox = () => {
+        if (lightboxImage && images[currentIndex]) {
+          lightboxImage.src = images[currentIndex];
+        }
+        if (lightboxCurrent) {
+          lightboxCurrent.textContent = String(currentIndex + 1);
+        }
+        // Update thumbnail active state
+        thumbnails.forEach((thumb, i) => {
+          if (i === currentIndex) {
+            thumb.classList.add('opacity-100', 'border-white');
+            thumb.classList.remove('opacity-50', 'border-transparent');
+          } else {
+            thumb.classList.remove('opacity-100', 'border-white');
+            thumb.classList.add('opacity-50', 'border-transparent');
+          }
+        });
+      };
+
+      // Navigate to previous image
+      const prevImage = () => {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        updateLightbox();
+      };
+
+      // Navigate to next image
+      const nextImage = () => {
+        currentIndex = (currentIndex + 1) % images.length;
+        updateLightbox();
+      };
+
+      // Event listeners for gallery items
+      galleryItems.forEach((item) => {
+        item.addEventListener('click', () => {
+          const index = parseInt(item.getAttribute('data-index') || '0', 10);
+          openLightbox(index);
+        });
+      });
+
+      // Event listeners for thumbnails
+      thumbnails.forEach((thumb) => {
+        thumb.addEventListener('click', () => {
+          const index = parseInt(thumb.getAttribute('data-index') || '0', 10);
+          currentIndex = index;
+          updateLightbox();
+        });
+      });
+
+      // Close button
+      lightboxClose?.addEventListener('click', closeLightbox);
+      
+      // Backdrop click to close
+      lightboxBackdrop?.addEventListener('click', closeLightbox);
+
+      // Navigation buttons
+      lightboxPrev?.addEventListener('click', prevImage);
+      lightboxNext?.addEventListener('click', nextImage);
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (lightbox.classList.contains('hidden')) return;
+        
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+      });
+
+      // Touch/swipe support for mobile
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      lightbox.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      lightbox.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const swipeThreshold = 50;
+        
+        if (touchStartX - touchEndX > swipeThreshold) {
+          nextImage(); // Swipe left = next
+        } else if (touchEndX - touchStartX > swipeThreshold) {
+          prevImage(); // Swipe right = prev
+        }
+      }, { passive: true });
+    });
+  </script>
+</MainLayout>

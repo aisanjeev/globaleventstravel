@@ -1,4 +1,6 @@
 ---
+import { api } from '@/lib/api';
+
 interface Props {
   title?: string;
   description?: string;
@@ -6,11 +8,37 @@ interface Props {
   secondaryButton?: { text: string; href: string };
 }
 
+interface PageSection {
+  title?: string | null;
+  subtitle?: string | null;
+  body_html?: string | null;
+  cta_label?: string | null;
+  cta_url?: string | null;
+}
+
+const defaultTitle = "Ready for Your Next Adventure?";
+const defaultDescription =
+  "Join thousands of happy trekkers who have discovered the magic of the Himalayas with us. Your adventure of a lifetime awaits.";
+const defaultPrimary = { text: "Explore Treks", href: "/treks" };
+const defaultSecondary = { text: "Contact Us", href: "/contact" };
+
+let section: PageSection | null = null;
+
+try {
+  const sections = await api.get<PageSection[]>(`/content/home`);
+  section = sections.find((s) => (s as any).key === "cta") || null;
+} catch (error) {
+  console.error('Failed to fetch home CTA content, using defaults:', error);
+}
+
 const {
-  title = "Ready for Your Next Adventure?",
-  description = "Join thousands of happy trekkers who have discovered the magic of the Himalayas with us. Your adventure of a lifetime awaits.",
-  primaryButton = { text: "Explore Treks", href: "/treks" },
-  secondaryButton = { text: "Contact Us", href: "/contact" },
+  title = section?.title || defaultTitle,
+  description = section?.subtitle || defaultDescription,
+  primaryButton = {
+    text: section?.cta_label || defaultPrimary.text,
+    href: section?.cta_url || defaultPrimary.href,
+  },
+  secondaryButton = defaultSecondary,
 } = Astro.props;
 ---
 

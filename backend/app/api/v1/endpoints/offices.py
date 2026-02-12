@@ -5,6 +5,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
+from app.core.auth import get_current_admin_user
+from app.db.models.user import User
 from app.crud.office import office_crud
 from app.models.office import OfficeCreate, OfficeUpdate, OfficeResponse
 
@@ -48,6 +50,7 @@ def get_office(
 def create_office(
     office_in: OfficeCreate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Create a new office."""
     # Convert aliased fields
@@ -68,6 +71,7 @@ def update_office(
     office_id: int,
     office_in: OfficeUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Update an office."""
     office = office_crud.get(db, office_id)
@@ -92,6 +96,7 @@ def update_office(
 def delete_office(
     office_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
 ):
     """Delete an office."""
     office = office_crud.get(db, office_id)

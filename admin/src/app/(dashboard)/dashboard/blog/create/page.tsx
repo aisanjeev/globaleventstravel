@@ -16,6 +16,10 @@ export default function CreateBlogPostPage() {
   const handleSubmit = async (data: BlogPostFormData) => {
     setIsLoading(true);
     try {
+      const metaKeywords = data.meta_keywords
+        ? data.meta_keywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+        : undefined;
+
       await blogService.create({
         title: data.title,
         slug: data.slug,
@@ -28,6 +32,7 @@ export default function CreateBlogPostPage() {
         featured_image: data.featured_image || undefined,
         meta_title: data.meta_title || undefined,
         meta_description: data.meta_description || undefined,
+        meta_keywords: metaKeywords,
         author_id: data.author_id,
         tag_ids: data.tag_ids,
         read_time: data.reading_time,

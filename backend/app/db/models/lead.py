@@ -15,11 +15,14 @@ class Lead(Base):
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     whatsapp: Mapped[str] = mapped_column(String(20), nullable=False)
     trek_slug: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     trek_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    
+
+    # trek | expedition - for PDF lookup
+    interest_type: Mapped[str] = mapped_column(String(20), default="trek", nullable=False)
+
     # Source tracking
     source: Mapped[str] = mapped_column(
         String(50), default="website", nullable=False

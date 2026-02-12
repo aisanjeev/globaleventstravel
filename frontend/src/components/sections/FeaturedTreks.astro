@@ -6,12 +6,15 @@ interface Props {
   treks: Trek[];
   title?: string;
   subtitle?: string;
+  /** Default urgency from page_content featured_defaults: { nextBatch, seatsText } */
+  urgencyDefaults?: { nextBatch?: string; seatsText?: string };
 }
 
 const {
   treks,
   title = "Featured Treks",
-  subtitle = "Explore our most popular expeditions loved by thousands of adventurers"
+  subtitle = "Explore our most popular expeditions loved by thousands of adventurers",
+  urgencyDefaults,
 } = Astro.props;
 ---
 
@@ -27,7 +30,7 @@ const {
     </div>
 
     <!-- Trek Grid -->
-    <TrekGrid treks={treks} columns={3} />
+    <TrekGrid treks={treks} columns={3} urgencyDefaults={urgencyDefaults} />
 
     <!-- View All Button -->
     <div class="text-center mt-12">

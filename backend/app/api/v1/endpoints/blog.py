@@ -10,9 +10,9 @@ from app.crud.blog import blog_crud, blog_author_crud, blog_category_crud, blog_
 from app.models.blog import (
     BlogPostCreate, BlogPostUpdate, 
     BlogPostResponse, BlogPostListResponse,
-    BlogAuthorCreate, BlogAuthorResponse,
+    BlogAuthorCreate, BlogAuthorUpdate, BlogAuthorResponse,
     BlogCategoryCreate, BlogCategoryUpdate, BlogCategoryResponse, BlogCategoryTreeResponse,
-    BlogTagCreate, BlogTagResponse
+    BlogTagCreate, BlogTagUpdate, BlogTagResponse
 )
 from app.models.common import PaginatedResponse
 
@@ -204,6 +204,33 @@ def create_tag(
     )
 
 
+@router.put("/tags/{tag_id}", response_model=BlogTagResponse)
+def update_tag(
+    tag_id: int,
+    tag_in: BlogTagUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update a tag."""
+    tag = blog_tag_crud.get(db, tag_id)
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+
+    # Check slug uniqueness if updating slug
+    if tag_in.slug and tag_in.slug != tag.slug:
+        existing = blog_tag_crud.get_by_slug(db, tag_in.slug)
+        if existing:
+            raise HTTPException(status_code=400, detail="Tag with this slug already exists")
+
+    tag = blog_tag_crud.update(db, db_obj=tag, obj_in=tag_in)
+    return BlogTagResponse(
+        id=tag.id,
+        name=tag.name,
+        slug=tag.slug,
+        post_count=0,
+        created_at=tag.created_at,
+    )
+
+
 @router.delete("/tags/{tag_id}")
 def delete_tag(
     tag_id: int,
@@ -259,6 +286,8 @@ def list_blog_posts(
         filters["featured"] = featured
     if status:
         filters["status"] = status
+    if search:
+        filters["search"] = search
     total = blog_crud.get_count(db, filters=filters)
     
     return PaginatedResponse(
@@ -452,3 +481,41 @@ def create_blog_author(
     """Create a new blog author."""
     author = blog_author_crud.create(db, obj_in=author_in)
     return BlogAuthorResponse.model_validate(author)
+
+
+@router.put("/authors/{author_id}", response_model=BlogAuthorResponse)
+def update_blog_author(
+    author_id: int,
+    author_in: BlogAuthorUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update a blog author."""
+    author = blog_author_crud.get(db, author_id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+
+    author = blog_author_crud.update(db, db_obj=author, obj_in=author_in)
+    return BlogAuthorResponse.model_validate(author)
+
+
+@router.delete("/authors/{author_id}")
+def delete_blog_author(
+    author_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete a blog author. Prevents deletion if author has posts."""
+    from app.db.models.blog import BlogPost
+
+    author = blog_author_crud.get(db, author_id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+
+    post_count = db.query(BlogPost).filter(BlogPost.author_id == author_id).count()
+    if post_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete author with {post_count} post(s). Reassign posts first.",
+        )
+
+    blog_author_crud.remove(db, id=author_id)
+    return {"message": "Author deleted successfully"}

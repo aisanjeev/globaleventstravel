@@ -1,12 +1,21 @@
 ---
 import OfficeCard from './OfficeCard.astro';
-import { OFFICES } from '@/lib/data';
+import { officesApi } from '@/lib/api';
+import type { Office } from '@/lib/types';
 
 interface Props {
   showTitle?: boolean;
 }
 
 const { showTitle = true } = Astro.props;
+
+let offices: Office[] = [];
+
+try {
+  offices = await officesApi.list();
+} catch (error) {
+  console.error('Failed to fetch offices from API:', error);
+}
 ---
 
 <section class="section bg-neutral-50">
@@ -57,7 +66,7 @@ const { showTitle = true } = Astro.props;
 
     <!-- Grid View -->
     <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {OFFICES.map((office) => (
+      {offices.map((office) => (
         <OfficeCard office={office} />
       ))}
     </div>
@@ -66,7 +75,7 @@ const { showTitle = true } = Astro.props;
     <div id="tabs-view" class="hidden">
       <!-- Tab Navigation -->
       <div class="flex flex-wrap justify-center gap-2 mb-6">
-        {OFFICES.map((office, index) => (
+        {offices.map((office, index) => (
           <button
             class={`office-tab-btn px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               index === 0 
@@ -82,7 +91,7 @@ const { showTitle = true } = Astro.props;
 
       <!-- Tab Content -->
       <div class="max-w-2xl mx-auto">
-        {OFFICES.map((office, index) => (
+        {offices.map((office, index) => (
           <div
             class={`office-tab-content ${index === 0 ? '' : 'hidden'}`}
             data-office-id={office.id}

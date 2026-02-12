@@ -6,6 +6,11 @@ export interface TagCreateData {
   slug: string;
 }
 
+export interface TagUpdateData {
+  name?: string;
+  slug?: string;
+}
+
 export const tagService = {
   async list(): Promise<BlogTag[]> {
     try {
@@ -19,6 +24,18 @@ export const tagService = {
   async create(data: TagCreateData): Promise<BlogTag> {
     try {
       const response = await apiClient.post<BlogTag>("/api/v1/blog/tags", data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async update(id: number, data: TagUpdateData): Promise<BlogTag> {
+    try {
+      const response = await apiClient.put<BlogTag>(
+        `/api/v1/blog/tags/${id}`,
+        data
+      );
       return response.data;
     } catch (error) {
       throw handleApiError(error);

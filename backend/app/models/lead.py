@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, EmailStr
 class LeadBase(BaseModel):
     """Base schema for lead."""
     name: str = Field(..., min_length=2, max_length=255)
-    email: EmailStr
+    email: Optional[EmailStr] = None
     whatsapp: str = Field(..., min_length=10, max_length=15)
     trek_slug: str
 
@@ -17,6 +17,7 @@ class LeadBase(BaseModel):
 class LeadCreate(LeadBase):
     """Schema for creating a lead."""
     trek_name: Optional[str] = None
+    interest_type: str = Field(default="trek", pattern="^(trek|expedition)$")
     source: str = "website"
 
 
@@ -31,6 +32,7 @@ class LeadResponse(LeadBase):
     """Schema for lead response."""
     id: int
     trek_name: Optional[str] = None
+    interest_type: str = "trek"
     source: str
     status: str
     itinerary_sent: bool
@@ -46,10 +48,11 @@ class LeadListResponse(BaseModel):
     """Schema for lead list."""
     id: int
     name: str
-    email: str
+    email: Optional[str] = None
     whatsapp: str
     trek_slug: str
     trek_name: Optional[str] = None
+    interest_type: str = "trek"
     source: str
     status: str
     itinerary_sent: bool

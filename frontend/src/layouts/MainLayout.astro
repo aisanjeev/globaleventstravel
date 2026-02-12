@@ -1,21 +1,26 @@
 ---
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
+import StickyWhatsAppButton from '@/components/StickyWhatsAppButton.astro';
+import { getSiteSettings } from '@/lib/api';
 import '@/styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
   ogImage?: string;
+  headerVariant?: 'default' | 'expedition';
 }
 
 const { 
   title, 
   description = 'Discover amazing treks and expeditions in the Himalayas with Global Events Travels.',
-  ogImage = '/images/hero/og-default.jpg'
+  ogImage = '/images/hero/og-default.jpg',
+  headerVariant = 'default'
 } = Astro.props;
 
-const siteTitle = `${title} | Global Events Travels`;
+const { siteConfig, socialLinks } = await getSiteSettings();
+const siteTitle = `${title} | ${siteConfig.name}`;
 ---
 
 <!DOCTYPE html>
@@ -56,11 +61,12 @@ const siteTitle = `${title} | Global Events Travels`;
     <meta name="theme-color" content="#ffffff" />
   </head>
   <body class="min-h-screen flex flex-col bg-white">
-    <Header />
+    <Header siteConfig={siteConfig} headerVariant={headerVariant} />
     <main class="flex-grow">
       <slot />
     </main>
-    <Footer />
+    <Footer siteConfig={siteConfig} socialLinks={socialLinks} />
+    <StickyWhatsAppButton />
   </body>
 </html>
 

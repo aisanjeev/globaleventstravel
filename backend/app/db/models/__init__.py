@@ -2,7 +2,7 @@
 Database models package.
 All models are imported here for easy access.
 """
-from app.db.models.trek import Trek, TrekImage, ItineraryDay
+from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ
 from app.db.models.expedition import Expedition, ExpeditionDay
 from app.db.models.guide import Guide
 from app.db.models.booking import Booking
@@ -15,11 +15,17 @@ from app.db.models.blog import (
     blog_post_tags, PostStatus, ContentType
 )
 from app.db.models.user import User
+from app.db.models.media import Media
+from app.db.models.email_log import EmailLog
+from app.db.models.site_settings import SiteSettings
+from app.db.models.google_review import GoogleReview
+from app.db.models.google_reviews_meta import GoogleReviewsMeta
 
 __all__ = [
     "Trek",
     "TrekImage",
     "ItineraryDay",
+    "TrekFAQ",
     "Expedition",
     "ExpeditionDay",
     "Guide",
@@ -36,5 +42,10 @@ __all__ = [
     "PostStatus",
     "ContentType",
     "User",
+    "Media",
+    "EmailLog",
+    "SiteSettings",
+    "GoogleReview",
+    "GoogleReviewsMeta",
 ]
 

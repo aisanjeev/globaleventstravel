@@ -1,11 +1,26 @@
 ---
-import { NAV_LINKS, SITE_CONFIG } from '@/lib/constants';
+import { NAV_LINKS } from '@/lib/constants';
 import { Image } from 'astro:assets';
+import type { SiteConfig } from '@/lib/api';
 
+interface Props {
+  siteConfig: SiteConfig;
+  headerVariant?: 'default' | 'expedition';
+}
+
+const { siteConfig, headerVariant = 'default' } = Astro.props;
 const currentPath = Astro.url.pathname;
+const isExpedition = headerVariant === 'expedition';
 ---
 
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-neutral-100 shadow-sm">
+<header 
+  class:list={[
+    'sticky top-0 z-50 backdrop-blur-sm shadow-sm',
+    isExpedition 
+      ? 'bg-royal-600/95 border-b border-white/10' 
+      : 'bg-white/95 border-b border-neutral-100'
+  ]}
+>
   <nav class="container-custom">
     <div class="flex items-center justify-between h-16 md:h-20">
       <!-- Logo -->
@@ -13,7 +28,7 @@ const currentPath = Astro.url.pathname;
         <!-- Brand logo image (optimized Image component) -->
         <Image
           src="/logo.webp"
-          alt="Globaleventstravels logo"
+          alt={siteConfig.name}
           class="h-12 w-auto object-contain drop-shadow-sm"
           width={300}
           height={80}
@@ -27,8 +42,9 @@ const currentPath = Astro.url.pathname;
           <a 
             href={link.href}
             class:list={[
-              'nav-link',
-              { 'nav-link-active': currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href)) }
+              isExpedition ? 'text-white/90 hover:text-white font-medium transition-colors' : 'nav-link',
+              isExpedition && (currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))) ? 'text-white' : '',
+              !isExpedition && { 'nav-link-active': currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href)) }
             ]}
           >
             {link.name}
@@ -36,17 +52,23 @@ const currentPath = Astro.url.pathname;
         ))}
       </div>
 
-      <!-- CTA Button - Orange -->
+      <!-- CTA Button -->
       <div class="hidden md:block">
-        <a href="/contact" class="btn-primary">
-          Book a Trek
+        <a 
+          href={isExpedition ? '/contact?interest=expedition' : '/contact'} 
+          class="btn-primary"
+        >
+          {isExpedition ? 'Apply for Expedition' : 'Book a Trek'}
         </a>
       </div>
 
       <!-- Mobile Menu Button -->
       <button 
         id="mobile-menu-btn"
-        class="md:hidden p-2 text-neutral-800 hover:text-secondary-600 hover:bg-neutral-50 rounded-lg transition-colors"
+        class:list={[
+          'md:hidden p-2 rounded-lg transition-colors',
+          isExpedition ? 'text-white/90 hover:text-white hover:bg-royal-700' : 'text-neutral-800 hover:text-secondary-600 hover:bg-neutral-50'
+        ]}
         aria-label="Toggle menu"
       >
         <svg class="w-6 h-6 menu-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,22 +82,28 @@ const currentPath = Astro.url.pathname;
 
     <!-- Mobile Navigation -->
     <div id="mobile-menu" class="hidden md:hidden pb-4">
-      <div class="flex flex-col gap-2 pt-4 border-t border-neutral-100">
+      <div class:list={[
+        'flex flex-col gap-2 pt-4 border-t',
+        isExpedition ? 'border-white/10' : 'border-neutral-100'
+      ]}>
         {NAV_LINKS.map((link) => (
           <a 
             href={link.href}
             class:list={[
               'px-4 py-2 rounded-lg transition-colors',
               currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href))
-                ? 'bg-secondary-50 text-secondary-600'
-                : 'text-neutral-800 hover:bg-neutral-50 hover:text-secondary-600'
+                ? isExpedition ? 'bg-royal-700 text-white' : 'bg-secondary-50 text-secondary-600'
+                : isExpedition ? 'text-white/90 hover:bg-royal-700 hover:text-white' : 'text-neutral-800 hover:bg-neutral-50 hover:text-secondary-600'
             ]}
           >
             {link.name}
           </a>
         ))}
-        <a href="/contact" class="btn-primary mt-2 text-center">
-          Book a Trek
+        <a 
+          href={isExpedition ? '/contact?interest=expedition' : '/contact'} 
+          class="btn-primary mt-2 text-center"
+        >
+          {isExpedition ? 'Apply for Expedition' : 'Book a Trek'}
         </a>
       </div>
     </div>
