@@ -21,6 +21,29 @@ const {
 
 const { siteConfig, socialLinks } = await getSiteSettings();
 const siteTitle = `${title} | ${siteConfig.name}`;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, Astro.url.origin).href;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: siteConfig.name,
+      description: siteConfig.description,
+      url: Astro.url.origin,
+      logo: new URL('/logo.webp', Astro.url.origin).href,
+      telephone: siteConfig.phone,
+      email: siteConfig.email,
+      address: { '@type': 'PostalAddress', streetAddress: siteConfig.address },
+    },
+    {
+      '@type': 'WebSite',
+      name: siteConfig.name,
+      url: Astro.url.origin,
+      description: siteConfig.description,
+    },
+  ],
+};
 ---
 
 <!DOCTYPE html>
@@ -34,31 +57,39 @@ const siteTitle = `${title} | ${siteConfig.name}`;
     <title>{siteTitle}</title>
     <meta name="title" content={siteTitle} />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook (absolute URLs for crawlers) -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url} />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:url" content={canonicalUrl} />
     <meta property="twitter:title" content={siteTitle} />
     <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={ogImage} />
+    <meta property="twitter:image" content={absoluteOgImage} />
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     
-    <!-- Fonts -->
+    <!-- Fonts: preconnect + async load to avoid render-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     
     <!-- Theme color -->
     <meta name="theme-color" content="#ffffff" />
+    
+    <!-- JSON-LD for SEO (Organization + WebSite) -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-screen flex flex-col bg-white">
     <Header siteConfig={siteConfig} headerVariant={headerVariant} />
