@@ -21,8 +21,8 @@ This document describes how to set up automated deployment of the FastAPI backen
 
 | Environment | URL                                      | Port | Deploy Path                                                                 |
 |-------------|------------------------------------------|------|-----------------------------------------------------------------------------|
-| Staging     | https://staging.api.globaleventstravels.com | 8093 | `/home/globalevents-staging-api/htdocs/staging.api.globaleventstravels.com` |
-| Production  | https://api.globaleventstravels.com      | 8092 | `/home/globalevents-api/htdocs/api.globaleventstravels.com`                 |
+| Staging     | https://staging.api.globaleventstravels.com | 8093 | `/home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com` |
+| Production  | https://api.globaleventstravels.com      | 8092 | `/home/globaleventstravels-api/htdocs/api.globaleventstravels.com`                 |
 
 ---
 
@@ -75,8 +75,8 @@ GOOGLE_REVIEWS_PLACE_ID=...
 Before the first deployment, create the deploy directories on the VPS:
 
 ```bash
-mkdir -p /home/globalevents-staging-api/htdocs/staging.api.globaleventstravels.com
-mkdir -p /home/globalevents-api/htdocs/api.globaleventstravels.com
+mkdir -p /home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com
+mkdir -p /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
 ```
 
 Ensure the VPS has:
@@ -106,28 +106,28 @@ When enabled, the app runs `alembic upgrade head` on each restart. Use this only
 
 ```bash
 # Staging
-systemctl status globalevents-staging-api
+systemctl status globaleventstravels-staging-api
 
 # Production
-systemctl status globalevents-api
+systemctl status globaleventstravels-api
 ```
 
 ### View logs
 
 ```bash
 # Staging
-journalctl -u globalevents-staging-api -f
+journalctl -u globaleventstravels-staging-api -f
 
 # Production
-journalctl -u globalevents-api -f
+journalctl -u globaleventstravels-api -f
 ```
 
 ### Restart service manually
 
 ```bash
-systemctl restart globalevents-staging-api
+systemctl restart globaleventstravels-staging-api
 # or
-systemctl restart globalevents-api
+systemctl restart globaleventstravels-api
 ```
 
 ### Common issues

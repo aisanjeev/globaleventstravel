@@ -26,8 +26,8 @@
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/globalevents-staging-api/htdocs/staging.api.globaleventstravels.com
-# mkdir -p /home/globalevents-api/htdocs/api.globaleventstravels.com
+# mkdir -p /home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com
+# mkdir -p /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
 # =============================================================================
 
 name: Deploy Backend to VPS
@@ -63,9 +63,9 @@ jobs:
       url: https://staging.api.globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globalevents-staging-api/htdocs/staging.api.globaleventstravels.com
-      SERVICE_NAME: globalevents-staging-api
-      APP_PORT: 8093
+      DEPLOY_PATH: /home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-staging-api
+      APP_PORT: 8096
 
     steps:
       - name: Checkout code
@@ -185,9 +185,9 @@ jobs:
       url: https://api.globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globalevents-api/htdocs/api.globaleventstravels.com
-      SERVICE_NAME: globalevents-api
-      APP_PORT: 8092
+      DEPLOY_PATH: /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-api
+      APP_PORT: 8097
 
     steps:
       - name: Checkout code
