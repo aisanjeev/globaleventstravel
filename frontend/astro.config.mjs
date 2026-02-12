@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     sitemap(),
   ],
-  output: 'hybrid',
+  output: 'static',
   adapter: node({
     mode: 'standalone',
   }),
