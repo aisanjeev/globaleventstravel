@@ -45,6 +45,7 @@ const difficultyColors = {
       src={expedition.image}
       alt={expedition.name}
       class="w-full h-full object-cover"
+      loading="lazy"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-royal-800/80 via-royal-600/50 to-royal-600/30"></div>
     
@@ -341,6 +342,7 @@ const difficultyColors = {
                       src={imageUrl} 
                       alt={`Thumbnail ${index + 1}`}
                       class="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </button>
                 ))}

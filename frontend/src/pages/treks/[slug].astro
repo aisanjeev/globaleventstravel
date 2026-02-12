@@ -164,6 +164,7 @@ const isWinterTrek = bestSeason.some((s) => winterMonths.some((m) => s.toLowerCa
       class="sr-only"
       width="1920"
       height="800"
+      loading="lazy"
     />
     <!-- Cinematic gradient overlay -->
     <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70"></div>
@@ -423,6 +424,7 @@ const isWinterTrek = bestSeason.some((s) => winterMonths.some((m) => s.toLowerCa
                       src={imageUrl} 
                       alt={`Thumbnail ${index + 1}`}
                       class="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </button>
                 ))}
