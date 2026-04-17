@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { TrekForm } from "@/components/forms/TrekForm";
@@ -10,17 +10,18 @@ import type { Trek } from "@/types/api";
 import type { TrekFormData } from "@/lib/validations";
 
 interface EditTrekPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EditTrekPage({ params }: EditTrekPageProps) {
+  const { id } = use(params);
   const router = useRouter();
   const { addToast } = useUIStore();
   const [trek, setTrek] = useState<Trek | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const trekId = parseInt(params.id, 10);
+  const trekId = parseInt(id, 10);
 
   useEffect(() => {
     const fetchTrek = async () => {

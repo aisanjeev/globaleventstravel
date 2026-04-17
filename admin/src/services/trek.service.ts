@@ -4,6 +4,9 @@ import type {
   TrekListItem,
   TrekCreate,
   TrekUpdate,
+  TrekBatch,
+  TrekBatchCreate,
+  TrekBatchUpdate,
   PaginatedResponse,
 } from "@/types/api";
 
@@ -116,6 +119,41 @@ export const trekService = {
     try {
       const response = await apiClient.post<Trek>(`/api/v1/treks/${id}/duplicate`);
       return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async getBatches(trekId: number): Promise<TrekBatch[]> {
+    try {
+      const response = await apiClient.get<TrekBatch[]>(`/api/v1/treks/${trekId}/batches`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async createBatch(trekId: number, data: TrekBatchCreate): Promise<TrekBatch> {
+    try {
+      const response = await apiClient.post<TrekBatch>(`/api/v1/treks/${trekId}/batches`, data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async updateBatch(trekId: number, batchId: number, data: TrekBatchUpdate): Promise<TrekBatch> {
+    try {
+      const response = await apiClient.put<TrekBatch>(`/api/v1/treks/${trekId}/batches/${batchId}`, data);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async deleteBatch(trekId: number, batchId: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/v1/treks/${trekId}/batches/${batchId}`);
     } catch (error) {
       throw handleApiError(error);
     }

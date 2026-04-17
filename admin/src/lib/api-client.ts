@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { auth } from "@/lib/firebase";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -9,31 +10,26 @@ export const apiClient = axios.create({
   },
 });
 
-// Add token to requests
-apiClient.interceptors.request.use((config) => {
+// Attach fresh Firebase ID token on every request
+apiClient.interceptors.request.use(async (config) => {
   if (typeof window !== "undefined") {
-    const authStorage = localStorage.getItem("auth-storage");
-    if (authStorage) {
-      try {
-        const { state } = JSON.parse(authStorage);
-        if (state?.token) {
-          config.headers.Authorization = `Bearer ${state.token}`;
-        }
-      } catch (e) {
-        // Ignore parse errors
-      }
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
     }
   }
   return config;
 });
 
-// Handle 401 responses
+// Handle 401 — sign out and redirect to login
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("auth-storage");
+        const { signOut } = await import("firebase/auth");
+        await signOut(auth).catch(() => {});
         window.location.href = "/login";
       }
     }
@@ -62,5 +58,3 @@ export function handleApiError(error: unknown): ApiError {
 }
 
 export { API_BASE_URL };
-
-

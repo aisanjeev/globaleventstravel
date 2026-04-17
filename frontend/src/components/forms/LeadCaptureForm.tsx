@@ -216,7 +216,7 @@ export default function LeadCaptureForm({ variant = 'full' }: LeadCaptureFormPro
               id="lead-whatsapp"
               value={formData.whatsapp}
               onChange={(e) => handleWhatsAppChange(e.target.value)}
-              placeholder="63833 13359"
+              placeholder="96000 36667"
               className={`w-full pl-12 pr-4 py-2.5 border rounded-lg text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/20 ${
                 errors.whatsapp ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-orange-500'
               }`}

@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./data/app.db"
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost:4321,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:4321,http://localhost:3000,http://localhost:3001"
     
     # API
     API_V1_PREFIX: str = "/api/v1"
@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     SENDER_NAME: str = "Global Events Travels"
     FRONTEND_URL: str = "http://localhost:4321"
     API_BASE_URL: str = "http://localhost:8000"  # For building absolute PDF URLs
+
+    # Firebase (for admin panel authentication)
+    FIREBASE_PROJECT_ID: str = "global-events-9c140"
 
     # Google Places API (for reviews sync)
     GOOGLE_MAPS_API_KEY: str = ""

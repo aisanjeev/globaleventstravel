@@ -1,0 +1,19 @@
+---
+export const prerender = false;
+import { blogApi } from '@/lib/api';
+
+const { slug } = Astro.params;
+
+if (slug) {
+  try {
+    const post = await blogApi.getPostBySlug(slug);
+    if (post?.slug) {
+      return Astro.redirect(`/blog/${slug}`, 301);
+    }
+  } catch {
+    // not a blog post slug — fall through to 404
+  }
+}
+
+return new Response(null, { status: 404 });
+---

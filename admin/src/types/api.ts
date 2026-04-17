@@ -250,6 +250,7 @@ export interface Trek {
   itinerary_pdf_url?: string;
   itinerary: ItineraryDay[];
   faqs?: TrekFAQ[];
+  batches?: TrekBatch[];
   rating?: number;
   review_count: number;
   created_at: string;
@@ -309,6 +310,38 @@ export interface TrekCreate {
 }
 
 export interface TrekUpdate extends Partial<TrekCreate> {}
+
+// ============================================
+// Trek Batch Types
+// ============================================
+
+export interface TrekBatch {
+  id: number;
+  trek_id: number;
+  start_date: string;
+  end_date: string;
+  total_seats: number;
+  booked_seats: number;
+  available_seats: number;
+  is_sold_out: boolean;
+  price_override?: number;
+  is_active: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrekBatchCreate {
+  start_date: string;
+  end_date: string;
+  total_seats: number;
+  booked_seats?: number;
+  price_override?: number;
+  is_active?: boolean;
+  notes?: string;
+}
+
+export type TrekBatchUpdate = Partial<TrekBatchCreate>;
 
 // ============================================
 // Expedition Types

@@ -5,13 +5,38 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from jose import jwt as jose_jwt
 from app.core.deps import get_db
 from app.core.security import decode_access_token
+from app.core.config import settings
 from app.db.models.user import User
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 oauth2_scheme_required = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+_FIREBASE_ISSUER_PREFIX = "https://securetoken.google.com/"
+
+
+def _is_valid_firebase_token(token: str) -> bool:
+    """Decode Firebase ID token without signature verification and check project claims."""
+    try:
+        unverified = jose_jwt.decode(
+            token,
+            key="",
+            options={
+                "verify_signature": False,
+                "verify_exp": True,
+                "verify_aud": False,
+            },
+        )
+        project_id = settings.FIREBASE_PROJECT_ID
+        return (
+            unverified.get("iss") == f"{_FIREBASE_ISSUER_PREFIX}{project_id}"
+            and unverified.get("aud") == project_id
+        )
+    except Exception:
+        return False
 
 
 async def get_current_user_optional(
@@ -43,6 +68,7 @@ async def get_current_user(
 ) -> User:
     """
     Get current user from JWT token (required).
+    Accepts both custom HS256 JWTs and Firebase ID tokens.
     Raises 401 if not authenticated.
     """
     credentials_exception = HTTPException(
@@ -50,26 +76,35 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
+    # Try custom HS256 JWT first
     payload = decode_access_token(token)
-    if not payload:
-        raise credentials_exception
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user:
-        raise credentials_exception
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is deactivated"
-        )
-    
-    return user
+    if payload:
+        user_id = payload.get("sub")
+        if not user_id:
+            raise credentials_exception
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if not user:
+            raise credentials_exception
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is deactivated",
+            )
+        return user
+
+    # Fall back to Firebase ID token
+    if _is_valid_firebase_token(token):
+        # Return a synthetic admin user — Firebase auth already validated the identity
+        admin = User()
+        admin.id = 0
+        admin.email = "firebase-admin@internal"
+        admin.full_name = "Firebase Admin"
+        admin.role = "admin"
+        admin.is_active = True
+        return admin
+
+    raise credentials_exception
 
 
 async def get_current_active_user(

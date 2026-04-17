@@ -1,15 +1,18 @@
 """
 Trek API endpoints.
 """
+from datetime import date
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
 from app.core.config import settings
 from app.crud.trek import trek_crud
+from app.db.models.trek import TrekBatch
 from app.models.trek import (
     TrekCreate, TrekUpdate, TrekResponse, TrekDetailResponse, TrekListResponse
 )
+from app.models.batch import TrekBatchCreate, TrekBatchUpdate, TrekBatchResponse
 from app.models.common import PaginatedResponse
 
 router = APIRouter()
@@ -234,6 +237,70 @@ def duplicate_trek(
     trek = trek_crud.get_with_details(db, trek_id)
     if not trek:
         raise HTTPException(status_code=404, detail="Trek not found")
-    
+
     new_trek = trek_crud.duplicate(db, db_obj=trek)
     return TrekResponse.model_validate(new_trek)
+
+
+# ============================================
+# Trek Batch Endpoints
+# ============================================
+
+@router.get("/{trek_id}/batches", response_model=List[TrekBatchResponse])
+def list_batches(trek_id: int, db: Session = Depends(get_db)):
+    """Get all batches for a trek (admin)."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    return [TrekBatchResponse.from_orm_model(b) for b in trek.batches]
+
+
+@router.get("/{slug}/batches/public", response_model=List[TrekBatchResponse])
+def list_batches_public(slug: str, db: Session = Depends(get_db)):
+    """Get active future batches for a trek by slug (frontend)."""
+    trek = trek_crud.get_by_slug_with_details(db, slug)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    today = date.today()
+    batches = [b for b in trek.batches if b.is_active and b.end_date >= today]
+    return [TrekBatchResponse.from_orm_model(b) for b in batches]
+
+
+@router.post("/{trek_id}/batches", response_model=TrekBatchResponse, status_code=201)
+def create_batch(trek_id: int, data: TrekBatchCreate, db: Session = Depends(get_db)):
+    """Create a new batch for a trek."""
+    trek = trek_crud.get(db, trek_id)
+    if not trek:
+        raise HTTPException(status_code=404, detail="Trek not found")
+    batch = TrekBatch(trek_id=trek_id, **data.model_dump())
+    db.add(batch)
+    db.commit()
+    db.refresh(batch)
+    return TrekBatchResponse.from_orm_model(batch)
+
+
+@router.put("/{trek_id}/batches/{batch_id}", response_model=TrekBatchResponse)
+def update_batch(trek_id: int, batch_id: int, data: TrekBatchUpdate, db: Session = Depends(get_db)):
+    """Update a batch."""
+    batch = db.query(TrekBatch).filter(
+        TrekBatch.id == batch_id, TrekBatch.trek_id == trek_id
+    ).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    for k, v in data.model_dump(exclude_unset=True).items():
+        setattr(batch, k, v)
+    db.commit()
+    db.refresh(batch)
+    return TrekBatchResponse.from_orm_model(batch)
+
+
+@router.delete("/{trek_id}/batches/{batch_id}", status_code=204)
+def delete_batch(trek_id: int, batch_id: int, db: Session = Depends(get_db)):
+    """Delete a batch."""
+    batch = db.query(TrekBatch).filter(
+        TrekBatch.id == batch_id, TrekBatch.trek_id == trek_id
+    ).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    db.delete(batch)
+    db.commit()

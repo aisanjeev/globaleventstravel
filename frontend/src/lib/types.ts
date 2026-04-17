@@ -36,6 +36,7 @@ export interface Trek {
   images?: TrekImage[];
   itinerary?: ItineraryDay[];
   faqs?: TrekFAQ[];
+  batches?: TrekBatch[];
   reviews?: Review[];
   guide_id?: number;
   guide?: Guide;
@@ -44,6 +45,19 @@ export interface Trek {
   created_at: string;
   updated_at: string;
   published_at?: string;
+}
+
+export interface TrekBatch {
+  id: number;
+  start_date: string;
+  end_date: string;
+  total_seats: number;
+  booked_seats: number;
+  available_seats: number;
+  is_sold_out: boolean;
+  price_override?: number;
+  is_active: boolean;
+  notes?: string;
 }
 
 export interface ItineraryDay {
