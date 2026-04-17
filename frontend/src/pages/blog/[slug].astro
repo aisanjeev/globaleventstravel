@@ -39,18 +39,25 @@ const formatDate = (dateStr: string) => {
 
 // Handle both API format and legacy format
 const publishDate = post.publishDate || post.publish_date || '';
-const featuredImage = post.featuredImage || post.featured_image || '/images/blog/placeholder.jpg';
+const featuredImage = post.featuredImage || post.featured_image || '/images/blog/kedarkantha.jpg';
 const readTime = post.readTime || post.read_time || 5;
 const tags = post.tags || [];
 const content = post.content || '';
 
-// Generate table of contents from headings (simplified for demo)
-const headings = content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace('## ', '')) || [];
+// Generate table of contents: supports both markdown and HTML content
+const contentType = post.contentType || post.content_type || 'html';
+const headings: string[] =
+  contentType === 'markdown'
+    ? (content.match(/^##\s+(.+)$/gm)?.map((h: string) => h.replace(/^##\s+/, '')) ?? [])
+    : (content.match(/<h2[^>]*>([^<]+)<\/h2>/gi)?.map((h: string) =>
+        h.replace(/<\/?h2[^>]*>/gi, '').trim()
+      ) ?? []);
 ---
 
-<MainLayout 
-  title={post.title} 
+<MainLayout
+  title={post.title}
   description={post.metaDescription || post.excerpt}
+  ogImage={featuredImage}
 >
   <!-- Article Header -->
   <article>

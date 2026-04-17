@@ -4,6 +4,7 @@ Trek Pydantic schemas for request/response validation.
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from app.models.batch import TrekBatchResponse
 
 
 # ============================================
@@ -225,6 +226,7 @@ class TrekDetailResponse(TrekResponse):
     itinerary: List[ItineraryDayResponse] = []
     images: List[TrekImageResponse] = []
     faqs: List[TrekFAQResponse] = []
+    batches: List[TrekBatchResponse] = []
 
     class Config:
         from_attributes = True

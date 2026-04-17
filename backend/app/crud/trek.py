@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, cast, String
 from app.crud.base import CRUDBase
-from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ
+from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ, TrekBatch
 from app.models.trek import TrekCreate, TrekUpdate, ItineraryDayCreate, TrekImageCreate, TrekFAQCreate
 
 
@@ -19,16 +19,18 @@ class CRUDTrek(CRUDBase[Trek, TrekCreate, TrekUpdate]):
             joinedload(Trek.itinerary),
             joinedload(Trek.images),
             joinedload(Trek.faqs),
-            joinedload(Trek.guide)
+            joinedload(Trek.guide),
+            joinedload(Trek.batches),
         ).filter(Trek.id == id).first()
-    
+
     def get_by_slug_with_details(self, db: Session, slug: str) -> Optional[Trek]:
         """Get trek by slug with all related data."""
         return db.query(Trek).options(
             joinedload(Trek.itinerary),
             joinedload(Trek.images),
             joinedload(Trek.faqs),
-            joinedload(Trek.guide)
+            joinedload(Trek.guide),
+            joinedload(Trek.batches),
         ).filter(Trek.slug == slug).first()
     
     def get_multi_with_filters(

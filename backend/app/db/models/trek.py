@@ -1,9 +1,9 @@
 """
 Trek model and related tables.
 """
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
-from sqlalchemy import String, Integer, Float, Text, Boolean, ForeignKey, JSON, DateTime
+from sqlalchemy import String, Integer, Float, Text, Boolean, ForeignKey, JSON, DateTime, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -94,6 +94,10 @@ class Trek(Base):
         order_by="TrekFAQ.display_order"
     )
     bookings: Mapped[List["Booking"]] = relationship("Booking", back_populates="trek")
+    batches: Mapped[List["TrekBatch"]] = relationship(
+        "TrekBatch", back_populates="trek", cascade="all, delete-orphan",
+        order_by="TrekBatch.start_date"
+    )
 
 
 class TrekImage(Base):
@@ -168,6 +172,38 @@ class TrekFAQ(Base):
     
     # Relationship
     trek: Mapped["Trek"] = relationship("Trek", back_populates="faqs")
+
+
+class TrekBatch(Base):
+    """Departure date batch with seat availability for a trek."""
+
+    __tablename__ = "trek_batches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    trek_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("treks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    total_seats: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    booked_seats: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    price_override: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notes: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    trek: Mapped["Trek"] = relationship("Trek", back_populates="batches")
+
+    @property
+    def available_seats(self) -> int:
+        return self.total_seats - self.booked_seats
+
+    @property
+    def is_sold_out(self) -> bool:
+        return self.available_seats <= 0
 
 
 # Import for type hints (avoid circular imports)

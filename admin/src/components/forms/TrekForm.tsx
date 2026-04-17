@@ -36,7 +36,9 @@ import {
   GripVertical,
   HelpCircle,
   Map,
+  CalendarDays,
 } from "lucide-react";
+import BatchManager from "@/components/forms/BatchManager";
 
 interface TrekFormProps {
   trek?: Trek;
@@ -207,6 +209,7 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
     { id: "itinerary", label: "Itinerary", icon: Clock },
     { id: "details", label: "Details", icon: Users },
     { id: "faq", label: "FAQ", icon: HelpCircle },
+    { id: "batches", label: "Batches", icon: CalendarDays },
     { id: "map", label: "Map", icon: Map },
     { id: "media", label: "Media", icon: Camera },
     { id: "seo", label: "SEO", icon: Eye },
@@ -1030,6 +1033,27 @@ export function TrekForm({ trek, onSubmit, isLoading, mode }: TrekFormProps) {
                     </Card>
                   ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Batches Tab */}
+      {activeTab === "batches" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Date Batches & Seat Availability</h3>
+              <p className="text-sm text-gray-600">
+                Configure departure dates and seat limits. Each batch is an independent departure window shown on the frontend.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {trek ? (
+                <BatchManager trekId={trek.id} />
+              ) : (
+                <p className="text-amber-600 text-sm">Save the trek first to manage batches.</p>
               )}
             </CardContent>
           </Card>

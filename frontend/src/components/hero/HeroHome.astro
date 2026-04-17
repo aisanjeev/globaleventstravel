@@ -49,7 +49,8 @@ try {
       class="w-full h-full object-cover"
       width={800}
       height={600}
-      loading="lazy"
+      loading="eager"
+      fetchpriority="high"
     />
     <!-- Gradient overlay for text readability -->
     <div class="absolute inset-0 bg-gradient-to-r from-secondary-600/90 via-secondary-600/80 to-secondary-600/60 lg:to-transparent"></div>
@@ -139,7 +140,7 @@ try {
 
       <!-- Right Form Panel (40% on desktop) - Hidden on mobile, minimal variant -->
       <div class="hidden lg:block lg:col-span-2">
-        <LeadCaptureForm client:load variant="minimal" />
+        <LeadCaptureForm client:idle variant="minimal" />
       </div>
     </div>
   </div>
@@ -153,4 +154,4 @@ try {
 </section>
 
 <!-- Mobile Sticky Form (only rendered on mobile) -->
-<MobileStickyForm client:load />
+<MobileStickyForm client:idle />

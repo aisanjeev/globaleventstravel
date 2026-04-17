@@ -2,7 +2,7 @@
 Database models package.
 All models are imported here for easy access.
 """
-from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ
+from app.db.models.trek import Trek, TrekImage, ItineraryDay, TrekFAQ, TrekBatch
 from app.db.models.expedition import Expedition, ExpeditionDay
 from app.db.models.guide import Guide
 from app.db.models.booking import Booking
@@ -26,6 +26,7 @@ __all__ = [
     "TrekImage",
     "ItineraryDay",
     "TrekFAQ",
+    "TrekBatch",
     "Expedition",
     "ExpeditionDay",
     "Guide",

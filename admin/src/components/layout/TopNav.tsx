@@ -45,7 +45,7 @@ export function TopNav() {
         <div className="flex items-center gap-3">
           <div className="hidden sm:block text-right">
             <p className="text-sm font-medium text-gray-900">
-              {user?.full_name || "Admin User"}
+              {user?.displayName || user?.email?.split("@")[0] || "Admin"}
             </p>
             <p className="text-xs text-gray-500">{user?.email}</p>
           </div>

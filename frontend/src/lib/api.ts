@@ -6,6 +6,7 @@
 import { API_BASE_URL } from './constants';
 import type {
   Trek,
+  TrekBatch,
   Expedition,
   Guide,
   Testimonial,
@@ -119,6 +120,10 @@ export const treksApi = {
   
   async getById(id: number): Promise<Trek> {
     return api.get<Trek>(`/treks/id/${id}`);
+  },
+
+  async getBatchesBySlug(slug: string): Promise<TrekBatch[]> {
+    return api.get<TrekBatch[]>(`/treks/${slug}/batches/public`);
   },
 };
 

@@ -4,17 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuthStore } from "@/store/auth.store";
-import { authService } from "@/services/auth.service";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
+import { auth } from "@/lib/firebase";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { Mountain, AlertCircle } from "lucide-react";
 
+const FIREBASE_ERRORS: Record<string, string> = {
+  "auth/invalid-credential": "Invalid email or password.",
+  "auth/user-not-found": "No account found with this email.",
+  "auth/wrong-password": "Incorrect password.",
+  "auth/user-disabled": "This account has been disabled.",
+  "auth/too-many-requests": "Too many failed attempts. Please try again later.",
+  "auth/network-request-failed": "Network error. Check your connection.",
+};
+
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,10 +33,7 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -35,11 +41,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await authService.login(data.email, data.password);
-      login(result.token, result.user);
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      // onAuthStateChanged in FirebaseAuthProvider will update the store
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+    } catch (err) {
+      if (err instanceof FirebaseError) {
+        setError(FIREBASE_ERRORS[err.code] ?? "Invalid email or password.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,14 +81,10 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <FormField
-              label="Email"
-              error={errors.email?.message}
-              required
-            >
+            <FormField label="Email" error={errors.email?.message} required>
               <Input
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="admin@globaleventstravels.com"
                 error={!!errors.email}
                 {...register("email")}
               />
@@ -106,17 +112,8 @@ export default function LoginPage() {
               Sign in
             </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Default credentials:</p>
-            <p className="font-mono text-xs mt-1">
-              admin@globaleventstravels.com / admin123
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-
-
