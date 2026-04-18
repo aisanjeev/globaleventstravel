@@ -134,7 +134,7 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-            ExecStart=/usr/local/bin/npx serve -s dist -l ${APP_PORT}
+            ExecStart=/usr/local/bin/npx serve -s dist/client -l ${APP_PORT}
             Restart=always
             RestartSec=10
 
@@ -250,7 +250,7 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-            ExecStart=/usr/local/bin/npx serve -s dist -l ${APP_PORT}
+            ExecStart=/usr/local/bin/npx serve -s dist/client -l ${APP_PORT}
             Restart=always
             RestartSec=10
 
