@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import tailwind from '@astrojs/tailwind';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
-import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
 
 const API_BASE = process.env.PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
@@ -40,8 +40,8 @@ export default defineConfig({
       customPages: dynamicPages,
     }),
   ],
-  output: 'static',
-  adapter: vercel(),
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
   vite: {
     define: {
       __API_BASE_URL__: JSON.stringify(

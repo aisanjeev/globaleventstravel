@@ -1,9 +1,9 @@
 # =============================================================================
 # Global Events Travels - Frontend Deployment Workflow
 # =============================================================================
-# Deploys frontend/ (Astro static site) to VPS.
-# Source is copied to VPS, env written before build, dist/ served by
-# `serve` Node.js static server in SPA mode via systemd.
+# Deploys frontend/ (Astro SSR site) to VPS.
+# Source is copied to VPS, env written before build, app served by
+# `node dist/server/entry.mjs` via systemd (@astrojs/node standalone).
 #
 # DEPLOYMENT STRATEGY:
 # --------------------
@@ -134,7 +134,9 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-            ExecStart=/usr/local/bin/npx serve -s dist/client -l ${APP_PORT}
+            Environment="HOST=0.0.0.0"
+            Environment="PORT=${APP_PORT}"
+            ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
 
@@ -250,7 +252,9 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-            ExecStart=/usr/local/bin/npx serve -s dist/client -l ${APP_PORT}
+            Environment="HOST=0.0.0.0"
+            Environment="PORT=${APP_PORT}"
+            ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
 
