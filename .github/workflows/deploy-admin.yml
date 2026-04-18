@@ -10,7 +10,7 @@
 #
 # ENVIRONMENTS:
 # -------------
-# Staging:    staging.admin.globaleventstravels.com (Port 3002)
+# Staging:    staging.admin.globaleventstravels.com (Port 3004)
 # Production: admin.globaleventstravels.com (Port 3001)
 #
 # REQUIRED GITHUB SECRETS:
@@ -26,7 +26,7 @@
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/globaleventstravels-staging-admin/htdocs/staging.admin.globaleventstravels.com
+# mkdir -p /home/vels-staging-admin/htdocs/staging.admin.globaleventstravels.com
 # mkdir -p /home/globaleventstravels-admin/htdocs/admin.globaleventstravels.com
 # Node.js 18+ must be installed on the VPS
 # =============================================================================
@@ -64,9 +64,9 @@ jobs:
       url: https://staging.admin.globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globaleventstravels-staging-admin/htdocs/staging.admin.globaleventstravels.com
+      DEPLOY_PATH: /home/vels-staging-admin/htdocs/staging.admin.globaleventstravels.com
       SERVICE_NAME: globaleventstravels-staging-admin
-      APP_PORT: 3002
+      APP_PORT: 3004
 
     steps:
       - name: Checkout code
