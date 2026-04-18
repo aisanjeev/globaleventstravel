@@ -10,7 +10,7 @@
 #
 # ENVIRONMENTS:
 # -------------
-# Staging:    dev.globaleventstravels.com
+# Staging:    dev.globaleventstravels.com (Port 3005)
 # Production: globaleventstravels.com
 #
 # NOTE: The site is output: 'static' — built on the CI runner, only dist/
@@ -37,7 +37,7 @@
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/globaleventstravels-staging-web/htdocs/dev.globaleventstravels.com
+# mkdir -p /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
 # mkdir -p /home/globaleventstravels-web/htdocs/globaleventstravels.com
 # Nginx must be configured to serve these directories.
 # =============================================================================
@@ -75,7 +75,8 @@ jobs:
       url: https://dev.globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globaleventstravels-staging-web/htdocs/dev.globaleventstravels.com
+      DEPLOY_PATH: /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
+      APP_PORT: 3005
 
     steps:
       - name: Checkout code
