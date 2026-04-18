@@ -108,9 +108,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "frontend/dist/"
+          source: "frontend/dist/client/"
           target: ${{ env.DEPLOY_PATH }}
-          strip_components: 2
+          strip_components: 3
           rm: true
 
       - name: Reload Nginx on Staging VPS
@@ -177,9 +177,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "frontend/dist/"
+          source: "frontend/dist/client/"
           target: ${{ env.DEPLOY_PATH }}
-          strip_components: 2
+          strip_components: 3
           rm: true
 
       - name: Reload Nginx on Production VPS
