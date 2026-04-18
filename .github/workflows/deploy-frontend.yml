@@ -136,6 +136,7 @@ jobs:
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
             Environment="HOST=0.0.0.0"
             Environment="PORT=${APP_PORT}"
+            EnvironmentFile=${DEPLOY_DIR}/.env
             ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
@@ -254,6 +255,7 @@ jobs:
             Environment="PATH=/usr/local/bin:/usr/bin:/bin"
             Environment="HOST=0.0.0.0"
             Environment="PORT=${APP_PORT}"
+            EnvironmentFile=${DEPLOY_DIR}/.env
             ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
