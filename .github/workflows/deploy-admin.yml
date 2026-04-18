@@ -1,34 +1,29 @@
 # =============================================================================
 # Global Events Travels - Admin Deployment Workflow
 # =============================================================================
-# This workflow automatically deploys the Next.js admin dashboard to VPS.
+# Deploys admin/ (Next.js 14 dashboard) to VPS.
+# Source is copied to VPS, env written before build, app served via
+# `next start` systemd service.
 #
 # DEPLOYMENT STRATEGY:
 # --------------------
-# - Push to `develop` branch -> Deploys to STAGING (automatic)
-# - Push to `main` branch    -> Deploys to PRODUCTION (automatic)
-#
-# ENVIRONMENTS:
-# -------------
-# Staging:    staging.admin.globaleventstravels.com (Port 3004)
-# Production: admin.globaleventstravels.com (Port 3001)
+# - Push to `develop` branch -> STAGING  (port 3004, staging.admin.globaleventstravels.com)
+# - Push to `main` branch    -> PRODUCTION (port 3001, admin.globaleventstravels.com)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
-# Repository Secrets (Settings > Secrets > Actions):
-#   SSH_HOST     - VPS hostname or IP address
-#   SSH_USER     - SSH username (e.g., root)
-#   SSH_PASSWORD - SSH password
-#   SSH_PORT     - SSH port (optional, defaults to 22)
+# Repository Secrets:
+#   SSH_HOST, SSH_USER, SSH_PASSWORD, SSH_PORT (optional, default 22)
 #
-# Environment Secrets (Settings > Environments > [env] > Secrets):
-#   ENV_FILE_ADMIN - Environment variables for the Next.js admin dashboard (.env.local contents)
+# Environment Secrets:
+#   ENV_FILE_ADMIN - Full .env.local contents for this environment
+#                    (NEXT_PUBLIC_API_URL, etc.)
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/vels-staging-admin/htdocs/staging.admin.globaleventstravels.com
-# mkdir -p /home/globaleventstravels-admin/htdocs/admin.globaleventstravels.com
-# Node.js 18+ must be installed on the VPS
+# - Node.js 20+ installed
+# - mkdir -p /home/vels-staging-admin/htdocs/staging.admin.globaleventstravels.com
+# - mkdir -p /home/globaleventstravels-admin/htdocs/admin.globaleventstravels.com
 # =============================================================================
 
 name: Deploy Admin to VPS
@@ -53,6 +48,9 @@ on:
           - staging
           - production
 
+# =============================================================================
+# STAGING DEPLOYMENT
+# =============================================================================
 jobs:
   deploy-staging:
     name: Deploy to Staging
@@ -110,14 +108,16 @@ jobs:
             ENVEOF
             chmod 600 .env.local
 
-            echo "Installing dependencies..."
-            npm ci --omit=dev=false
+            echo "Cleaning previous build..."
+            rm -rf .next 2>/dev/null || true
 
-            echo "Building application..."
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
+
+            echo "Building Next.js app..."
             npm run build
 
             echo "Setting up systemd service..."
-
             cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
             [Unit]
             Description=Global Events Travels Staging Admin Service
@@ -129,6 +129,7 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PORT=${APP_PORT}"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
             ExecStart=$(which node) node_modules/.bin/next start -p ${APP_PORT}
             Restart=always
             RestartSec=10
@@ -160,10 +161,13 @@ jobs:
             fi
 
             echo "=========================================="
-            echo "STAGING admin deployment complete!"
+            echo "STAGING deployment complete!"
             echo "   URL: https://staging.admin.globaleventstravels.com"
             echo "=========================================="
 
+# =============================================================================
+# PRODUCTION DEPLOYMENT
+# =============================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -220,14 +224,16 @@ jobs:
             ENVEOF
             chmod 600 .env.local
 
-            echo "Installing dependencies..."
-            npm ci --omit=dev=false
+            echo "Cleaning previous build..."
+            rm -rf .next 2>/dev/null || true
 
-            echo "Building application..."
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
+
+            echo "Building Next.js app..."
             npm run build
 
             echo "Setting up systemd service..."
-
             cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
             [Unit]
             Description=Global Events Travels Production Admin Service
@@ -239,6 +245,7 @@ jobs:
             WorkingDirectory=${DEPLOY_DIR}
             Environment="NODE_ENV=production"
             Environment="PORT=${APP_PORT}"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
             ExecStart=$(which node) node_modules/.bin/next start -p ${APP_PORT}
             Restart=always
             RestartSec=10
@@ -270,7 +277,7 @@ jobs:
             fi
 
             echo "=========================================="
-            echo "PRODUCTION admin deployment complete!"
+            echo "PRODUCTION deployment complete!"
             echo "   URL: https://admin.globaleventstravels.com"
             echo "=========================================="
 

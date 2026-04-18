@@ -1,45 +1,33 @@
 # =============================================================================
 # Global Events Travels - Frontend Deployment Workflow
 # =============================================================================
-# This workflow builds the Astro static site on CI and deploys dist/ to VPS.
+# Deploys frontend/ (Astro static site) to VPS.
+# Source is copied to VPS, env written before build, dist/ served by
+# `serve` Node.js static server in SPA mode via systemd.
 #
 # DEPLOYMENT STRATEGY:
 # --------------------
-# - Push to `develop` branch -> Deploys to STAGING (automatic)
-# - Push to `main` branch    -> Deploys to PRODUCTION (automatic)
-#
-# ENVIRONMENTS:
-# -------------
-# Staging:    dev.globaleventstravels.com (Port 3005)
-# Production: globaleventstravels.com
-#
-# NOTE: The site is output: 'static' — built on the CI runner, only dist/
-#       is transferred to the VPS. Nginx serves the static files directly.
-#       No systemd service is required.
+# - Push to `develop` branch -> STAGING  (port 3005, dev.globaleventstravels.com)
+# - Push to `main` branch    -> PRODUCTION (port 3006, globaleventstravels.com)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
-# Repository Secrets (Settings > Secrets > Actions):
-#   SSH_HOST     - VPS hostname or IP address
-#   SSH_USER     - SSH username (e.g., root)
-#   SSH_PASSWORD - SSH password
-#   SSH_PORT     - SSH port (optional, defaults to 22)
+# Repository Secrets:
+#   SSH_HOST, SSH_USER, SSH_PASSWORD, SSH_PORT (optional, default 22)
 #
-# Environment Secrets (Settings > Environments > [env] > Secrets):
-#   ENV_FILE_FRONTEND          - Not used (Astro env vars are set as discrete secrets below)
-#   PUBLIC_API_BASE_URL        - Backend API base URL for this environment
-#                                staging:    https://staging.api.globaleventstravels.com
-#                                production: https://api.globaleventstravels.com
-#   PUBLIC_SITE_URL            - Canonical site URL
-#                                staging:    https://dev.globaleventstravels.com
-#                                production: https://globaleventstravels.com
-#   PUBLIC_GOOGLE_MAPS_API_KEY - Google Maps API key (optional)
+# Environment Secrets:
+#   ENV_FILE_FRONTEND - Full .env contents for this environment
+#                       (PUBLIC_API_BASE_URL, PUBLIC_SITE_URL,
+#                        PUBLIC_GOOGLE_MAPS_API_KEY, etc.)
+#   IMPORTANT: PUBLIC_* vars are inlined at BUILD TIME — env file must be
+#              written BEFORE `npm run build`.
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
-# mkdir -p /home/globaleventstravels-web/htdocs/globaleventstravels.com
-# Nginx must be configured to serve these directories.
+# - Node.js 20+ installed
+# - npm install -g serve
+# - mkdir -p /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
+# - mkdir -p /home/globaleventstravels-web/htdocs/globaleventstravels.com
 # =============================================================================
 
 name: Deploy Frontend to VPS
@@ -64,6 +52,9 @@ on:
           - staging
           - production
 
+# =============================================================================
+# STAGING DEPLOYMENT
+# =============================================================================
 jobs:
   deploy-staging:
     name: Deploy to Staging
@@ -76,44 +67,26 @@ jobs:
 
     env:
       DEPLOY_PATH: /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-staging-web
       APP_PORT: 3005
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build static site
-        working-directory: frontend
-        env:
-          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
-          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
-          PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.PUBLIC_GOOGLE_MAPS_API_KEY }}
-        run: npm run build
-
-      - name: Deploy dist/ to Staging VPS
+      - name: Deploy files to Staging VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "frontend/dist/client/"
+          source: "frontend/"
           target: ${{ env.DEPLOY_PATH }}
-          strip_components: 3
-          rm: true
+          strip_components: 1
+          rm: false
 
-      - name: Reload Nginx on Staging VPS
+      - name: Setup and restart staging service
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -127,14 +100,78 @@ jobs:
             echo "Global Events Travels STAGING Frontend Deployment"
             echo "=========================================="
 
-            echo "Reloading Nginx..."
-            nginx -t && systemctl reload nginx
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            SERVICE_NAME="${{ env.SERVICE_NAME }}"
+            APP_PORT="${{ env.APP_PORT }}"
+
+            cd "$DEPLOY_DIR"
+
+            # IMPORTANT: write env BEFORE build (Astro/Vite inlines PUBLIC_* vars at build time)
+            echo "Writing .env file (inlined at build time)..."
+            cat > .env << 'ENVEOF'
+            ${{ secrets.ENV_FILE_FRONTEND }}
+            ENVEOF
+            chmod 600 .env
+
+            echo "Cleaning previous build..."
+            rm -rf dist 2>/dev/null || true
+
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
+
+            echo "Building Astro site..."
+            npm run build
+
+            echo "Setting up systemd service..."
+            cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
+            [Unit]
+            Description=Global Events Travels Staging Frontend Service
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=root
+            WorkingDirectory=${DEPLOY_DIR}
+            Environment="NODE_ENV=production"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+            ExecStart=/usr/local/bin/npx serve -s dist -l ${APP_PORT}
+            Restart=always
+            RestartSec=10
+
+            [Install]
+            WantedBy=multi-user.target
+            SERVICEEOF
+
+            echo "Restarting service..."
+            systemctl daemon-reload
+            systemctl enable ${SERVICE_NAME}.service 2>/dev/null || true
+
+            PID=$(lsof -t -i:${APP_PORT} 2>/dev/null) || true
+            if [ -n "$PID" ]; then
+                kill -9 $PID 2>/dev/null || true
+                sleep 2
+            fi
+
+            systemctl restart ${SERVICE_NAME}.service
+            sleep 5
+
+            echo "Health check..."
+            if systemctl is-active --quiet ${SERVICE_NAME}.service; then
+                echo "Staging frontend service is running on port ${APP_PORT}!"
+            else
+                echo "Service failed!"
+                journalctl -u ${SERVICE_NAME}.service --no-pager -n 30
+                exit 1
+            fi
 
             echo "=========================================="
-            echo "STAGING frontend deployment complete!"
+            echo "STAGING deployment complete!"
             echo "   URL: https://dev.globaleventstravels.com"
             echo "=========================================="
 
+# =============================================================================
+# PRODUCTION DEPLOYMENT
+# =============================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -146,43 +183,26 @@ jobs:
 
     env:
       DEPLOY_PATH: /home/globaleventstravels-web/htdocs/globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-web
+      APP_PORT: 3006
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build static site
-        working-directory: frontend
-        env:
-          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
-          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
-          PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.PUBLIC_GOOGLE_MAPS_API_KEY }}
-        run: npm run build
-
-      - name: Deploy dist/ to Production VPS
+      - name: Deploy files to Production VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "frontend/dist/client/"
+          source: "frontend/"
           target: ${{ env.DEPLOY_PATH }}
-          strip_components: 3
-          rm: true
+          strip_components: 1
+          rm: false
 
-      - name: Reload Nginx on Production VPS
+      - name: Setup and restart production service
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -196,11 +216,72 @@ jobs:
             echo "Global Events Travels PRODUCTION Frontend Deployment"
             echo "=========================================="
 
-            echo "Reloading Nginx..."
-            nginx -t && systemctl reload nginx
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            SERVICE_NAME="${{ env.SERVICE_NAME }}"
+            APP_PORT="${{ env.APP_PORT }}"
+
+            cd "$DEPLOY_DIR"
+
+            # IMPORTANT: write env BEFORE build (Astro/Vite inlines PUBLIC_* vars at build time)
+            echo "Writing .env file (inlined at build time)..."
+            cat > .env << 'ENVEOF'
+            ${{ secrets.ENV_FILE_FRONTEND }}
+            ENVEOF
+            chmod 600 .env
+
+            echo "Cleaning previous build..."
+            rm -rf dist 2>/dev/null || true
+
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
+
+            echo "Building Astro site..."
+            npm run build
+
+            echo "Setting up systemd service..."
+            cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
+            [Unit]
+            Description=Global Events Travels Production Frontend Service
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=root
+            WorkingDirectory=${DEPLOY_DIR}
+            Environment="NODE_ENV=production"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+            ExecStart=/usr/local/bin/npx serve -s dist -l ${APP_PORT}
+            Restart=always
+            RestartSec=10
+
+            [Install]
+            WantedBy=multi-user.target
+            SERVICEEOF
+
+            echo "Restarting service..."
+            systemctl daemon-reload
+            systemctl enable ${SERVICE_NAME}.service 2>/dev/null || true
+
+            PID=$(lsof -t -i:${APP_PORT} 2>/dev/null) || true
+            if [ -n "$PID" ]; then
+                kill -9 $PID 2>/dev/null || true
+                sleep 2
+            fi
+
+            systemctl restart ${SERVICE_NAME}.service
+            sleep 5
+
+            echo "Health check..."
+            if systemctl is-active --quiet ${SERVICE_NAME}.service; then
+                echo "Production frontend service is running on port ${APP_PORT}!"
+            else
+                echo "Service failed!"
+                journalctl -u ${SERVICE_NAME}.service --no-pager -n 30
+                exit 1
+            fi
 
             echo "=========================================="
-            echo "PRODUCTION frontend deployment complete!"
+            echo "PRODUCTION deployment complete!"
             echo "   URL: https://globaleventstravels.com"
             echo "=========================================="
 
