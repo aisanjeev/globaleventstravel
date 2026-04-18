@@ -23,6 +23,9 @@ const { siteConfig, socialLinks } = await getSiteSettings();
 const siteTitle = `${title} | ${siteConfig.name}`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, Astro.url.origin).href;
+
+// Robots: set PUBLIC_ROBOTS=noindex,nofollow on staging, index,follow on production
+const robotsContent = import.meta.env.PUBLIC_ROBOTS || 'index,follow';
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -57,6 +60,7 @@ const jsonLd = {
     <title>{siteTitle}</title>
     <meta name="title" content={siteTitle} />
     <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
     <link rel="canonical" href={canonicalUrl} />
     
     <!-- Open Graph / Facebook (absolute URLs for crawlers) -->
