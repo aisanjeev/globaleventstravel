@@ -1,0 +1,210 @@
+# =============================================================================
+# Global Events Travels - Frontend Deployment Workflow
+# =============================================================================
+# This workflow builds the Astro static site on CI and deploys dist/ to VPS.
+#
+# DEPLOYMENT STRATEGY:
+# --------------------
+# - Push to `develop` branch -> Deploys to STAGING (automatic)
+# - Push to `main` branch    -> Deploys to PRODUCTION (automatic)
+#
+# ENVIRONMENTS:
+# -------------
+# Staging:    dev.globaleventstravels.com
+# Production: globaleventstravels.com
+#
+# NOTE: The site is output: 'static' — built on the CI runner, only dist/
+#       is transferred to the VPS. Nginx serves the static files directly.
+#       No systemd service is required.
+#
+# REQUIRED GITHUB SECRETS:
+# ------------------------
+# Repository Secrets (Settings > Secrets > Actions):
+#   SSH_HOST     - VPS hostname or IP address
+#   SSH_USER     - SSH username (e.g., root)
+#   SSH_PASSWORD - SSH password
+#   SSH_PORT     - SSH port (optional, defaults to 22)
+#
+# Environment Secrets (Settings > Environments > [env] > Secrets):
+#   ENV_FILE_FRONTEND          - Not used (Astro env vars are set as discrete secrets below)
+#   PUBLIC_API_BASE_URL        - Backend API base URL for this environment
+#                                staging:    https://staging.api.globaleventstravels.com
+#                                production: https://api.globaleventstravels.com
+#   PUBLIC_SITE_URL            - Canonical site URL
+#                                staging:    https://dev.globaleventstravels.com
+#                                production: https://globaleventstravels.com
+#   PUBLIC_GOOGLE_MAPS_API_KEY - Google Maps API key (optional)
+#
+# VPS PREREQUISITES:
+# ------------------
+# mkdir -p /home/globaleventstravels-staging-web/htdocs/dev.globaleventstravels.com
+# mkdir -p /home/globaleventstravels-web/htdocs/globaleventstravels.com
+# Nginx must be configured to serve these directories.
+# =============================================================================
+
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+
+    environment:
+      name: staging
+      url: https://dev.globaleventstravels.com
+
+    env:
+      DEPLOY_PATH: /home/globaleventstravels-staging-web/htdocs/dev.globaleventstravels.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build static site
+        working-directory: frontend
+        env:
+          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
+          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+          PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.PUBLIC_GOOGLE_MAPS_API_KEY }}
+        run: npm run build
+
+      - name: Deploy dist/ to Staging VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "frontend/dist/"
+          target: ${{ env.DEPLOY_PATH }}
+          strip_components: 2
+          rm: true
+
+      - name: Reload Nginx on Staging VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "=========================================="
+            echo "Global Events Travels STAGING Frontend Deployment"
+            echo "=========================================="
+
+            echo "Reloading Nginx..."
+            nginx -t && systemctl reload nginx
+
+            echo "=========================================="
+            echo "STAGING frontend deployment complete!"
+            echo "   URL: https://dev.globaleventstravels.com"
+            echo "=========================================="
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+
+    environment:
+      name: production
+      url: https://globaleventstravels.com
+
+    env:
+      DEPLOY_PATH: /home/globaleventstravels-web/htdocs/globaleventstravels.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build static site
+        working-directory: frontend
+        env:
+          PUBLIC_API_BASE_URL: ${{ secrets.PUBLIC_API_BASE_URL }}
+          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+          PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.PUBLIC_GOOGLE_MAPS_API_KEY }}
+        run: npm run build
+
+      - name: Deploy dist/ to Production VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "frontend/dist/"
+          target: ${{ env.DEPLOY_PATH }}
+          strip_components: 2
+          rm: true
+
+      - name: Reload Nginx on Production VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            echo "=========================================="
+            echo "Global Events Travels PRODUCTION Frontend Deployment"
+            echo "=========================================="
+
+            echo "Reloading Nginx..."
+            nginx -t && systemctl reload nginx
+
+            echo "=========================================="
+            echo "PRODUCTION frontend deployment complete!"
+            echo "   URL: https://globaleventstravels.com"
+            echo "=========================================="
+
+      - name: Deployment failed notification
+        if: failure()
+        run: |
+          echo "PRODUCTION frontend deployment failed!"
+          echo "Check the logs above for details."
