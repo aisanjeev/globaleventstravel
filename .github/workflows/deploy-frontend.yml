@@ -8,7 +8,7 @@
 # DEPLOYMENT STRATEGY:
 # --------------------
 # - Push to `develop` branch -> STAGING  (port 3005, dev.globaleventstravels.com)
-# - Push to `main` branch    -> PRODUCTION (port 3006, globaleventstravels.com)
+# - Push to `main` branch    -> PRODUCTION (port 3011, globaleventstravels.com)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
@@ -27,7 +27,7 @@
 # - Node.js 20+ installed
 # - npm install -g serve
 # - mkdir -p /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
-# - mkdir -p /home/globaleventstravels-web/htdocs/globaleventstravels.com
+# - mkdir -p /home/globaleventstravels/htdocs/globaleventstravels.com
 # =============================================================================
 
 name: Deploy Frontend to VPS
@@ -185,9 +185,9 @@ jobs:
       url: https://globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globaleventstravels-web/htdocs/globaleventstravels.com
+      DEPLOY_PATH: /home/globaleventstravels/htdocs/globaleventstravels.com
       SERVICE_NAME: globaleventstravels-web
-      APP_PORT: 3006
+      APP_PORT: 3011
 
     steps:
       - name: Checkout code

@@ -8,7 +8,7 @@
 # DEPLOYMENT STRATEGY:
 # --------------------
 # - Push to `develop` branch -> STAGING  (port 3004, staging.admin.globaleventstravels.com)
-# - Push to `main` branch    -> PRODUCTION (port 3001, admin.globaleventstravels.com)
+# - Push to `main` branch    -> PRODUCTION (port 3010, admin.globaleventstravels.com)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
@@ -180,7 +180,7 @@ jobs:
     env:
       DEPLOY_PATH: /home/globaleventstravels-admin/htdocs/admin.globaleventstravels.com
       SERVICE_NAME: globaleventstravels-admin
-      APP_PORT: 3001
+      APP_PORT: 3010
 
     steps:
       - name: Checkout code

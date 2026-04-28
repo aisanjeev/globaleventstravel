@@ -10,8 +10,8 @@
 #
 # ENVIRONMENTS:
 # -------------
-# Staging:    staging.api.globaleventstravels.com (Port 8093)
-# Production: api.globaleventstravels.com (Port 8092)
+# Staging:    staging.api.globaleventstravels.com (Port 8096)
+# Production: api.globaleventstravels.com (Port 8100)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
@@ -187,7 +187,7 @@ jobs:
     env:
       DEPLOY_PATH: /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
       SERVICE_NAME: globaleventstravels-api
-      APP_PORT: 8097
+      APP_PORT: 8100
 
     steps:
       - name: Checkout code

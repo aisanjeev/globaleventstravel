@@ -97,7 +97,7 @@ const jsonLd = {
     <!-- Third-party widget (configured via admin Settings > Website Widget) -->
     {siteConfig.widgetScript && <Fragment set:html={siteConfig.widgetScript} />}
   </head>
-  <body class="min-h-screen flex flex-col bg-white">
+  <body class="min-h-screen flex flex-col bg-white overflow-x-hidden">
     <Header siteConfig={siteConfig} headerVariant={headerVariant} />
     <main class="flex-grow">
       <slot />

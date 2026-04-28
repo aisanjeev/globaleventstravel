@@ -123,11 +123,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ## Deployment
 
-- CI/CD via `.github/workflows/deploy-backend.yml`
-- `develop` branch → staging (`staging.api.globaleventstravels.com`, port 8096)
-- `main` branch → production (`api.globaleventstravels.com`, port 8097)
+- CI/CD via `.github/workflows/deploy-backend.yml`, `deploy-admin.yml`, `deploy-frontend.yml`
+- Backend production: `api.globaleventstravels.com` — `/home/globaleventstravels-api/htdocs/api.globaleventstravels.com`, port 8100
+- Backend staging: `staging.api.globaleventstravels.com` — port 8096
+- Admin production: `admin.globaleventstravels.com` — `/home/globaleventstravels-admin/htdocs/admin.globaleventstravels.com`, port 3010
+- Frontend production: `globaleventstravels.com` — `/home/globaleventstravels/htdocs/globaleventstravels.com`, port 3011
 - Backend runs as a systemd service on VPS; workflow uploads files via SCP, installs deps, generates `.env` from GitHub secrets, and restarts the service
-- Frontend and admin deploy to Vercel
+- Frontend and admin also run as systemd services on VPS (built on server via `npm run build`, served by `next start` / Astro node adapter)
 
 ## Key Conventions
 
