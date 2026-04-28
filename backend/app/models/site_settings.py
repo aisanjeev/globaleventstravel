@@ -19,6 +19,7 @@ class SiteSettingsBase(BaseModel):
     instagram_url: Optional[str] = Field(None, max_length=500)
     twitter_url: Optional[str] = Field(None, max_length=500)
     youtube_url: Optional[str] = Field(None, max_length=500)
+    website_widget_script: Optional[str] = None
 
 
 class SiteSettingsUpdate(BaseModel):
@@ -35,6 +36,7 @@ class SiteSettingsUpdate(BaseModel):
     instagram_url: Optional[str] = Field(None, max_length=500)
     twitter_url: Optional[str] = Field(None, max_length=500)
     youtube_url: Optional[str] = Field(None, max_length=500)
+    website_widget_script: Optional[str] = None
 
 
 class SiteSettingsResponse(BaseModel):
@@ -52,6 +54,7 @@ class SiteSettingsResponse(BaseModel):
     instagram_url: Optional[str] = None
     twitter_url: Optional[str] = None
     youtube_url: Optional[str] = None
+    website_widget_script: Optional[str] = None
 
     class Config:
         from_attributes = True

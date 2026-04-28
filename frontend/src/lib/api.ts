@@ -389,6 +389,7 @@ export interface SiteSettingsApiResponse {
   instagram_url: string | null;
   twitter_url: string | null;
   youtube_url: string | null;
+  website_widget_script: string | null;
 }
 
 export interface SiteConfig {
@@ -399,6 +400,7 @@ export interface SiteConfig {
   email: string;
   phone: string;
   address: string;
+  widgetScript: string;
 }
 
 export interface SocialLinks {
@@ -421,6 +423,7 @@ function siteSettingsToConfig(data: SiteSettingsApiResponse): {
       email: data.email,
       phone: data.phone,
       address: data.address || '',
+      widgetScript: data.website_widget_script || '',
     },
     socialLinks: {
       facebook: data.facebook_url || '#',

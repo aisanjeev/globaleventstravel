@@ -25,6 +25,7 @@ class SiteSettings(Base):
     instagram_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     twitter_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     youtube_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    website_widget_script: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )

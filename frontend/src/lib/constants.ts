@@ -15,6 +15,7 @@ export const SITE_CONFIG = {
   email: 'info@globaleventstravels.com',
   phone: '+91 96000 36667',
   address: 'Manali, Himachal Pradesh, India',
+  widgetScript: '',
 };
 
 export const NAV_LINKS = [

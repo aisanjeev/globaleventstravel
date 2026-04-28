@@ -1,7 +1,6 @@
 ---
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
-import StickyWhatsAppButton from '@/components/StickyWhatsAppButton.astro';
 import { getSiteSettings } from '@/lib/api';
 import '@/styles/global.css';
 
@@ -94,6 +93,9 @@ const jsonLd = {
     
     <!-- JSON-LD for SEO (Organization + WebSite) -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Third-party widget (configured via admin Settings > Website Widget) -->
+    {siteConfig.widgetScript && <Fragment set:html={siteConfig.widgetScript} />}
   </head>
   <body class="min-h-screen flex flex-col bg-white">
     <Header siteConfig={siteConfig} headerVariant={headerVariant} />
@@ -101,7 +103,6 @@ const jsonLd = {
       <slot />
     </main>
     <Footer siteConfig={siteConfig} socialLinks={socialLinks} />
-    <StickyWhatsAppButton />
   </body>
 </html>
 
