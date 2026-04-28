@@ -53,6 +53,7 @@ def update(db: Session, *, obj_in: SiteSettingsUpdate) -> SiteSettings:
             instagram_url=data.get("instagram_url"),
             twitter_url=data.get("twitter_url"),
             youtube_url=data.get("youtube_url"),
+            website_widget_script=data.get("website_widget_script"),
         )
         db.add(row)
     else:

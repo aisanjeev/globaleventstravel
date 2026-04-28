@@ -1,36 +1,36 @@
 # =============================================================================
-# Global Events Travels - Backend Deployment Workflow
+# Global Events Travels - Frontend Deployment Workflow
 # =============================================================================
-# This workflow automatically deploys the FastAPI backend to VPS.
+# Deploys frontend/ (Astro SSR site) to VPS.
+# Source is copied to VPS, env written before build, app served by
+# `node dist/server/entry.mjs` via systemd (@astrojs/node standalone).
 #
 # DEPLOYMENT STRATEGY:
 # --------------------
-# - Push to `develop` branch -> Deploys to STAGING (automatic)
-# - Push to `main` branch    -> Deploys to PRODUCTION (automatic)
-#
-# ENVIRONMENTS:
-# -------------
-# Staging:    staging.api.globaleventstravels.com (Port 8096)
-# Production: api.globaleventstravels.com (Port 8100)
+# - Push to `develop` branch -> STAGING  (port 3005, dev.globaleventstravels.com)
+# - Push to `main` branch    -> PRODUCTION (port 3011, globaleventstravels.com)
 #
 # REQUIRED GITHUB SECRETS:
 # ------------------------
-# Repository Secrets (Settings > Secrets > Actions):
-#   SSH_HOST     - VPS hostname or IP address
-#   SSH_USER     - SSH username (e.g., root)
-#   SSH_PASSWORD - SSH password
-#   SSH_PORT     - SSH port (optional, defaults to 22)
+# Repository Secrets:
+#   SSH_HOST, SSH_USER, SSH_PASSWORD, SSH_PORT (optional, default 22)
 #
-# Environment Secrets (Settings > Environments > [env] > Secrets):
-#   ENV_FILE_BACKEND - Environment variables for the FastAPI backend (.env contents)
+# Environment Secrets:
+#   ENV_FILE_FRONTEND - Full .env contents for this environment
+#                       (PUBLIC_API_BASE_URL, PUBLIC_SITE_URL,
+#                        PUBLIC_GOOGLE_MAPS_API_KEY, etc.)
+#   IMPORTANT: PUBLIC_* vars are inlined at BUILD TIME — env file must be
+#              written BEFORE `npm run build`.
 #
 # VPS PREREQUISITES:
 # ------------------
-# mkdir -p /home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com
-# mkdir -p /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
+# - Node.js 20+ installed
+# - npm install -g serve
+# - mkdir -p /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
+# - mkdir -p /home/globaleventstravels/htdocs/globaleventstravels.com
 # =============================================================================
 
-name: Deploy Backend to VPS
+name: Deploy Frontend to VPS
 
 on:
   push:
@@ -38,8 +38,8 @@ on:
       - main
       - develop
     paths:
-      - 'backend/**'
-      - '.github/workflows/deploy-backend.yml'
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
 
   workflow_dispatch:
     inputs:
@@ -52,6 +52,9 @@ on:
           - staging
           - production
 
+# =============================================================================
+# STAGING DEPLOYMENT
+# =============================================================================
 jobs:
   deploy-staging:
     name: Deploy to Staging
@@ -60,12 +63,12 @@ jobs:
 
     environment:
       name: staging
-      url: https://staging.api.globaleventstravels.com
+      url: https://dev.globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globaleventstravels-staging-api/htdocs/staging.api.globaleventstravels.com
-      SERVICE_NAME: globaleventstravels-staging-api
-      APP_PORT: 8096
+      DEPLOY_PATH: /home/glfdgdg-dev/htdocs/dev.globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-staging-web
+      APP_PORT: 3005
 
     steps:
       - name: Checkout code
@@ -78,7 +81,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "backend/"
+          source: "frontend/"
           target: ${{ env.DEPLOY_PATH }}
           strip_components: 1
           rm: false
@@ -94,7 +97,7 @@ jobs:
             set -e
 
             echo "=========================================="
-            echo "Global Events Travels STAGING Deployment"
+            echo "Global Events Travels STAGING Frontend Deployment"
             echo "=========================================="
 
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
@@ -103,44 +106,38 @@ jobs:
 
             cd "$DEPLOY_DIR"
 
-            echo "Creating data directories..."
-            mkdir -p data/uploads
-
-            echo "Writing .env file..."
+            # IMPORTANT: write env BEFORE build (Astro/Vite inlines PUBLIC_* vars at build time)
+            echo "Writing .env file (inlined at build time)..."
             cat > .env << 'ENVEOF'
-            ${{ secrets.ENV_FILE_BACKEND }}
+            ${{ secrets.ENV_FILE_FRONTEND }}
             ENVEOF
             chmod 600 .env
 
-            echo "Cleaning up cache files..."
-            find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-            find . -type f -name "*.pyc" -delete 2>/dev/null || true
+            echo "Cleaning previous build..."
+            rm -rf dist 2>/dev/null || true
 
-            echo "Setting up Python virtual environment..."
-            if [ ! -d "venv" ]; then
-                python3 -m venv venv
-            fi
-            source venv/bin/activate
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
 
-            echo "Installing dependencies..."
-            pip install --upgrade pip poetry
-            poetry config virtualenvs.create false
-            poetry install --no-interaction --no-ansi --only main
+            echo "Building Astro site..."
+            npm run build
 
             echo "Setting up systemd service..."
-
             cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
             [Unit]
-            Description=Global Events Travels Staging API Service
+            Description=Global Events Travels Staging Frontend Service
             After=network.target
 
             [Service]
             Type=simple
             User=root
             WorkingDirectory=${DEPLOY_DIR}
-            Environment="PATH=${DEPLOY_DIR}/venv/bin:/usr/local/bin:/usr/bin:/bin"
-            Environment="PYTHONUNBUFFERED=1"
-            ExecStart=${DEPLOY_DIR}/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port ${APP_PORT}
+            Environment="NODE_ENV=production"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+            Environment="HOST=0.0.0.0"
+            Environment="PORT=${APP_PORT}"
+            EnvironmentFile=${DEPLOY_DIR}/.env
+            ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
 
@@ -163,7 +160,7 @@ jobs:
 
             echo "Health check..."
             if systemctl is-active --quiet ${SERVICE_NAME}.service; then
-                echo "Staging service is running on port ${APP_PORT}!"
+                echo "Staging frontend service is running on port ${APP_PORT}!"
             else
                 echo "Service failed!"
                 journalctl -u ${SERVICE_NAME}.service --no-pager -n 30
@@ -172,9 +169,12 @@ jobs:
 
             echo "=========================================="
             echo "STAGING deployment complete!"
-            echo "   URL: https://staging.api.globaleventstravels.com"
+            echo "   URL: https://dev.globaleventstravels.com"
             echo "=========================================="
 
+# =============================================================================
+# PRODUCTION DEPLOYMENT
+# =============================================================================
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -182,12 +182,12 @@ jobs:
 
     environment:
       name: production
-      url: https://api.globaleventstravels.com
+      url: https://globaleventstravels.com
 
     env:
-      DEPLOY_PATH: /home/globaleventstravels-api/htdocs/api.globaleventstravels.com
-      SERVICE_NAME: globaleventstravels-api
-      APP_PORT: 8100
+      DEPLOY_PATH: /home/globaleventstravels/htdocs/globaleventstravels.com
+      SERVICE_NAME: globaleventstravels-web
+      APP_PORT: 3011
 
     steps:
       - name: Checkout code
@@ -200,7 +200,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          source: "backend/"
+          source: "frontend/"
           target: ${{ env.DEPLOY_PATH }}
           strip_components: 1
           rm: false
@@ -216,7 +216,7 @@ jobs:
             set -e
 
             echo "=========================================="
-            echo "Global Events Travels PRODUCTION Deployment"
+            echo "Global Events Travels PRODUCTION Frontend Deployment"
             echo "=========================================="
 
             DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
@@ -225,44 +225,38 @@ jobs:
 
             cd "$DEPLOY_DIR"
 
-            echo "Creating data directories..."
-            mkdir -p data/uploads
-
-            echo "Writing .env file..."
+            # IMPORTANT: write env BEFORE build (Astro/Vite inlines PUBLIC_* vars at build time)
+            echo "Writing .env file (inlined at build time)..."
             cat > .env << 'ENVEOF'
-            ${{ secrets.ENV_FILE_BACKEND }}
+            ${{ secrets.ENV_FILE_FRONTEND }}
             ENVEOF
             chmod 600 .env
 
-            echo "Cleaning up cache files..."
-            find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-            find . -type f -name "*.pyc" -delete 2>/dev/null || true
+            echo "Cleaning previous build..."
+            rm -rf dist 2>/dev/null || true
 
-            echo "Setting up Python virtual environment..."
-            if [ ! -d "venv" ]; then
-                python3 -m venv venv
-            fi
-            source venv/bin/activate
+            echo "Installing dependencies (npm ci)..."
+            npm ci --no-audit --no-fund
 
-            echo "Installing dependencies..."
-            pip install --upgrade pip poetry
-            poetry config virtualenvs.create false
-            poetry install --no-interaction --no-ansi --only main
+            echo "Building Astro site..."
+            npm run build
 
             echo "Setting up systemd service..."
-
             cat > /etc/systemd/system/${SERVICE_NAME}.service << SERVICEEOF
             [Unit]
-            Description=Global Events Travels Production API Service
+            Description=Global Events Travels Production Frontend Service
             After=network.target
 
             [Service]
             Type=simple
             User=root
             WorkingDirectory=${DEPLOY_DIR}
-            Environment="PATH=${DEPLOY_DIR}/venv/bin:/usr/local/bin:/usr/bin:/bin"
-            Environment="PYTHONUNBUFFERED=1"
-            ExecStart=${DEPLOY_DIR}/venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port ${APP_PORT} --workers 2
+            Environment="NODE_ENV=production"
+            Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+            Environment="HOST=0.0.0.0"
+            Environment="PORT=${APP_PORT}"
+            EnvironmentFile=${DEPLOY_DIR}/.env
+            ExecStart=$(which node) dist/server/entry.mjs
             Restart=always
             RestartSec=10
 
@@ -285,7 +279,7 @@ jobs:
 
             echo "Health check..."
             if systemctl is-active --quiet ${SERVICE_NAME}.service; then
-                echo "Production service is running on port ${APP_PORT}!"
+                echo "Production frontend service is running on port ${APP_PORT}!"
             else
                 echo "Service failed!"
                 journalctl -u ${SERVICE_NAME}.service --no-pager -n 30
@@ -294,11 +288,11 @@ jobs:
 
             echo "=========================================="
             echo "PRODUCTION deployment complete!"
-            echo "   URL: https://api.globaleventstravels.com"
+            echo "   URL: https://globaleventstravels.com"
             echo "=========================================="
 
       - name: Deployment failed notification
         if: failure()
         run: |
-          echo "PRODUCTION deployment failed!"
+          echo "PRODUCTION frontend deployment failed!"
           echo "Check the logs above for details."

@@ -281,19 +281,87 @@ async def delete_media(
 ):
     """
     Delete a media item.
-    
+
     This removes the database record and the file from storage.
     """
     media = media_crud.get(db, id=media_id)
     if not media:
         raise HTTPException(status_code=404, detail="Media not found")
-    
+
     # Delete from storage
     storage = get_storage()
     await storage.delete(media.storage_path)
-    
+
     # Delete from database
     db.delete(media)
     db.commit()
-    
+
     return {"message": "Media deleted successfully"}
+
+
+@router.post("/sync")
+async def sync_uploads_to_media(db: Session = Depends(get_db)):
+    """
+    Scan the uploads directory and import any files not yet in the media table.
+
+    This is useful when files were uploaded via the old /uploads endpoint and
+    therefore have no database record, causing the media library to appear empty.
+    """
+    from app.services.storage import LocalStorage
+    import hashlib
+
+    # Resolve the uploads directory the same way LocalStorage does
+    local_storage = LocalStorage()
+    upload_dir = local_storage.upload_dir
+
+    if not os.path.exists(upload_dir):
+        return {"imported": 0, "skipped": 0, "message": "Uploads directory not found"}
+
+    imported = 0
+    skipped = 0
+
+    for folder_name in os.listdir(upload_dir):
+        folder_path = os.path.join(upload_dir, folder_name)
+        if not os.path.isdir(folder_path):
+            continue
+
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if not os.path.isfile(file_path):
+                continue
+
+            ext = get_file_extension(filename)
+            if ext not in ALLOWED_EXTENSIONS:
+                continue
+
+            # Read file and compute hash
+            with open(file_path, "rb") as f:
+                content = f.read()
+
+            content_hash = hashlib.sha256(content).hexdigest()
+
+            # Skip if already in DB
+            if media_crud.get_by_hash(db, hash=content_hash):
+                skipped += 1
+                continue
+
+            storage_path = f"{folder_name}/{filename}"
+            url = f"/api/v1/uploads/{storage_path}"
+
+            media_record = Media(
+                hash=content_hash,
+                filename=filename,
+                original_filename=filename,
+                url=url,
+                size=len(content),
+                mime_type=get_mime_type(ext),
+                folder=folder_name,
+                tags=[],
+                storage_type="local",
+                storage_path=storage_path,
+            )
+            db.add(media_record)
+            imported += 1
+
+    db.commit()
+    return {"imported": imported, "skipped": skipped}

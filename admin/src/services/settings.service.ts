@@ -13,6 +13,7 @@ export interface SiteSettings {
   instagram_url: string | null;
   twitter_url: string | null;
   youtube_url: string | null;
+  website_widget_script: string | null;
 }
 
 export interface SiteSettingsUpdate {
@@ -27,6 +28,7 @@ export interface SiteSettingsUpdate {
   instagram_url?: string | null;
   twitter_url?: string | null;
   youtube_url?: string | null;
+  website_widget_script?: string | null;
 }
 
 export const settingsService = {

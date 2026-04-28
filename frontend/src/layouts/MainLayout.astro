@@ -1,7 +1,6 @@
 ---
 import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
-import StickyWhatsAppButton from '@/components/StickyWhatsAppButton.astro';
 import { getSiteSettings } from '@/lib/api';
 import '@/styles/global.css';
 
@@ -23,6 +22,9 @@ const { siteConfig, socialLinks } = await getSiteSettings();
 const siteTitle = `${title} | ${siteConfig.name}`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
 const absoluteOgImage = ogImage.startsWith('http') ? ogImage : new URL(ogImage, Astro.url.origin).href;
+
+// Robots: set PUBLIC_ROBOTS=noindex,nofollow on staging, index,follow on production
+const robotsContent = import.meta.env.PUBLIC_ROBOTS || 'index,follow';
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -57,6 +59,7 @@ const jsonLd = {
     <title>{siteTitle}</title>
     <meta name="title" content={siteTitle} />
     <meta name="description" content={description} />
+    <meta name="robots" content={robotsContent} />
     <link rel="canonical" href={canonicalUrl} />
     
     <!-- Open Graph / Facebook (absolute URLs for crawlers) -->
@@ -90,14 +93,16 @@ const jsonLd = {
     
     <!-- JSON-LD for SEO (Organization + WebSite) -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Third-party widget (configured via admin Settings > Website Widget) -->
+    {siteConfig.widgetScript && <Fragment set:html={siteConfig.widgetScript} />}
   </head>
-  <body class="min-h-screen flex flex-col bg-white">
+  <body class="min-h-screen flex flex-col bg-white overflow-x-hidden">
     <Header siteConfig={siteConfig} headerVariant={headerVariant} />
     <main class="flex-grow">
       <slot />
     </main>
     <Footer siteConfig={siteConfig} socialLinks={socialLinks} />
-    <StickyWhatsAppButton />
   </body>
 </html>
 

@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(curl -s \"https://staging.api.globaleventstravels.com/api/v1/treks/featured?limit=6\")",
+      "Bash(curl -s \"https://staging.api.globaleventstravels.com/api/v1/treks?featured=true&status=published&limit=6\")",
+      "Bash(curl -s \"https://staging.api.globaleventstravels.com/api/v1/treks?limit=3\")",
+      "Bash(curl -s \"https://dev.globaleventstravels.com/\")",
+      "Bash(node -e \"fetch\\('https://staging.api.globaleventstravels.com/api/v1/treks/featured?limit=6'\\).then\\(r=>r.json\\(\\)\\).then\\(d=>console.log\\('Featured count:',d.length,'| First:',d[0]?.name\\)\\).catch\\(e=>console.error\\('Error:',e.message\\)\\)\")"
     ]
   }
 }

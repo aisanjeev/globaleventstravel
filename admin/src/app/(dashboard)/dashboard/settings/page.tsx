@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Building2, MapPin, Plus, Pencil, Trash2, User, Bell, Shield, Palette, Star, RefreshCw } from "lucide-react";
+import { Building2, MapPin, Plus, Pencil, Trash2, User, Bell, Shield, Palette, Star, RefreshCw, Code2 } from "lucide-react";
 import { settingsService, type SiteSettings } from "@/services/settings.service";
 import { googleReviewsService } from "@/services/google-reviews.service";
 import { officeService, type Office } from "@/services/office.service";
@@ -27,6 +27,8 @@ export default function SettingsPage() {
     twitter_url: "",
     youtube_url: "",
   });
+  const [widgetScript, setWidgetScript] = useState("");
+  const [savingWidget, setSavingWidget] = useState(false);
   const [offices, setOffices] = useState<Office[]>([]);
   const [officesLoading, setOfficesLoading] = useState(true);
   const [officeModal, setOfficeModal] = useState<{ open: boolean; office: Office | null }>({
@@ -54,6 +56,7 @@ export default function SettingsPage() {
           twitter_url: data.twitter_url || "",
           youtube_url: data.youtube_url || "",
         });
+        setWidgetScript(data.website_widget_script || "");
       } catch (e) {
         setError(handleApiError(e).message);
       } finally {
@@ -118,6 +121,19 @@ export default function SettingsPage() {
     if (!confirm("Delete this office?")) return;
     await officeService.delete(id);
     setOffices((prev) => prev.filter((o) => o.id !== id));
+  };
+
+  const handleSaveWidget = async () => {
+    setSavingWidget(true);
+    try {
+      const updated = await settingsService.update({ website_widget_script: widgetScript || null });
+      setSettings(updated);
+      setWidgetScript(updated.website_widget_script || "");
+    } catch (e) {
+      setError(handleApiError(e).message);
+    } finally {
+      setSavingWidget(false);
+    }
   };
 
   const handleSyncGoogleReviews = async () => {
@@ -355,6 +371,41 @@ export default function SettingsPage() {
           onSave={handleSaveOffice}
         />
       )}
+
+      {/* Website Widget */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100">
+            <Code2 className="h-5 w-5 text-violet-600" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900">Website Widget</h2>
+            <p className="text-sm text-gray-500">
+              Paste any third-party widget script (chat, support, analytics). It will be injected into every page of the public site.
+            </p>
+          </div>
+        </div>
+        <textarea
+          rows={6}
+          value={widgetScript}
+          onChange={(e) => setWidgetScript(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-xs text-gray-800 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          placeholder={"<script>\n// Paste your widget script here\n</script>"}
+          spellCheck={false}
+        />
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs text-gray-400">
+            Clear the field and save to remove the widget from the site.
+          </p>
+          <button
+            onClick={handleSaveWidget}
+            disabled={savingWidget}
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
+          >
+            {savingWidget ? "Saving..." : "Save Widget"}
+          </button>
+        </div>
+      </div>
 
       {/* Google Reviews Sync */}
       <div className="rounded-lg border border-gray-200 bg-white p-6">
